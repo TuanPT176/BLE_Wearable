@@ -8,9 +8,11 @@ Thiết bị quảng bá với GAP Device Name: **`BLEWearable`**.
 
 - Đo và gửi nhịp tim, SpO2, nhiệt độ và điện áp supercapacitor.
 - Theo dõi trạng thái nguồn, ECG, cảnh báo khẩn cấp và nguy cơ té ngã.
+- Quản lý nguồn thu năng lượng và supercapacitor bằng NEH7100 PMIC.
 - Điều khiển phép đo và chế độ hoạt động qua BLE.
 - Đọc trực tiếp hoặc nhận notification từ các characteristic.
 - Chu kỳ gửi dữ liệu cảm biến mặc định: **1 giây** khi đang đo và notification đã được bật.
+- Dự kiến tích hợp ST25 để bổ sung giao tiếp NFC/RFID.
 
 ## Phần cứng và cảm biến
 
@@ -20,7 +22,11 @@ Thiết bị quảng bá với GAP Device Name: **`BLEWearable`**.
 | MAX86150 | Cảm biến quang học/ECG |
 | MAX30208 | Cảm biến nhiệt độ |
 | ST1VAFE3BX | Cảm biến chuyển động và nhận diện nguy cơ té ngã |
+| NEH7100 | Energy-harvesting PMIC; quản lý nguồn và theo dõi dòng điện qua I2C |
 | Supercapacitor monitor | Theo dõi điện áp nguồn |
+| ST25 *(planned)* | Giao tiếp NFC/RFID; driver và source code chưa được tích hợp |
+
+> **Trạng thái tích hợp:** NEH7100 đã có source tại `Application/neh7100.cpp` và `Application/neh7100.h`. ST25 hiện mới nằm trong kế hoạch phần cứng; model cụ thể và driver sẽ được bổ sung sau.
 
 ## Cấu trúc project
 
@@ -28,6 +34,7 @@ Thiết bị quảng bá với GAP Device Name: **`BLEWearable`**.
 BLE_Wearable_GATT/
 ├── Application/                 # Logic ứng dụng độc lập với BLE
 │   ├── sensor_manager.*         # Khởi tạo, đọc và quản lý cảm biến
+│   ├── neh7100.*                 # Driver I2C cho NEH7100 PMIC
 │   ├── wearable_data.*          # Định dạng/encode BLE payload
 │   └── wearable_state_manager.* # Máy trạng thái của thiết bị
 ├── Core/
@@ -48,8 +55,11 @@ BLE_Wearable_GATT/
 ├── STM32CubeIDE/                # Project, linker script và startup
 ├── System/                      # Debug và USART interface
 ├── Utilities/                   # Sequencer, low-power và trace
+├── ST25/                        # Planned: driver NFC/RFID (chưa có source)
 └── BLE_p2pServer_GATT.ioc       # Cấu hình STM32CubeMX
 ```
+
+Thư mục `ST25/` trong sơ đồ thể hiện kiến trúc dự kiến và chưa tồn tại trong source tree hiện tại.
 
 ## BLE GATT profile
 
