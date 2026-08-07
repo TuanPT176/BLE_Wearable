@@ -67,8 +67,8 @@ extern I2C_HandleTypeDef hi2c1;
 
 /* USER CODE BEGIN Private defines */
 
-#define ST1VAFE3BX_INT_Pin        GPIO_PIN_2
-#define ST1VAFE3BX_INT_GPIO_Port  GPIOB
+#define LIS2DUXS12_INT_Pin        GPIO_PIN_2
+#define LIS2DUXS12_INT_GPIO_Port  GPIOB
 
 /* USER CODE END Private defines */
 

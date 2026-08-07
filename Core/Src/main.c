@@ -370,11 +370,11 @@ static void MX_GPIO_Init(void)
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
-  /* ST1VAFE3BX INT: active-high push-pull, task-level I2C handling. */
-  GPIO_InitStruct.Pin = ST1VAFE3BX_INT_Pin;
+  /* LIS2DUXS12TR INT1: active-high, task-level I2C/MLC handling. */
+  GPIO_InitStruct.Pin = LIS2DUXS12_INT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(ST1VAFE3BX_INT_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(LIS2DUXS12_INT_GPIO_Port, &GPIO_InitStruct);
 
   HAL_NVIC_SetPriority(GPIOB_IRQn, 2U, 0U);
   HAL_NVIC_EnableIRQ(GPIOB_IRQn);

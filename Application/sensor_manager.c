@@ -6,7 +6,7 @@
 #include "neh7100.h"
 #include "../Drivers/max30208.h"
 #include "../Drivers/supercap_monitor.h"
-#include "../Drivers/Sensors/ST1VAFE3BX/st1vafe3bx_motion.h"
+#include "../Drivers/Sensors/LIS2DUXS12TR/lis2dux12_motion.h"
 
 /*
  * Driver implementation bundle
@@ -15,29 +15,17 @@
  * existing Eclipse workspaces cache the old .project description and silently
  * omit newly-added linked .c files from objects.list. SensorManager is an
  * original, stable build resource, so the mandatory sensor implementations are
- * compiled in this translation unit. Do not also add these four .c files as
+ * compiled in this translation unit. Do not also add these driver .c files as
  * standalone build resources.
  */
 #include "../Drivers/max30208.c"
-#include "../Drivers/Sensors/ST1VAFE3BX/st1vafe3bx_reg.c"
-#include "../Drivers/Sensors/ST1VAFE3BX/st1vafe3bx_platform.c"
-#include "../Drivers/Sensors/ST1VAFE3BX/st1vafe3bx_motion.c"
+#include "../Drivers/Sensors/LIS2DUXS12TR/lis2dux12_reg.c"
+#include "../Drivers/Sensors/LIS2DUXS12TR/lis2dux12_platform.c"
+#include "../Drivers/Sensors/LIS2DUXS12TR/lis2dux12_motion.c"
 
 #define TEMPERATURE_FIRST_POLL_DELAY_MS   20U
 #define TEMPERATURE_RETRY_DELAY_MS         5U
 #define TEMPERATURE_CONVERSION_TIMEOUT_MS 60U
-#define FALL_IMPACT_WINDOW_MS            1200U
-#define FALL_POST_CONFIRM_DELAY_MS        500U
-#define FALL_STILL_MIN_MG                  600L
-#define FALL_STILL_MAX_MG                 1400L
-
-typedef enum
-{
-  FALL_DETECTOR_IDLE = 0,
-  FALL_DETECTOR_WAIT_IMPACT,
-  FALL_DETECTOR_WAIT_CONFIRMATION
-} fall_detector_state_t;
-
 static wearable_sensor_data_t latest_data;
 static bool initialized;
 static bool running;
@@ -45,7 +33,6 @@ static sensor_temperature_status_t temperature_status;
 static sensor_motion_status_t motion_status;
 static uint32_t temperature_conversion_elapsed_ms;
 static uint32_t temperature_async_delay_ms;
-static fall_detector_state_t fall_detector_state;
 static uint32_t motion_delay_ms;
 
 static void SensorManager_StartTemperatureConversion(void)
@@ -74,7 +61,7 @@ static void SensorManager_StartTemperatureConversion(void)
 
 bool SensorManager_Init(void)
 {
-  st1vafe3bx_acceleration_t acceleration;
+  lis2dux12_acceleration_t acceleration;
   latest_data.heart_rate_bpm = 72U;
   latest_data.spo2_percent = 98U;
   latest_data.temperature_centi_c = WEARABLE_TEMPERATURE_INVALID_CENTI_C;
@@ -96,18 +83,17 @@ bool SensorManager_Init(void)
 
   temperature_status = (TempSensor_Init() == TEMP_SENSOR_RESULT_OK) ?
                        SENSOR_TEMPERATURE_IDLE : SENSOR_TEMPERATURE_NOT_PRESENT;
-  motion_status = (ST1VAFE3BX_MotionInit(&hi2c1) == ST1VAFE3BX_MOTION_OK) ?
+  motion_status = (LIS2DUX12_MotionInit(&hi2c1) == LIS2DUX12_MOTION_OK) ?
                   SENSOR_MOTION_ACCELEROMETER_READY : SENSOR_MOTION_NOT_PRESENT;
-  fall_detector_state = FALL_DETECTOR_IDLE;
   motion_delay_ms = 0U;
   if (motion_status == SENSOR_MOTION_ACCELEROMETER_READY)
   {
-    APP_DBG_MSG("-- ST1VAFE3BX: WHO_AM_I OK, I2C=0x%02x\n",
-                (unsigned int)(ST1VAFE3BX_MotionGetHalAddress() >> 1U));
-    if (ST1VAFE3BX_MotionReadAcceleration(&acceleration) ==
-        ST1VAFE3BX_MOTION_OK)
+    APP_DBG_MSG("-- LIS2DUXS12TR: WHO_AM_I OK, I2C=0x%02x\n",
+                (unsigned int)(LIS2DUX12_MotionGetHalAddress() >> 1U));
+    if (LIS2DUX12_MotionReadAcceleration(&acceleration) ==
+        LIS2DUX12_MOTION_OK)
     {
-      APP_DBG_MSG("-- ST1VAFE3BX XYZ [mg]: %ld, %ld, %ld\n",
+      APP_DBG_MSG("-- LIS2DUXS12TR XYZ [mg]: %ld, %ld, %ld\n",
                   (long)acceleration.mg[0],
                   (long)acceleration.mg[1],
                   (long)acceleration.mg[2]);
@@ -115,7 +101,7 @@ bool SensorManager_Init(void)
   }
   else
   {
-    APP_DBG_MSG("-- ST1VAFE3BX: not present (optional)\n");
+    APP_DBG_MSG("-- LIS2DUXS12TR: not present (optional)\n");
   }
   temperature_conversion_elapsed_ms = 0U;
   temperature_async_delay_ms = 0U;
@@ -232,8 +218,8 @@ sensor_motion_status_t SensorManager_GetMotionStatus(void)
 
 void SensorManager_ProcessMotionInterrupt(void)
 {
-  st1vafe3bx_motion_result_t result;
-  st1vafe3bx_motion_event_t event;
+  lis2dux12_motion_result_t result;
+  lis2dux12_motion_event_t event;
 
   if ((motion_status == SENSOR_MOTION_NOT_PRESENT) ||
       (motion_status == SENSOR_MOTION_BUS_ERROR))
@@ -241,33 +227,24 @@ void SensorManager_ProcessMotionInterrupt(void)
     return;
   }
 
-  result = ST1VAFE3BX_MotionProcessInterrupt();
-  if (result == ST1VAFE3BX_MOTION_OK)
+  result = LIS2DUX12_MotionProcessInterrupt();
+  if (result == LIS2DUX12_MOTION_OK)
   {
-    if (!ST1VAFE3BX_MotionGetLatestEvent(&event))
+    if (!LIS2DUX12_MotionGetLatestEvent(&event))
     {
       return;
     }
-    if ((event.mlc_status != 0U) || (event.fsm_status != 0U))
+    if (event.mlc_status != 0U)
     {
       motion_status = SENSOR_MOTION_CLASSIFIER_READY;
     }
-    if (event.free_fall)
+    if (event.activity == LIS2DUX12_ACTIVITY_FALL)
     {
-      SensorManager_SetFlag(WEARABLE_FLAG_FALL_CANDIDATE, false);
-      fall_detector_state = FALL_DETECTOR_WAIT_IMPACT;
-      motion_delay_ms = FALL_IMPACT_WINDOW_MS;
-      APP_DBG_MSG("-- ST1VAFE3BX: free-fall candidate\n");
-    }
-    if (event.wake_up &&
-        (fall_detector_state == FALL_DETECTOR_WAIT_IMPACT))
-    {
-      fall_detector_state = FALL_DETECTOR_WAIT_CONFIRMATION;
-      motion_delay_ms = FALL_POST_CONFIRM_DELAY_MS;
-      APP_DBG_MSG("-- ST1VAFE3BX: impact candidate\n");
+      SensorManager_SetFlag(WEARABLE_FLAG_FALL_CANDIDATE, true);
+      APP_DBG_MSG("-- LIS2DUXS12TR: MLC fall candidate\n");
     }
   }
-  else if (result == ST1VAFE3BX_MOTION_BUS_ERROR)
+  else if (result == LIS2DUX12_MOTION_BUS_ERROR)
   {
     motion_status = SENSOR_MOTION_BUS_ERROR;
   }
@@ -275,41 +252,8 @@ void SensorManager_ProcessMotionInterrupt(void)
 
 void SensorManager_ProcessMotionTimeout(void)
 {
-  st1vafe3bx_acceleration_t acceleration;
-  int64_t magnitude_squared;
-  const int64_t minimum_squared =
-      (int64_t)FALL_STILL_MIN_MG * FALL_STILL_MIN_MG;
-  const int64_t maximum_squared =
-      (int64_t)FALL_STILL_MAX_MG * FALL_STILL_MAX_MG;
-
+  /* MLC classification is delivered directly through the sensor interrupt. */
   motion_delay_ms = 0U;
-  if (fall_detector_state == FALL_DETECTOR_WAIT_IMPACT)
-  {
-    fall_detector_state = FALL_DETECTOR_IDLE;
-    return;
-  }
-  if (fall_detector_state != FALL_DETECTOR_WAIT_CONFIRMATION)
-  {
-    return;
-  }
-
-  fall_detector_state = FALL_DETECTOR_IDLE;
-  if (ST1VAFE3BX_MotionReadAcceleration(&acceleration) !=
-      ST1VAFE3BX_MOTION_OK)
-  {
-    motion_status = SENSOR_MOTION_BUS_ERROR;
-    return;
-  }
-  magnitude_squared =
-      ((int64_t)acceleration.mg[0] * acceleration.mg[0]) +
-      ((int64_t)acceleration.mg[1] * acceleration.mg[1]) +
-      ((int64_t)acceleration.mg[2] * acceleration.mg[2]);
-  if ((magnitude_squared >= minimum_squared) &&
-      (magnitude_squared <= maximum_squared))
-  {
-    SensorManager_SetFlag(WEARABLE_FLAG_FALL_CANDIDATE, true);
-    APP_DBG_MSG("-- ST1VAFE3BX: FALL CANDIDATE CONFIRMED\n");
-  }
 }
 
 bool SensorManager_GetMotionDelayMs(uint32_t *delay_ms)

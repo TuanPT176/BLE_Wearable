@@ -31,7 +31,7 @@ Thiết bị quảng bá với GAP Device Name: **`BLEWearable`**.
 
 > **Trạng thái tích hợp:** NEH7100 đã có source tại `Application/neh7100.cpp` và `Application/neh7100.h`. ST25 và SX1262 hiện mới nằm trong kế hoạch phần cứng. Model ST25 cụ thể, driver SX1262 và LoRaWAN stack sẽ được bổ sung sau.
 
-> **Migration cảm biến:** Kiến trúc mới chuyển ECG sang MAX86150 và thay ST1VAFE3BX bằng LIS2DUXS12TR chỉ cho gia tốc/MLC. Source hiện tại vẫn còn phần cấu hình MAX86150 ở chế độ optical-only cùng driver và chân interrupt của ST1VAFE3BX; các phần này cần được cập nhật khi tích hợp firmware mới.
+> **Migration cảm biến:** Driver register, HAL I2C, đọc gia tốc và khung nạp MLC cho LIS2DUXS12TR đã được tích hợp; cần thêm file UCF sinh từ Unico và bảng ánh xạ class để kích hoạt model MLC thực tế. MAX86150 hiện vẫn ở chế độ optical-only, vì vậy phần thu nhận ECG cần được bổ sung tiếp.
 
 ## Cấu trúc project
 

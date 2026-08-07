@@ -247,13 +247,13 @@ void RADIO_RRM_IRQHandler(void)
 
 void GPIOB_IRQHandler(void)
 {
-  HAL_GPIO_EXTI_IRQHandler(ST1VAFE3BX_INT_GPIO_Port, ST1VAFE3BX_INT_Pin);
+  HAL_GPIO_EXTI_IRQHandler(LIS2DUXS12_INT_GPIO_Port, LIS2DUXS12_INT_Pin);
 }
 
 void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin)
 {
-  if ((GPIOx == ST1VAFE3BX_INT_GPIO_Port) &&
-      (GPIO_Pin == ST1VAFE3BX_INT_Pin))
+  if ((GPIOx == LIS2DUXS12_INT_GPIO_Port) &&
+      (GPIO_Pin == LIS2DUXS12_INT_Pin))
   {
     WEARABLE_APP_NotifyMotionInterruptFromISR();
   }
