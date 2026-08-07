@@ -6,8 +6,9 @@ Thiết bị quảng bá với GAP Device Name: **`BLEWearable`**.
 
 ## Chức năng chính
 
-- Đo và gửi nhịp tim, SpO2, nhiệt độ và điện áp supercapacitor.
+- Đo và gửi nhịp tim, SpO2, ECG, nhiệt độ và điện áp supercapacitor; MAX86150 đảm nhiệm cả PPG và ECG.
 - Theo dõi trạng thái nguồn, ECG, cảnh báo khẩn cấp và nguy cơ té ngã.
+- Thu thập gia tốc và chạy Machine Learning Core (MLC) bằng LIS2DUXS12TR.
 - Quản lý nguồn thu năng lượng và supercapacitor bằng NEH7100 PMIC.
 - Điều khiển phép đo và chế độ hoạt động qua BLE.
 - Đọc trực tiếp hoặc nhận notification từ các characteristic.
@@ -20,15 +21,17 @@ Thiết bị quảng bá với GAP Device Name: **`BLEWearable`**.
 | Thành phần | Vai trò |
 |---|---|
 | STM32WB09KE | MCU và BLE peripheral |
-| MAX86150 | Cảm biến quang học/ECG |
+| MAX86150 | Đo PPG (nhịp tim/SpO2) và ECG |
 | MAX30208 | Cảm biến nhiệt độ |
-| ST1VAFE3BX | Cảm biến chuyển động và nhận diện nguy cơ té ngã |
+| LIS2DUXS12TR | Đo gia tốc và xử lý Machine Learning Core (MLC); thay thế ST1VAFE3BX |
 | NEH7100 | Energy-harvesting PMIC; quản lý nguồn và theo dõi dòng điện qua I2C |
 | Supercapacitor monitor | Theo dõi điện áp nguồn |
 | ST25 *(planned)* | Giao tiếp NFC/RFID; driver và source code chưa được tích hợp |
 | SX1262 *(planned)* | LoRa transceiver cho kết nối LoRa/LoRaWAN; driver và stack chưa được tích hợp |
 
 > **Trạng thái tích hợp:** NEH7100 đã có source tại `Application/neh7100.cpp` và `Application/neh7100.h`. ST25 và SX1262 hiện mới nằm trong kế hoạch phần cứng. Model ST25 cụ thể, driver SX1262 và LoRaWAN stack sẽ được bổ sung sau.
+
+> **Migration cảm biến:** Kiến trúc mới chuyển ECG sang MAX86150 và thay ST1VAFE3BX bằng LIS2DUXS12TR chỉ cho gia tốc/MLC. Source hiện tại vẫn còn phần cấu hình MAX86150 ở chế độ optical-only cùng driver và chân interrupt của ST1VAFE3BX; các phần này cần được cập nhật khi tích hợp firmware mới.
 
 ## Cấu trúc project
 
@@ -45,7 +48,7 @@ BLE_Wearable_GATT/
 ├── Drivers/
 │   ├── CMSIS/                   # CMSIS cho STM32WB0
 │   ├── STM32WB0x_HAL_Driver/    # STM32 HAL/LL
-│   └── Sensors/                 # Driver MAX86150, MAX30208, ST1VAFE3BX
+│   └── Sensors/                 # MAX86150 (PPG/ECG), MAX30208 và LIS2DUXS12TR (accel/MLC)
 ├── Middlewares/ST/STM32_BLE/    # BLE stack và thư viện ST
 ├── Projects/Common/BLE/         # BLE interfaces/modules dùng chung
 ├── STM32_BLE/
