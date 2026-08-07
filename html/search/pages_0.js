@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['1_20—_20bring_20up_20giao_20tiếp_0',['Task 5.1 — Bring-up giao tiếp',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md46',1,'']]],
+  ['1_20—_20cấu_20hình_20adc_1',['Task 3.1 — Cấu hình ADC',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md33',1,'']]],
+  ['1_20—_20chọn_20driver_20target_2',['Task 4.1 — Chọn driver target',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md40',1,'']]],
+  ['1_20—_20driver_20bring_20up_3',['Task 6.1 — Driver bring-up',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md53',1,'']]],
+  ['1_20—_20hoàn_20thiện_20ble_20gatt_20hiện_20tại_4',['Giai đoạn 1 — Hoàn thiện BLE GATT hiện tại',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md5',1,'']]],
+  ['1_20—_20hoàn_20thiện_20gatt_20read_20cho_20sensor_5fdata_5',['Task 1.1 — Hoàn thiện GATT Read cho SENSOR_DATA',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md6',1,'']]],
+  ['1_20—_20reset_20counter_6',['Task 9.1 — Reset counter',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md78',1,'']]],
+  ['1_20—_20state_20machine_20năng_20lượng_7',['Task 8.1 — State machine năng lượng',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md68',1,'']]],
+  ['1_20—_20tạo_20data_20model_20chung_8',['Task 2.1 — Tạo data model chung',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md24',1,'']]],
+  ['1_20—_20tắt_20low_20power_20debug_20mode_9',['Task 10.1 — Tắt low-power debug mode',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md84',1,'']]],
+  ['1_20—_20vafe_20bring_20up_10',['Task 7.1 — vAFE bring-up',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md61',1,'']]],
+  ['1_201_20—_20hoàn_20thiện_20gatt_20read_20cho_20sensor_5fdata_11',['Task 1.1 — Hoàn thiện GATT Read cho SENSOR_DATA',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md6',1,'']]],
+  ['1_202_20—_20hoàn_20thiện_20gatt_20read_20cho_20device_5fstatus_12',['Task 1.2 — Hoàn thiện GATT Read cho DEVICE_STATUS',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md11',1,'']]],
+  ['1_203_20—_20chuẩn_20hóa_20command_20protocol_13',['Task 1.3 — Chuẩn hóa command protocol',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md15',1,'']]],
+  ['1_204_20—_20tạo_20protocol_20version_14',['Task 1.4 — Tạo protocol version',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md21',1,'']]],
+  ['1_20trạng_20thái_20hiện_20tại_15',['1. Trạng thái hiện tại',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md1',1,'']]],
+  ['10_20—_20low_20power_20thật_16',['Giai đoạn 10 — Low-power thật',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md83',1,'']]],
+  ['10_201_20—_20tắt_20low_20power_20debug_20mode_17',['Task 10.1 — Tắt low-power debug mode',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md84',1,'']]],
+  ['10_202_20—_20sleep_20policy_18',['Task 10.2 — Sleep policy',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md85',1,'']]],
+  ['10_203_20—_20wake_20sources_19',['Task 10.3 — Wake sources',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md86',1,'']]],
+  ['10_204_20—_20đo_20dòng_20',['Task 10.4 — Đo dòng',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md87',1,'']]],
+  ['11_20—_20test_20matrix_21',['Giai đoạn 11 — Test matrix',['../md__b_l_e___wearable___firmware___next___plan.html#autotoc_md90',1,'']]]
+];

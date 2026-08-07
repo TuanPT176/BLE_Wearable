@@ -1,0 +1,728 @@
+\chapter{Kế hoạch phát triển tiếp theo — BLE Wearable Firmware trên STM32\+WB09 }
+\hypertarget{md__b_l_e___wearable___firmware___next___plan}{}\label{md__b_l_e___wearable___firmware___next___plan}\index{Kế hoạch phát triển tiếp theo — BLE Wearable Firmware trên STM32WB09@{Kế hoạch phát triển tiếp theo — BLE Wearable Firmware trên STM32WB09}}
+\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md0}%
+\Hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md0}%
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md1}{}\doxysection{\texorpdfstring{1. Trạng thái hiện tại}{1. Trạng thái hiện tại}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md1}
+Project đã hoàn thành nền tảng BLE ban đầu:\+
+
+
+\begin{DoxyItemize}
+\item Advertising với tên {\ttfamily BLEWearable}
+\item Tự advertising lại sau disconnect
+\item Custom Wearable Health Service
+\item 3 characteristic:\+
+\begin{DoxyItemize}
+\item {\ttfamily CONTROL}
+\item {\ttfamily SENSOR\+\_\+\+DATA}
+\item {\ttfamily DEVICE\+\_\+\+STATUS}
+\end{DoxyItemize}
+\item Hỗ trợ Write command
+\item Hỗ trợ Notify độc lập cho sensor data và device status
+\item Có virtual timer và sequencer task
+\item Mock sensor data gửi định kỳ
+\item Project build thành công
+\end{DoxyItemize}
+
+Các phần chưa hoàn thiện:\+
+
+
+\begin{DoxyItemize}
+\item GATT Read response hoàn chỉnh
+\item Driver cảm biến thật
+\item ADC đo điện áp supercap
+\item ECG thật
+\item Reset counter lưu bền vững
+\item Deep sleep và power state thực tế
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md3}{}\doxysection{\texorpdfstring{2. Mục tiêu giai đoạn tiếp theo}{2. Mục tiêu giai đoạn tiếp theo}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md3}
+Ưu tiên phát triển theo thứ tự:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{1.\ Hoàn\ thiện\ BLE\ hiện\ tại}
+\DoxyCodeLine{2.\ Tách\ application\ logic\ khỏi\ mock\ data}
+\DoxyCodeLine{3.\ Đọc\ ADC\ điện\ áp\ supercap\ thật}
+\DoxyCodeLine{4.\ Tích\ hợp\ driver\ cảm\ biến\ từng\ bước}
+\DoxyCodeLine{5.\ Hoàn\ thiện\ power\ manager}
+\DoxyCodeLine{6.\ Tích\ hợp\ ECG}
+\DoxyCodeLine{7.\ Lưu\ trạng\ thái\ bền\ vững}
+\DoxyCodeLine{8.\ Kiểm\ thử\ độ\ ổn\ định\ và\ đo\ năng\ lượng}
+
+\end{DoxyCode}
+
+
+Không nên tích hợp tất cả cảm biến cùng lúc.
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md5}{}\doxysection{\texorpdfstring{Giai đoạn 1 — Hoàn thiện BLE GATT hiện tại}{Giai đoạn 1 — Hoàn thiện BLE GATT hiện tại}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md5}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md6}{}\doxysubsection{\texorpdfstring{Task 1.\+1 — Hoàn thiện GATT Read cho SENSOR\+\_\+\+DATA}{Task 1.\+1 — Hoàn thiện GATT Read cho SENSOR\+\_\+\+DATA}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md6}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md7}{}\doxysubsubsection{\texorpdfstring{Mục tiêu}{Mục tiêu}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md7}
+Khi điện thoại nhấn Read trên {\ttfamily SENSOR\+\_\+\+DATA}, firmware phải trả về dữ liệu mới nhất.\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md8}{}\doxysubsubsection{\texorpdfstring{Yêu cầu}{Yêu cầu}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md8}
+
+\begin{DoxyItemize}
+\item Duy trì một buffer dữ liệu sensor hiện tại
+\item Khi có Read request:\+
+\begin{DoxyItemize}
+\item Copy dữ liệu mới nhất vào characteristic
+\item Trả về đúng chiều dài payload
+\end{DoxyItemize}
+\item Không tạo dữ liệu mới trực tiếp trong callback Read
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md9}{}\doxysubsubsection{\texorpdfstring{Acceptance criteria}{Acceptance criteria}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md9}
+
+\begin{DoxyItemize}
+\item n\+RF Connect đọc được đủ 16 byte
+\item Payload giống giá trị notification gần nhất
+\item Không lỗi khi Read liên tục nhiều lần
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md11}{}\doxysubsection{\texorpdfstring{Task 1.\+2 — Hoàn thiện GATT Read cho DEVICE\+\_\+\+STATUS}{Task 1.\+2 — Hoàn thiện GATT Read cho DEVICE\+\_\+\+STATUS}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md11}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md12}{}\doxysubsubsection{\texorpdfstring{Mục tiêu}{Mục tiêu}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md12}
+Điện thoại đọc được trạng thái hệ thống hiện tại.\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md13}{}\doxysubsubsection{\texorpdfstring{Acceptance criteria}{Acceptance criteria}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md13}
+
+\begin{DoxyItemize}
+\item Read trả đủ 8 byte
+\item Trạng thái phản ánh đúng:\+
+\begin{DoxyItemize}
+\item measurement state
+\item sensor ready
+\item error code
+\item power state
+\item supercap voltage
+\item flags
+\end{DoxyItemize}
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md15}{}\doxysubsection{\texorpdfstring{Task 1.\+3 — Chuẩn hóa command protocol}{Task 1.\+3 — Chuẩn hóa command protocol}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md15}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md16}{}\doxysubsubsection{\texorpdfstring{Mục tiêu}{Mục tiêu}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md16}
+Tránh nhầm lẫn command về sau.\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md17}{}\doxysubsubsection{\texorpdfstring{Đề xuất}{Đề xuất}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md17}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{0x01\ Start\ Measurement}
+\DoxyCodeLine{0x02\ Stop\ Measurement}
+\DoxyCodeLine{0x03\ Request\ Current\ Data}
+\DoxyCodeLine{0x04\ Set\ Normal\ Power\ Mode}
+\DoxyCodeLine{0x05\ Set\ Low-\/Power\ Mode}
+\DoxyCodeLine{0x06\ Start\ ECG}
+\DoxyCodeLine{0x07\ Stop\ ECG}
+\DoxyCodeLine{0x08\ Trigger\ Emergency\ Test}
+
+\end{DoxyCode}
+
+
+Hiện tại command bắt đầu từ {\ttfamily 0x00}. Có thể giữ nguyên nếu muốn tương thích, nhưng nên chốt protocol sớm.\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md18}{}\doxysubsubsection{\texorpdfstring{Codex cần làm}{Codex cần làm}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md18}
+
+\begin{DoxyItemize}
+\item Tạo enum command rõ ràng
+\item Không dùng số hex rải rác trong code
+\item Kiểm tra payload length trước khi đọc
+\item Ignore command không hợp lệ
+\item Set error code nếu command sai
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md19}{}\doxysubsubsection{\texorpdfstring{Acceptance criteria}{Acceptance criteria}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md19}
+
+\begin{DoxyItemize}
+\item Mỗi command có một enum duy nhất
+\item Không còn magic number trong switch-\/case
+\item Command sai không làm reset firmware
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md21}{}\doxysubsection{\texorpdfstring{Task 1.\+4 — Tạo protocol version}{Task 1.\+4 — Tạo protocol version}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md21}
+Thêm version vào {\ttfamily DEVICE\+\_\+\+STATUS}, ví dụ:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{Byte\ 7\ lower\ nibble\ =\ protocol\ version}
+
+\end{DoxyCode}
+
+
+Hoặc tạo macro:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{preprocessor}{\#define\ WEARABLE\_PROTOCOL\_VERSION\ 0x01}}
+
+\end{DoxyCode}
+
+
+Mục tiêu là app điện thoại biết cách decode payload sau này.
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md23}{}\doxysection{\texorpdfstring{Giai đoạn 2 — Tách mock data khỏi BLE logic}{Giai đoạn 2 — Tách mock data khỏi BLE logic}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md23}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md24}{}\doxysubsection{\texorpdfstring{Task 2.\+1 — Tạo data model chung}{Task 2.\+1 — Tạo data model chung}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md24}
+Tạo file:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{Application/wearable\_data.h}
+\DoxyCodeLine{Application/wearable\_data.c}
+
+\end{DoxyCode}
+
+
+Định nghĩa:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{typedef}\ \textcolor{keyword}{struct}}
+\DoxyCodeLine{\{}
+\DoxyCodeLine{\ \ \ \ uint8\_t\ \ heart\_rate\_bpm;}
+\DoxyCodeLine{\ \ \ \ uint8\_t\ \ spo2\_percent;}
+\DoxyCodeLine{\ \ \ \ int16\_t\ \ temperature\_centi\_c;}
+\DoxyCodeLine{\ \ \ \ uint16\_t\ supercap\_mv;}
+\DoxyCodeLine{\ \ \ \ uint8\_t\ \ power\_state;}
+\DoxyCodeLine{\ \ \ \ uint8\_t\ \ flags;}
+\DoxyCodeLine{\}\ wearable\_sensor\_data\_t;}
+
+\end{DoxyCode}
+
+
+Và:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keyword}{typedef}\ \textcolor{keyword}{struct}}
+\DoxyCodeLine{\{}
+\DoxyCodeLine{\ \ \ \ uint8\_t\ \ measurement\_state;}
+\DoxyCodeLine{\ \ \ \ uint8\_t\ \ sensor\_ready;}
+\DoxyCodeLine{\ \ \ \ uint8\_t\ \ error\_code;}
+\DoxyCodeLine{\ \ \ \ uint8\_t\ \ power\_state;}
+\DoxyCodeLine{\ \ \ \ uint16\_t\ supercap\_mv;}
+\DoxyCodeLine{\ \ \ \ uint8\_t\ \ reset\_counter;}
+\DoxyCodeLine{\ \ \ \ uint8\_t\ \ flags;}
+\DoxyCodeLine{\}\ wearable\_device\_status\_t;}
+
+\end{DoxyCode}
+
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md26}{}\doxysubsection{\texorpdfstring{Task 2.\+2 — Tạo Sensor\+Manager abstraction}{Task 2.\+2 — Tạo Sensor\+Manager abstraction}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md26}
+Tạo:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{Application/sensor\_manager.c}
+\DoxyCodeLine{Application/sensor\_manager.h}
+
+\end{DoxyCode}
+
+
+API đề xuất:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keywordtype}{bool}\ SensorManager\_Init(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{\textcolor{keywordtype}{bool}\ SensorManager\_Start(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{\textcolor{keywordtype}{bool}\ SensorManager\_Stop(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{\textcolor{keywordtype}{bool}\ SensorManager\_GetLatestData(wearable\_sensor\_data\_t\ *data);}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ SensorManager\_Process(\textcolor{keywordtype}{void});}
+
+\end{DoxyCode}
+
+
+Hiện tại Sensor\+Manager vẫn trả mock data.
+
+Sau này chỉ thay phần implementation.\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md27}{}\doxysubsubsection{\texorpdfstring{Acceptance criteria}{Acceptance criteria}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md27}
+
+\begin{DoxyItemize}
+\item BLE code không tự sinh mock HR/\+\+Sp\+O2 nữa
+\item BLE chỉ gọi Sensor\+Manager
+\item Có thể thay mock bằng sensor thật mà không sửa GATT code
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md29}{}\doxysubsection{\texorpdfstring{Task 2.\+3 — Tạo Wearable\+State\+Manager}{Task 2.\+3 — Tạo Wearable\+State\+Manager}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md29}
+Tạo state:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{IDLE}
+\DoxyCodeLine{MEASURING}
+\DoxyCodeLine{ECG\_ACTIVE}
+\DoxyCodeLine{LOW\_POWER}
+\DoxyCodeLine{EMERGENCY}
+\DoxyCodeLine{ERROR}
+
+\end{DoxyCode}
+
+
+API:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keywordtype}{void}\ WearableState\_Set(...);}
+\DoxyCodeLine{wearable\_state\_t\ WearableState\_Get(\textcolor{keywordtype}{void});}
+
+\end{DoxyCode}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md30}{}\doxysubsubsection{\texorpdfstring{Acceptance criteria}{Acceptance criteria}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md30}
+
+\begin{DoxyItemize}
+\item Command CONTROL thay đổi state
+\item DEVICE\+\_\+\+STATUS phản ánh đúng state
+\item Timer chỉ chạy khi state cho phép
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md32}{}\doxysection{\texorpdfstring{Giai đoạn 3 — Đọc điện áp supercap bằng ADC}{Giai đoạn 3 — Đọc điện áp supercap bằng ADC}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md32}
+Đây nên là phần phần cứng thật đầu tiên vì đơn giản hơn cảm biến y sinh.\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md33}{}\doxysubsection{\texorpdfstring{Task 3.\+1 — Cấu hình ADC}{Task 3.\+1 — Cấu hình ADC}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md33}
+Cấu hình trong Cube\+MX:\+
+
+
+\begin{DoxyItemize}
+\item ADC channel nối tới cầu chia áp supercap
+\item Sampling time phù hợp trở kháng nguồn
+\item Không để ADC hoạt động liên tục
+\item Dùng single conversion hoặc low-\/rate periodic sampling
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md34}{}\doxysubsection{\texorpdfstring{Task 3.\+2 — Tạo driver voltage monitor}{Task 3.\+2 — Tạo driver voltage monitor}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md34}
+Tạo:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{Drivers/supercap\_monitor.c}
+\DoxyCodeLine{Drivers/supercap\_monitor.h}
+
+\end{DoxyCode}
+
+
+API:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keywordtype}{bool}\ SupercapMonitor\_Init(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{uint16\_t\ SupercapMonitor\_ReadMillivolts(\textcolor{keywordtype}{void});}
+
+\end{DoxyCode}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md35}{}\doxysubsection{\texorpdfstring{Task 3.\+3 — Quy đổi ADC sang điện áp thật}{Task 3.\+3 — Quy đổi ADC sang điện áp thật}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md35}
+Cần tính:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{Vsupercap\ =\ Vadc\ ×\ divider\_ratio}
+
+\end{DoxyCode}
+
+
+Thông số resistor divider phải được cấu hình bằng macro.\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md36}{}\doxysubsection{\texorpdfstring{Task 3.\+4 — Thêm lọc đơn giản}{Task 3.\+4 — Thêm lọc đơn giản}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md36}
+Dùng:\+
+
+
+\begin{DoxyItemize}
+\item Moving average 4–8 mẫu
+\item Hoặc median 3 mẫu
+\end{DoxyItemize}
+
+Không cần thuật toán phức tạp.\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md37}{}\doxysubsection{\texorpdfstring{Acceptance criteria}{Acceptance criteria}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md37}
+
+\begin{DoxyItemize}
+\item Sai số đo dưới mức mục tiêu đã đặt
+\item Giá trị được cập nhật vào SENSOR\+\_\+\+DATA và DEVICE\+\_\+\+STATUS
+\item Không làm tăng dòng tiêu thụ đáng kể
+\item ADC không chạy liên tục
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md39}{}\doxysection{\texorpdfstring{Giai đoạn 4 — Tích hợp cảm biến nhiệt độ đầu tiên}{Giai đoạn 4 — Tích hợp cảm biến nhiệt độ đầu tiên}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md39}
+Nhiệt độ là cảm biến dễ nhất để bring-\/up.\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md40}{}\doxysubsection{\texorpdfstring{Task 4.\+1 — Chọn driver target}{Task 4.\+1 — Chọn driver target}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md40}
+Theo cấu hình phần cứng cuối cùng:\+
+
+
+\begin{DoxyItemize}
+\item MAX30208\+CLB+
+\item Hoặc sensor nhiệt độ thực tế trên PCB
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md41}{}\doxysubsection{\texorpdfstring{Task 4.\+2 — Viết driver cơ bản}{Task 4.\+2 — Viết driver cơ bản}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md41}
+API:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{\textcolor{keywordtype}{bool}\ TempSensor\_Init(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{\textcolor{keywordtype}{bool}\ TempSensor\_TriggerOneShot(\textcolor{keywordtype}{void});}
+\DoxyCodeLine{\textcolor{keywordtype}{bool}\ TempSensor\_ReadCentiC(int16\_t\ *temperature);}
+\DoxyCodeLine{\textcolor{keywordtype}{bool}\ TempSensor\_Sleep(\textcolor{keywordtype}{void});}
+
+\end{DoxyCode}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md42}{}\doxysubsection{\texorpdfstring{Task 4.\+3 — Test độc lập}{Task 4.\+3 — Test độc lập}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md42}
+
+\begin{DoxyItemize}
+\item Read device ID nếu có
+\item One-\/shot measurement
+\item So sánh với nhiệt kế tham chiếu
+\item Test disconnect/\+reconnect BLE không ảnh hưởng sensor
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md43}{}\doxysubsection{\texorpdfstring{Acceptance criteria}{Acceptance criteria}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md43}
+
+\begin{DoxyItemize}
+\item Đọc nhiệt độ ổn định
+\item Không dùng polling blocking dài
+\item Dữ liệu thay mock temperature
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md45}{}\doxysection{\texorpdfstring{Giai đoạn 5 — Tích hợp ST1\+VAFE3\+BX phần IMU trước}{Giai đoạn 5 — Tích hợp ST1\+VAFE3\+BX phần IMU trước}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md45}
+Không nên bật ECG ngay.\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md46}{}\doxysubsection{\texorpdfstring{Task 5.\+1 — Bring-\/up giao tiếp}{Task 5.\+1 — Bring-\/up giao tiếp}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md46}
+
+\begin{DoxyItemize}
+\item SPI hoặc I2C theo schematic cuối cùng
+\item Đọc WHO\+\_\+\+AM\+\_\+I
+\item Reset software
+\item Kiểm tra register read/\+write
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md47}{}\doxysubsection{\texorpdfstring{Task 5.\+2 — Accelerometer basic}{Task 5.\+2 — Accelerometer basic}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md47}
+
+\begin{DoxyItemize}
+\item Cấu hình ODR thấp
+\item Đọc XYZ
+\item Verify orientation
+\item Gửi dữ liệu raw qua debug log
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md48}{}\doxysubsection{\texorpdfstring{Task 5.\+3 — Interrupt wake-\/up}{Task 5.\+3 — Interrupt wake-\/up}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md48}
+
+\begin{DoxyItemize}
+\item Cấu hình motion interrupt
+\item MCU ngủ
+\item Cử động tay làm wake-\/up
+\item Không đọc liên tục nếu không cần
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md49}{}\doxysubsection{\texorpdfstring{Task 5.\+4 — Fall candidate event}{Task 5.\+4 — Fall candidate event}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md49}
+Giai đoạn đầu chỉ cần:\+
+
+
+\begin{DoxyItemize}
+\item free-\/fall interrupt
+\item impact threshold
+\item post-\/event confirmation đơn giản
+\end{DoxyItemize}
+
+Chưa cần MLC ngay.\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md50}{}\doxysubsection{\texorpdfstring{Acceptance criteria}{Acceptance criteria}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md50}
+
+\begin{DoxyItemize}
+\item WHO\+\_\+\+AM\+\_\+I đúng
+\item Interrupt hoạt động
+\item MCU wake được từ sensor event
+\item Không có polling liên tục
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md52}{}\doxysection{\texorpdfstring{Giai đoạn 6 — Tích hợp PPG /\+ HR /\+ Sp\+O2}{Giai đoạn 6 — Tích hợp PPG /\+ HR /\+ Sp\+O2}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md52}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md53}{}\doxysubsection{\texorpdfstring{Task 6.\+1 — Driver bring-\/up}{Task 6.\+1 — Driver bring-\/up}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md53}
+
+\begin{DoxyItemize}
+\item Device ID
+\item Reset
+\item FIFO
+\item Interrupt data-\/ready
+\item LED current configuration
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md54}{}\doxysubsection{\texorpdfstring{Task 6.\+2 — Raw PPG streaming mode}{Task 6.\+2 — Raw PPG streaming mode}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md54}
+Ban đầu chỉ:\+
+
+
+\begin{DoxyItemize}
+\item Read raw samples
+\item Gửi debug qua UART hoặc BLE ở tốc độ thấp
+\item Không tính HR/\+\+Sp\+O2 ngay
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md55}{}\doxysubsection{\texorpdfstring{Task 6.\+3 — HR extraction}{Task 6.\+3 — HR extraction}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md55}
+
+\begin{DoxyItemize}
+\item Tạo buffer cửa sổ
+\item DC removal
+\item Peak detection
+\item Tính BPM
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md56}{}\doxysubsection{\texorpdfstring{Task 6.\+4 — Sp\+O2}{Task 6.\+4 — Sp\+O2}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md56}
+Chỉ thực hiện sau khi raw red/\+\+IR ổn định.\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md57}{}\doxysubsection{\texorpdfstring{Task 6.\+5 — Adaptive sampling}{Task 6.\+5 — Adaptive sampling}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md57}
+Theo power state:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{NORMAL\ \ \ \ \ \ sampling\ thấp}
+\DoxyCodeLine{SURPLUS\ \ \ \ \ sampling\ cao\ hơn}
+\DoxyCodeLine{LOW\_POWER\ \ \ PPG\ tắt\ hoặc\ duty\ cycle\ thấp}
+
+\end{DoxyCode}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md58}{}\doxysubsection{\texorpdfstring{Acceptance criteria}{Acceptance criteria}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md58}
+
+\begin{DoxyItemize}
+\item FIFO không overflow
+\item Dữ liệu raw ổn định
+\item HR hợp lý trong thử nghiệm tĩnh
+\item Power manager có thể bật/\+tắt PPG
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md60}{}\doxysection{\texorpdfstring{Giai đoạn 7 — Tích hợp ECG thật}{Giai đoạn 7 — Tích hợp ECG thật}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md60}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md61}{}\doxysubsection{\texorpdfstring{Task 7.\+1 — v\+AFE bring-\/up}{Task 7.\+1 — v\+AFE bring-\/up}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md61}
+
+\begin{DoxyItemize}
+\item Cấu hình ST1\+VAFE3\+BX v\+AFE
+\item Đọc raw ECG
+\item Kiểm tra electrode connection
+\item Kiểm tra saturation
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md62}{}\doxysubsection{\texorpdfstring{Task 7.\+2 — ECG state riêng}{Task 7.\+2 — ECG state riêng}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md62}
+ECG chỉ chạy khi:\+
+
+
+\begin{DoxyItemize}
+\item command Start ECG
+\item anomaly trigger
+\item emergency
+\item manual test
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md63}{}\doxysubsection{\texorpdfstring{Task 7.\+3 — ECG buffer}{Task 7.\+3 — ECG buffer}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md63}
+Dùng ring buffer.
+
+Không gửi từng sample riêng lẻ nếu không cần.\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md64}{}\doxysubsection{\texorpdfstring{Task 7.\+4 — ECG transport design}{Task 7.\+4 — ECG transport design}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md64}
+Không nhét ECG waveform vào {\ttfamily SENSOR\+\_\+\+DATA} 16 byte.
+
+Đề xuất sau này thêm characteristic riêng:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{ECG\_DATA}
+\DoxyCodeLine{Properties:\ Notify}
+\DoxyCodeLine{Length:\ 20–244\ byte\ tùy\ MTU}
+
+\end{DoxyCode}
+
+
+Hoặc thêm service riêng.\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md65}{}\doxysubsection{\texorpdfstring{Acceptance criteria}{Acceptance criteria}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md65}
+
+\begin{DoxyItemize}
+\item ECG raw đọc ổn định
+\item Không block BLE
+\item Không overflow buffer
+\item ECG start/\+stop hoạt động bằng CONTROL command
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md67}{}\doxysection{\texorpdfstring{Giai đoạn 8 — Hoàn thiện Power Manager}{Giai đoạn 8 — Hoàn thiện Power Manager}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md67}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md68}{}\doxysubsection{\texorpdfstring{Task 8.\+1 — State machine năng lượng}{Task 8.\+1 — State machine năng lượng}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md68}
+Đề xuất:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{COLD\_START}
+\DoxyCodeLine{DEPLETED}
+\DoxyCodeLine{NORMAL}
+\DoxyCodeLine{SURPLUS}
+\DoxyCodeLine{EMERGENCY}
+
+\end{DoxyCode}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md69}{}\doxysubsection{\texorpdfstring{Task 8.\+2 — Hysteresis}{Task 8.\+2 — Hysteresis}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md69}
+Không đổi state liên tục quanh một ngưỡng.
+
+Ví dụ:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{NORMAL\ -\/>\ DEPLETED\ khi\ Vcap\ <\ V\_LOW}
+\DoxyCodeLine{DEPLETED\ -\/>\ NORMAL\ khi\ Vcap\ >\ V\_RECOVER}
+
+\end{DoxyCode}
+
+
+với:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{V\_RECOVER\ >\ V\_LOW}
+
+\end{DoxyCode}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md70}{}\doxysubsection{\texorpdfstring{Task 8.\+3 — Action theo state}{Task 8.\+3 — Action theo state}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md70}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md71}{}\doxysubsubsection{\texorpdfstring{DEPLETED}{DEPLETED}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md71}
+
+\begin{DoxyItemize}
+\item Stop PPG
+\item Stop ECG
+\item BLE advertising chậm hoặc off
+\item Chỉ giữ motion wake-\/up
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md72}{}\doxysubsubsection{\texorpdfstring{NORMAL}{NORMAL}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md72}
+
+\begin{DoxyItemize}
+\item Sensor duty cycle bình thường
+\item BLE notify định kỳ
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md73}{}\doxysubsubsection{\texorpdfstring{SURPLUS}{SURPLUS}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md73}
+
+\begin{DoxyItemize}
+\item Sampling cao hơn
+\item Đồng bộ dữ liệu thường xuyên hơn
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md74}{}\doxysubsubsection{\texorpdfstring{EMERGENCY}{EMERGENCY}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md74}
+
+\begin{DoxyItemize}
+\item Ưu tiên BLE /\+ Lo\+Ra alert
+\item Sau đó quay về state phù hợp năng lượng
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md75}{}\doxysubsection{\texorpdfstring{Acceptance criteria}{Acceptance criteria}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md75}
+
+\begin{DoxyItemize}
+\item State thay đổi đúng theo voltage
+\item Không oscillate giữa hai state
+\item BLE payload phản ánh đúng power state
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md77}{}\doxysection{\texorpdfstring{Giai đoạn 9 — Reset counter và persistence}{Giai đoạn 9 — Reset counter và persistence}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md77}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md78}{}\doxysubsection{\texorpdfstring{Task 9.\+1 — Reset counter}{Task 9.\+1 — Reset counter}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md78}
+Không nên ghi flash mỗi lần loop.
+
+Chỉ update khi boot.\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md79}{}\doxysubsection{\texorpdfstring{Task 9.\+2 — Lưu flash an toàn}{Task 9.\+2 — Lưu flash an toàn}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md79}
+Tùy STM32\+WB09 support:\+
+
+
+\begin{DoxyItemize}
+\item Flash page riêng
+\item EEPROM emulation
+\item Hoặc NVM service có sẵn
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md80}{}\doxysubsection{\texorpdfstring{Task 9.\+3 — Wear leveling tối thiểu}{Task 9.\+3 — Wear leveling tối thiểu}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md80}
+Không ghi cùng một cell quá thường xuyên.\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md81}{}\doxysubsection{\texorpdfstring{Acceptance criteria}{Acceptance criteria}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md81}
+
+\begin{DoxyItemize}
+\item Reset counter tăng sau reset
+\item Power cycle không mất
+\item Không ghi flash liên tục
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md83}{}\doxysection{\texorpdfstring{Giai đoạn 10 — Low-\/power thật}{Giai đoạn 10 — Low-\/power thật}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md83}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md84}{}\doxysubsection{\texorpdfstring{Task 10.\+1 — Tắt low-\/power debug mode}{Task 10.\+1 — Tắt low-\/power debug mode}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md84}
+Chỉ bật sau khi chức năng ổn định.\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md85}{}\doxysubsection{\texorpdfstring{Task 10.\+2 — Sleep policy}{Task 10.\+2 — Sleep policy}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md85}
+MCU ngủ khi:\+
+
+
+\begin{DoxyItemize}
+\item không có task pending
+\item không có BLE transaction đang chờ
+\item không có sensor read pending
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md86}{}\doxysubsection{\texorpdfstring{Task 10.\+3 — Wake sources}{Task 10.\+3 — Wake sources}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md86}
+
+\begin{DoxyItemize}
+\item BLE radio
+\item RTC /\+ virtual timer
+\item ST1\+VAFE3\+BX interrupt
+\item Button
+\item ADC threshold nếu dùng comparator ngoài
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md87}{}\doxysubsection{\texorpdfstring{Task 10.\+4 — Đo dòng}{Task 10.\+4 — Đo dòng}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md87}
+Đo các mode:\+
+
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{Advertising}
+\DoxyCodeLine{Connected\ idle}
+\DoxyCodeLine{Sensor\ notify\ 1\ Hz}
+\DoxyCodeLine{Measurement\ active}
+\DoxyCodeLine{ECG\ active}
+\DoxyCodeLine{Low\ power}
+\DoxyCodeLine{Disconnected\ sleep}
+
+\end{DoxyCode}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md88}{}\doxysubsection{\texorpdfstring{Acceptance criteria}{Acceptance criteria}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md88}
+
+\begin{DoxyItemize}
+\item Không mất BLE
+\item Không mất sensor interrupt
+\item Dòng giảm rõ so với baseline
+\item Wake-\/up ổn định
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md90}{}\doxysection{\texorpdfstring{Giai đoạn 11 — Test matrix}{Giai đoạn 11 — Test matrix}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md90}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md91}{}\doxysubsection{\texorpdfstring{BLE}{BLE}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md91}
+
+\begin{DoxyItemize}
+\item Connect/\+disconnect 50 lần
+\item Enable/\+disable notify nhiều lần
+\item Gửi command sai
+\item Read liên tục
+\item Reset khi đang connected
+\item Điện thoại ra khỏi vùng phủ
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md92}{}\doxysubsection{\texorpdfstring{Sensor}{Sensor}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md92}
+
+\begin{DoxyItemize}
+\item Sensor missing
+\item I2\+C/\+\+SPI timeout
+\item FIFO overflow
+\item Invalid sample
+\item Sensor reset
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md93}{}\doxysubsection{\texorpdfstring{Power}{Power}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md93}
+
+\begin{DoxyItemize}
+\item Vcap giảm qua threshold
+\item Brownout
+\item Cold start
+\item Recover từ low power
+\item Emergency khi năng lượng thấp
+\end{DoxyItemize}\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md94}{}\doxysubsection{\texorpdfstring{Long-\/run}{Long-\/run}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md94}
+
+\begin{DoxyItemize}
+\item Chạy tối thiểu 8 giờ
+\item Sau đó 24 giờ
+\item Không reset ngoài ý muốn
+\item Không mất notification bất thường
+\item Không timer leak
+\end{DoxyItemize}
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md96}{}\doxysection{\texorpdfstring{3. Thứ tự Codex nên triển khai}{3. Thứ tự Codex nên triển khai}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md96}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{Phase\ A}
+\DoxyCodeLine{-\/\ Hoàn\ thiện\ Read}
+\DoxyCodeLine{-\/\ Chuẩn\ hóa\ command}
+\DoxyCodeLine{-\/\ Refactor\ data\ model}
+\DoxyCodeLine{-\/\ Tách\ SensorManager}
+\DoxyCodeLine{}
+\DoxyCodeLine{Phase\ B}
+\DoxyCodeLine{-\/\ ADC\ supercap\ thật}
+\DoxyCodeLine{-\/\ Power\ state\ cơ\ bản}
+\DoxyCodeLine{-\/\ DeviceStatus\ hoàn\ chỉnh}
+\DoxyCodeLine{}
+\DoxyCodeLine{Phase\ C}
+\DoxyCodeLine{-\/\ Temperature\ sensor}
+\DoxyCodeLine{-\/\ ST1VAFE3BX\ accelerometer}
+\DoxyCodeLine{-\/\ Motion\ interrupt}
+\DoxyCodeLine{}
+\DoxyCodeLine{Phase\ D}
+\DoxyCodeLine{-\/\ PPG\ raw}
+\DoxyCodeLine{-\/\ HR}
+\DoxyCodeLine{-\/\ SpO2}
+\DoxyCodeLine{}
+\DoxyCodeLine{Phase\ E}
+\DoxyCodeLine{-\/\ ECG}
+\DoxyCodeLine{-\/\ ECG\ streaming\ characteristic}
+\DoxyCodeLine{}
+\DoxyCodeLine{Phase\ F}
+\DoxyCodeLine{-\/\ Flash\ persistence}
+\DoxyCodeLine{-\/\ Low\ power}
+\DoxyCodeLine{-\/\ Long-\/run\ validation}
+
+\end{DoxyCode}
+
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md98}{}\doxysection{\texorpdfstring{4. Việc nên làm ngay tiếp theo}{4. Việc nên làm ngay tiếp theo}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md98}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md99}{}\doxysubsection{\texorpdfstring{Sprint tiếp theo đề xuất}{Sprint tiếp theo đề xuất}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md99}
+
+\begin{DoxyEnumerate}
+\item Hoàn thiện GATT Read
+\item Tách mock data ra khỏi BLE service
+\item Tạo {\ttfamily Sensor\+Manager}
+\item Tạo {\ttfamily Wearable\+State\+Manager}
+\item Đọc supercap voltage bằng ADC thật
+\item Cập nhật voltage vào cả SENSOR\+\_\+\+DATA và DEVICE\+\_\+\+STATUS
+\item Test lại bằng n\+RF Connect
+\end{DoxyEnumerate}
+
+Đây là sprint hợp lý nhất vì vẫn chưa phụ thuộc vào sensor board hoàn chỉnh.
+
+\DoxyHorRuler{0}
+\hypertarget{md__b_l_e___wearable___firmware___next___plan_autotoc_md101}{}\doxysection{\texorpdfstring{5. Definition of Done cho sprint tiếp theo}{5. Definition of Done cho sprint tiếp theo}}\label{md__b_l_e___wearable___firmware___next___plan_autotoc_md101}
+Sprint được xem là hoàn thành khi:\+
+
+
+\begin{DoxyItemize}
+\item Build không warning nghiêm trọng
+\item CONTROL Write hoạt động
+\item SENSOR\+\_\+\+DATA Read và Notify giống nhau
+\item DEVICE\+\_\+\+STATUS Read và Notify giống nhau
+\item Mock data không còn nằm trực tiếp trong BLE code
+\item Supercap voltage đọc từ ADC thật
+\item Disconnect dừng timer
+\item Reconnect hoạt động
+\item Không có BLE API gọi trực tiếp từ ISR
+\item Code custom nằm trong USER CODE hoặc file riêng 
+\end{DoxyItemize}

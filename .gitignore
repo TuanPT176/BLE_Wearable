@@ -1,0 +1,26 @@
+# Local editor and Codex workspace metadata
+.codex_ide_workspace/
+.vscode/
+
+# STM32CubeIDE build outputs
+STM32CubeIDE/Debug/
+STM32CubeIDE/Release/
+Debug/
+Release/
+
+# Common generated files
+*.o
+*.obj
+*.d
+*.su
+*.cyclo
+*.elf
+*.bin
+*.hex
+*.map
+*.list
+*.log
+
+# OS metadata
+.DS_Store
+Thumbs.db

@@ -1,0 +1,340 @@
+#include "sensor_manager.h"
+
+#include <stddef.h>
+
+#include "main.h"
+#include "neh7100.h"
+#include "../Drivers/max30208.h"
+#include "../Drivers/supercap_monitor.h"
+#include "../Drivers/Sensors/ST1VAFE3BX/st1vafe3bx_motion.h"
+
+/*
+ * Driver implementation bundle
+ * ----------------------------
+ * This CubeIDE project keeps application sources as linked resources. Some
+ * existing Eclipse workspaces cache the old .project description and silently
+ * omit newly-added linked .c files from objects.list. SensorManager is an
+ * original, stable build resource, so the mandatory sensor implementations are
+ * compiled in this translation unit. Do not also add these four .c files as
+ * standalone build resources.
+ */
+#include "../Drivers/max30208.c"
+#include "../Drivers/Sensors/ST1VAFE3BX/st1vafe3bx_reg.c"
+#include "../Drivers/Sensors/ST1VAFE3BX/st1vafe3bx_platform.c"
+#include "../Drivers/Sensors/ST1VAFE3BX/st1vafe3bx_motion.c"
+
+#define TEMPERATURE_FIRST_POLL_DELAY_MS   20U
+#define TEMPERATURE_RETRY_DELAY_MS         5U
+#define TEMPERATURE_CONVERSION_TIMEOUT_MS 60U
+#define FALL_IMPACT_WINDOW_MS            1200U
+#define FALL_POST_CONFIRM_DELAY_MS        500U
+#define FALL_STILL_MIN_MG                  600L
+#define FALL_STILL_MAX_MG                 1400L
+
+typedef enum
+{
+  FALL_DETECTOR_IDLE = 0,
+  FALL_DETECTOR_WAIT_IMPACT,
+  FALL_DETECTOR_WAIT_CONFIRMATION
+} fall_detector_state_t;
+
+static wearable_sensor_data_t latest_data;
+static bool initialized;
+static bool running;
+static sensor_temperature_status_t temperature_status;
+static sensor_motion_status_t motion_status;
+static uint32_t temperature_conversion_elapsed_ms;
+static uint32_t temperature_async_delay_ms;
+static fall_detector_state_t fall_detector_state;
+static uint32_t motion_delay_ms;
+
+static void SensorManager_StartTemperatureConversion(void)
+{
+  if ((!running) ||
+      ((temperature_status != SENSOR_TEMPERATURE_IDLE) &&
+       (temperature_status != SENSOR_TEMPERATURE_VALID) &&
+       (temperature_status != SENSOR_TEMPERATURE_TIMEOUT) &&
+       (temperature_status != SENSOR_TEMPERATURE_BUS_ERROR)))
+  {
+    return;
+  }
+
+  if (TempSensor_TriggerOneShot() == TEMP_SENSOR_RESULT_OK)
+  {
+    temperature_conversion_elapsed_ms = 0U;
+    temperature_async_delay_ms = TEMPERATURE_FIRST_POLL_DELAY_MS;
+    temperature_status = SENSOR_TEMPERATURE_CONVERTING;
+  }
+  else
+  {
+    temperature_async_delay_ms = 0U;
+    temperature_status = SENSOR_TEMPERATURE_BUS_ERROR;
+  }
+}
+
+bool SensorManager_Init(void)
+{
+  st1vafe3bx_acceleration_t acceleration;
+  latest_data.heart_rate_bpm = 72U;
+  latest_data.spo2_percent = 98U;
+  latest_data.temperature_centi_c = WEARABLE_TEMPERATURE_INVALID_CENTI_C;
+  latest_data.supercap_mv = 0U;
+  latest_data.power_state = 1U;
+  latest_data.flags = 0U;
+  running = false;
+  initialized = SupercapMonitor_Init();
+  if (initialized)
+  {
+    latest_data.supercap_mv = SupercapMonitor_ReadMillivolts();
+  }
+
+  /* The PMIC is optional for BLE/ADC operation; record presence independently. */
+  if (NEH7100_Init())
+  {
+    (void)NEH7100_EnsureConfig();
+  }
+
+  temperature_status = (TempSensor_Init() == TEMP_SENSOR_RESULT_OK) ?
+                       SENSOR_TEMPERATURE_IDLE : SENSOR_TEMPERATURE_NOT_PRESENT;
+  motion_status = (ST1VAFE3BX_MotionInit(&hi2c1) == ST1VAFE3BX_MOTION_OK) ?
+                  SENSOR_MOTION_ACCELEROMETER_READY : SENSOR_MOTION_NOT_PRESENT;
+  fall_detector_state = FALL_DETECTOR_IDLE;
+  motion_delay_ms = 0U;
+  if (motion_status == SENSOR_MOTION_ACCELEROMETER_READY)
+  {
+    APP_DBG_MSG("-- ST1VAFE3BX: WHO_AM_I OK, I2C=0x%02x\n",
+                (unsigned int)(ST1VAFE3BX_MotionGetHalAddress() >> 1U));
+    if (ST1VAFE3BX_MotionReadAcceleration(&acceleration) ==
+        ST1VAFE3BX_MOTION_OK)
+    {
+      APP_DBG_MSG("-- ST1VAFE3BX XYZ [mg]: %ld, %ld, %ld\n",
+                  (long)acceleration.mg[0],
+                  (long)acceleration.mg[1],
+                  (long)acceleration.mg[2]);
+    }
+  }
+  else
+  {
+    APP_DBG_MSG("-- ST1VAFE3BX: not present (optional)\n");
+  }
+  temperature_conversion_elapsed_ms = 0U;
+  temperature_async_delay_ms = 0U;
+  return initialized;
+}
+
+bool SensorManager_Start(void)
+{
+  if (!initialized)
+  {
+    return false;
+  }
+  running = true;
+  SensorManager_StartTemperatureConversion();
+  return true;
+}
+
+bool SensorManager_Stop(void)
+{
+  running = false;
+  temperature_async_delay_ms = 0U;
+  if (temperature_status != SENSOR_TEMPERATURE_NOT_PRESENT)
+  {
+    (void)TempSensor_Sleep();
+    temperature_status = SENSOR_TEMPERATURE_IDLE;
+  }
+  return initialized;
+}
+
+bool SensorManager_GetLatestData(wearable_sensor_data_t *data)
+{
+  if ((!initialized) || (data == NULL))
+  {
+    return false;
+  }
+  *data = latest_data;
+  return true;
+}
+
+void SensorManager_Process(void)
+{
+  if (!running)
+  {
+    return;
+  }
+
+  latest_data.supercap_mv = SupercapMonitor_ReadMillivolts();
+
+  SensorManager_StartTemperatureConversion();
+
+  /* Only HR/SpO2 remain mock data until their sensor stages are implemented. */
+  latest_data.heart_rate_bpm++;
+  if (latest_data.heart_rate_bpm > 82U)
+  {
+    latest_data.heart_rate_bpm = 68U;
+  }
+}
+
+void SensorManager_ProcessAsync(void)
+{
+  temp_sensor_result_t result;
+  int16_t temperature_centi_c;
+
+  if ((!running) || (temperature_status != SENSOR_TEMPERATURE_CONVERTING))
+  {
+    temperature_async_delay_ms = 0U;
+    return;
+  }
+
+  temperature_conversion_elapsed_ms += temperature_async_delay_ms;
+  result = TempSensor_TryReadCentiC(&temperature_centi_c);
+  if (result == TEMP_SENSOR_RESULT_OK)
+  {
+    latest_data.temperature_centi_c = temperature_centi_c;
+    temperature_async_delay_ms = 0U;
+    temperature_status = SENSOR_TEMPERATURE_VALID;
+    return;
+  }
+
+  if ((result == TEMP_SENSOR_RESULT_NOT_READY) &&
+      (temperature_conversion_elapsed_ms < TEMPERATURE_CONVERSION_TIMEOUT_MS))
+  {
+    temperature_async_delay_ms = TEMPERATURE_RETRY_DELAY_MS;
+    return;
+  }
+
+  temperature_async_delay_ms = 0U;
+  temperature_status = (result == TEMP_SENSOR_RESULT_NOT_READY) ?
+                       SENSOR_TEMPERATURE_TIMEOUT : SENSOR_TEMPERATURE_BUS_ERROR;
+}
+
+bool SensorManager_GetAsyncDelayMs(uint32_t *delay_ms)
+{
+  if ((delay_ms == NULL) ||
+      (temperature_status != SENSOR_TEMPERATURE_CONVERTING) ||
+      (temperature_async_delay_ms == 0U))
+  {
+    return false;
+  }
+
+  *delay_ms = temperature_async_delay_ms;
+  return true;
+}
+
+sensor_temperature_status_t SensorManager_GetTemperatureStatus(void)
+{
+  return temperature_status;
+}
+
+sensor_motion_status_t SensorManager_GetMotionStatus(void)
+{
+  return motion_status;
+}
+
+void SensorManager_ProcessMotionInterrupt(void)
+{
+  st1vafe3bx_motion_result_t result;
+  st1vafe3bx_motion_event_t event;
+
+  if ((motion_status == SENSOR_MOTION_NOT_PRESENT) ||
+      (motion_status == SENSOR_MOTION_BUS_ERROR))
+  {
+    return;
+  }
+
+  result = ST1VAFE3BX_MotionProcessInterrupt();
+  if (result == ST1VAFE3BX_MOTION_OK)
+  {
+    if (!ST1VAFE3BX_MotionGetLatestEvent(&event))
+    {
+      return;
+    }
+    if ((event.mlc_status != 0U) || (event.fsm_status != 0U))
+    {
+      motion_status = SENSOR_MOTION_CLASSIFIER_READY;
+    }
+    if (event.free_fall)
+    {
+      SensorManager_SetFlag(WEARABLE_FLAG_FALL_CANDIDATE, false);
+      fall_detector_state = FALL_DETECTOR_WAIT_IMPACT;
+      motion_delay_ms = FALL_IMPACT_WINDOW_MS;
+      APP_DBG_MSG("-- ST1VAFE3BX: free-fall candidate\n");
+    }
+    if (event.wake_up &&
+        (fall_detector_state == FALL_DETECTOR_WAIT_IMPACT))
+    {
+      fall_detector_state = FALL_DETECTOR_WAIT_CONFIRMATION;
+      motion_delay_ms = FALL_POST_CONFIRM_DELAY_MS;
+      APP_DBG_MSG("-- ST1VAFE3BX: impact candidate\n");
+    }
+  }
+  else if (result == ST1VAFE3BX_MOTION_BUS_ERROR)
+  {
+    motion_status = SENSOR_MOTION_BUS_ERROR;
+  }
+}
+
+void SensorManager_ProcessMotionTimeout(void)
+{
+  st1vafe3bx_acceleration_t acceleration;
+  int64_t magnitude_squared;
+  const int64_t minimum_squared =
+      (int64_t)FALL_STILL_MIN_MG * FALL_STILL_MIN_MG;
+  const int64_t maximum_squared =
+      (int64_t)FALL_STILL_MAX_MG * FALL_STILL_MAX_MG;
+
+  motion_delay_ms = 0U;
+  if (fall_detector_state == FALL_DETECTOR_WAIT_IMPACT)
+  {
+    fall_detector_state = FALL_DETECTOR_IDLE;
+    return;
+  }
+  if (fall_detector_state != FALL_DETECTOR_WAIT_CONFIRMATION)
+  {
+    return;
+  }
+
+  fall_detector_state = FALL_DETECTOR_IDLE;
+  if (ST1VAFE3BX_MotionReadAcceleration(&acceleration) !=
+      ST1VAFE3BX_MOTION_OK)
+  {
+    motion_status = SENSOR_MOTION_BUS_ERROR;
+    return;
+  }
+  magnitude_squared =
+      ((int64_t)acceleration.mg[0] * acceleration.mg[0]) +
+      ((int64_t)acceleration.mg[1] * acceleration.mg[1]) +
+      ((int64_t)acceleration.mg[2] * acceleration.mg[2]);
+  if ((magnitude_squared >= minimum_squared) &&
+      (magnitude_squared <= maximum_squared))
+  {
+    SensorManager_SetFlag(WEARABLE_FLAG_FALL_CANDIDATE, true);
+    APP_DBG_MSG("-- ST1VAFE3BX: FALL CANDIDATE CONFIRMED\n");
+  }
+}
+
+bool SensorManager_GetMotionDelayMs(uint32_t *delay_ms)
+{
+  if ((delay_ms == NULL) || (motion_delay_ms == 0U))
+  {
+    return false;
+  }
+  *delay_ms = motion_delay_ms;
+  return true;
+}
+
+void SensorManager_SetPowerState(uint8_t power_state)
+{
+  latest_data.power_state = power_state;
+}
+
+void SensorManager_SetFlag(uint8_t flag, bool enabled)
+{
+  if (enabled)
+  {
+    latest_data.flags |= flag;
+  }
+  else
+  {
+    latest_data.flags &= (uint8_t)~flag;
+  }
+}
