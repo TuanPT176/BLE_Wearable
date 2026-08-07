@@ -13,6 +13,7 @@ Thiết bị quảng bá với GAP Device Name: **`BLEWearable`**.
 - Đọc trực tiếp hoặc nhận notification từ các characteristic.
 - Chu kỳ gửi dữ liệu cảm biến mặc định: **1 giây** khi đang đo và notification đã được bật.
 - Dự kiến tích hợp ST25 để bổ sung giao tiếp NFC/RFID.
+- Dự kiến tích hợp SX1262 để truyền dữ liệu tầm xa qua LoRa/LoRaWAN.
 
 ## Phần cứng và cảm biến
 
@@ -25,8 +26,9 @@ Thiết bị quảng bá với GAP Device Name: **`BLEWearable`**.
 | NEH7100 | Energy-harvesting PMIC; quản lý nguồn và theo dõi dòng điện qua I2C |
 | Supercapacitor monitor | Theo dõi điện áp nguồn |
 | ST25 *(planned)* | Giao tiếp NFC/RFID; driver và source code chưa được tích hợp |
+| SX1262 *(planned)* | LoRa transceiver cho kết nối LoRa/LoRaWAN; driver và stack chưa được tích hợp |
 
-> **Trạng thái tích hợp:** NEH7100 đã có source tại `Application/neh7100.cpp` và `Application/neh7100.h`. ST25 hiện mới nằm trong kế hoạch phần cứng; model cụ thể và driver sẽ được bổ sung sau.
+> **Trạng thái tích hợp:** NEH7100 đã có source tại `Application/neh7100.cpp` và `Application/neh7100.h`. ST25 và SX1262 hiện mới nằm trong kế hoạch phần cứng. Model ST25 cụ thể, driver SX1262 và LoRaWAN stack sẽ được bổ sung sau.
 
 ## Cấu trúc project
 
@@ -56,10 +58,11 @@ BLE_Wearable_GATT/
 ├── System/                      # Debug và USART interface
 ├── Utilities/                   # Sequencer, low-power và trace
 ├── ST25/                        # Planned: driver NFC/RFID (chưa có source)
+├── LoRaWAN/                     # Planned: SX1262 driver và LoRaWAN stack
 └── BLE_p2pServer_GATT.ioc       # Cấu hình STM32CubeMX
 ```
 
-Thư mục `ST25/` trong sơ đồ thể hiện kiến trúc dự kiến và chưa tồn tại trong source tree hiện tại.
+Các thư mục `ST25/` và `LoRaWAN/` trong sơ đồ thể hiện kiến trúc dự kiến và chưa tồn tại trong source tree hiện tại.
 
 ## BLE GATT profile
 
