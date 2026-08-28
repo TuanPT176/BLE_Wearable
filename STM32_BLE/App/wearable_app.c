@@ -33,6 +33,7 @@
 #include "../../Application/sensor_manager.h"
 #include "../../Application/wearable_data.h"
 #include "../../Application/wearable_state_manager.h"
+#include "../../Application/device_time.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,7 +48,8 @@ typedef enum
   WEARABLE_CMD_LOW_POWER_MODE    = 0x05,
   WEARABLE_CMD_ECG_START         = 0x06,
   WEARABLE_CMD_ECG_STOP          = 0x07,
-  WEARABLE_CMD_EMERGENCY_TEST    = 0x08
+  WEARABLE_CMD_EMERGENCY_TEST    = 0x08,
+  WEARABLE_CMD_SYNC_TIME         = 0x09
 } wearable_command_t;
 
 /* USER CODE END PTD */
@@ -233,6 +235,44 @@ void WEARABLE_Notification(WEARABLE_NotificationEvt_t *p_Notification)
           WEARABLE_SendStatus();
           break;
 
+        case WEARABLE_CMD_SYNC_TIME:
+          if (p_Notification->DataTransfered.Length < 8)
+          {
+            WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_INVALID_COMMAND;
+            APP_DBG_MSG("-- WEARABLE TIME: SYNC FAILED\nReason: INVALID LENGTH\n");
+          }
+          else
+          {
+            uint8_t *payload = p_Notification->DataTransfered.p_Payload;
+            if (payload[7] != 0)
+            {
+              WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_INVALID_COMMAND;
+              APP_DBG_MSG("-- WEARABLE TIME: SYNC FAILED\nReason: RESERVED BYTE NON-ZERO\n");
+            }
+            else
+            {
+              uint32_t seconds = (uint32_t)payload[1] | ((uint32_t)payload[2] << 8) | ((uint32_t)payload[3] << 16) | ((uint32_t)payload[4] << 24);
+              uint16_t millis = (uint16_t)payload[5] | ((uint16_t)payload[6] << 8);
+
+              if (millis > 999)
+              {
+                WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_INVALID_COMMAND;
+                APP_DBG_MSG("-- WEARABLE TIME: SYNC FAILED\nReason: INVALID MILLIS\n");
+              }
+              else if (DeviceTime_SetUnixTime(seconds, millis))
+              {
+                WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_NONE;
+                APP_DBG_MSG("-- WEARABLE TIME: SYNC SUCCESS\nUnix seconds: %lu\nMilliseconds: %u\nDevice synchronized: YES\n", (unsigned long)seconds, (unsigned int)millis);
+              }
+              else
+              {
+                WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_INVALID_COMMAND;
+                APP_DBG_MSG("-- WEARABLE TIME: SYNC FAILED\nReason: INTERNAL ERROR\n");
+              }
+            }
+          }
+          break;
+
         default:
           WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_INVALID_COMMAND;
           WearableState_Set(WEARABLE_STATE_ERROR);
@@ -347,6 +387,7 @@ void WEARABLE_APP_Init(void)
   WEARABLE_Init();
 
   /* USER CODE BEGIN Service1_APP_Init */
+  DeviceTime_Init();
   WEARABLE_APP_Context.Sensor_data_Notification_Status = Sensor_data_NOTIFICATION_OFF;
   WEARABLE_APP_Context.Device_status_Notification_Status = Device_status_NOTIFICATION_OFF;
   WEARABLE_APP_Context.ResetCounter = 0U;

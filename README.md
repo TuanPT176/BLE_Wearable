@@ -102,11 +102,28 @@ Ghi payload 8 byte vào characteristic `Control`. Byte `0` là command; byte `1.
 | `0x06` | ECG start | Bắt đầu ECG và bật cờ ECG |
 | `0x07` | ECG stop | Dừng ECG và xóa cờ ECG |
 | `0x08` | Emergency test | Bật cờ emergency và chuyển sang Emergency |
+| `0x09` | Sync time | Đồng bộ thời gian thực (Unix time) cho thiết bị |
 
 Ví dụ bắt đầu đo:
 
 ```text
 01 00 00 00 00 00 00 00
+```
+
+### Cấu trúc lệnh Sync time (`0x09`)
+
+Ghi 8 byte vào characteristic `Control` với cấu trúc như sau (dữ liệu truyền kiểu **little-endian**):
+
+| Offset | Kích thước | Kiểu | Mô tả |
+|---:|---:|---|---|
+| 0 | 1 | `uint8` | Command = `0x09` |
+| 1 | 4 | `uint32 LE` | Unix timestamp (tính bằng giây) |
+| 5 | 2 | `uint16 LE` | Milliseconds (0..999) |
+| 7 | 1 | `uint8` | Reserved (bắt buộc = `0x00`) |
+
+Ví dụ (Đồng bộ thời gian Unix `1724833200` = `0x66CE9DB0`, `500` ms = `0x01F4`):
+```text
+09 B0 9D CE 66 F4 01 00
 ```
 
 ## Decode Sensor Data

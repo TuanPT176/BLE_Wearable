@@ -387,5 +387,15 @@
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/System/Config/Debug_GPIO/app_debug.c</locationURI>
 		</link>
+		<link>
+			<name>Application/User/device_time.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Application/device_time.c</locationURI>
+		</link>
+		<link>
+			<name>Application/User/device_time.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Application/device_time.h</locationURI>
+		</link>
 	</linkedResources>
 </projectDescription>
