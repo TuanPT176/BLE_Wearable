@@ -217,10 +217,72 @@ lis2dux12_motion_result_t LIS2DUX12_MotionProcessInterrupt(void)
 
 bool LIS2DUX12_MotionGetLatestEvent(lis2dux12_motion_event_t *event)
 {
-  if ((!event_valid) || (event == NULL))
+  if ((event == NULL) || (!event_valid))
   {
     return false;
   }
   *event = latest_event;
   return true;
+}
+
+/* QVar Implementation for Wear/No-Wear Detection */
+#define LIS2DUXS12_AH_QVAR_CFG     0x31U
+#define LIS2DUXS12_OUT_T_AH_QVAR_L 0x2EU
+
+lis2dux12_motion_result_t LIS2DUX12_MotionInitQvar(void)
+{
+  uint8_t ctrl1 = 0;
+  uint8_t qvar_cfg = 0;
+
+  if (!motion_present)
+  {
+    return LIS2DUX12_MOTION_NOT_PRESENT;
+  }
+
+  /* 1. Set INT1_ON_RES bit (bit 6) in CTRL1 to route QVar to INT1 */
+  if (lis2dux12_read_reg(&motion_context, LIS2DUX12_CTRL1, &ctrl1, 1) != 0)
+  {
+    return LIS2DUX12_MOTION_BUS_ERROR;
+  }
+  ctrl1 |= (1U << 6);
+  if (lis2dux12_write_reg(&motion_context, LIS2DUX12_CTRL1, &ctrl1, 1) != 0)
+  {
+    return LIS2DUX12_MOTION_BUS_ERROR;
+  }
+
+  /* 2. Set AH_QVAR_EN bit (bit 0) in AH_QVAR_CFG (0x31) */
+  if (lis2dux12_read_reg(&motion_context, LIS2DUXS12_AH_QVAR_CFG, &qvar_cfg, 1) != 0)
+  {
+    return LIS2DUX12_MOTION_BUS_ERROR;
+  }
+  qvar_cfg |= 0x01U;
+  if (lis2dux12_write_reg(&motion_context, LIS2DUXS12_AH_QVAR_CFG, &qvar_cfg, 1) != 0)
+  {
+    return LIS2DUX12_MOTION_BUS_ERROR;
+  }
+
+  return LIS2DUX12_MOTION_OK;
+}
+
+lis2dux12_motion_result_t LIS2DUX12_MotionReadQvar(int16_t *qvar_value)
+{
+  uint8_t data[2];
+
+  if (qvar_value == NULL)
+  {
+    return LIS2DUX12_MOTION_INVALID_ARGUMENT;
+  }
+  if (!motion_present)
+  {
+    return LIS2DUX12_MOTION_NOT_PRESENT;
+  }
+
+  /* Read QVar raw data from 0x2E (Low) and 0x2F (High) */
+  if (lis2dux12_read_reg(&motion_context, LIS2DUXS12_OUT_T_AH_QVAR_L, data, 2) != 0)
+  {
+    return LIS2DUX12_MOTION_BUS_ERROR;
+  }
+
+  *qvar_value = (int16_t)(((uint16_t)data[1] << 8) | (uint16_t)data[0]);
+  return LIS2DUX12_MOTION_OK;
 }

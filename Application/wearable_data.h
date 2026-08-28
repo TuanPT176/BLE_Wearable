@@ -20,6 +20,9 @@ typedef struct
   uint16_t supercap_mv;
   uint8_t power_state;
   uint8_t flags;
+  int16_t accel_x;
+  int16_t accel_y;
+  int16_t accel_z;
 } wearable_sensor_data_t;
 
 typedef struct

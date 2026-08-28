@@ -68,6 +68,9 @@ bool SensorManager_Init(void)
   latest_data.supercap_mv = 0U;
   latest_data.power_state = 1U;
   latest_data.flags = 0U;
+  latest_data.accel_x = 0;
+  latest_data.accel_y = 0;
+  latest_data.accel_z = 0;
   running = false;
   initialized = SupercapMonitor_Init();
   if (initialized)
@@ -97,6 +100,11 @@ bool SensorManager_Init(void)
                   (long)acceleration.mg[0],
                   (long)acceleration.mg[1],
                   (long)acceleration.mg[2]);
+    }
+    
+    if (LIS2DUX12_MotionInitQvar() == LIS2DUX12_MOTION_OK)
+    {
+      APP_DBG_MSG("-- LIS2DUXS12TR QVar initialized on INT1\n");
     }
   }
   else
@@ -151,6 +159,33 @@ void SensorManager_Process(void)
   latest_data.supercap_mv = SupercapMonitor_ReadMillivolts();
 
   SensorManager_StartTemperatureConversion();
+
+  if (motion_status == SENSOR_MOTION_ACCELEROMETER_READY || motion_status == SENSOR_MOTION_CLASSIFIER_READY)
+  {
+    lis2dux12_acceleration_t acceleration;
+    int16_t qvar_raw = 0;
+    
+    if (LIS2DUX12_MotionReadAcceleration(&acceleration) == LIS2DUX12_MOTION_OK)
+    {
+      latest_data.accel_x = (int16_t)acceleration.mg[0];
+      latest_data.accel_y = (int16_t)acceleration.mg[1];
+      latest_data.accel_z = (int16_t)acceleration.mg[2];
+    }
+    
+    if (LIS2DUX12_MotionReadQvar(&qvar_raw) == LIS2DUX12_MOTION_OK)
+    {
+       /* Simple wear/no-wear logic (0x40 is the arbitrary WEARING flag for now) */
+       /* A proper threshold should be calibrated based on your hardware design */
+       if (qvar_raw > 1000 || qvar_raw < -1000) 
+       {
+          latest_data.flags |= 0x40; /* Wear detected */
+       }
+       else
+       {
+          latest_data.flags &= ~0x40; /* No wear detected */
+       }
+    }
+  }
 
   /* Only HR/SpO2 remain mock data until their sensor stages are implemented. */
   latest_data.heart_rate_bpm++;

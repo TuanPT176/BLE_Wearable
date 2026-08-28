@@ -121,7 +121,10 @@ Payload dài **16 byte**. Các số nhiều byte dùng **little-endian**.
 | 4 | 2 | `uint16 LE` | Supercapacitor voltage | mV |
 | 6 | 1 | `uint8` | Power state | `1` = Normal, `2` = Low power |
 | 7 | 1 | Bit field | Flags | Xem bảng flags bên dưới |
-| 8–15 | 8 | — | Reserved | Hiện bằng `0`, dành cho phiên bản sau |
+| 8 | 2 | `int16 LE` | Gia tốc X | mg |
+| 10 | 2 | `int16 LE` | Gia tốc Y | mg |
+| 12 | 2 | `int16 LE` | Gia tốc Z | mg |
+| 14 | 2 | — | Reserved | Hiện bằng `0` |
 
 ### Sensor/status flags
 
@@ -130,6 +133,7 @@ Payload dài **16 byte**. Các số nhiều byte dùng **little-endian**.
 | `0x08` | Fall candidate – phát hiện nguy cơ té ngã |
 | `0x10` | Emergency đang bật |
 | `0x20` | ECG đang hoạt động |
+| `0x40` | Wear detected (QVar) – Trạng thái đang đeo |
 
 Ví dụ payload:
 
@@ -213,6 +217,10 @@ function decodeSensorData(input) {
     emergency: Boolean(flags & 0x10),
     ecgActive: Boolean(flags & 0x20),
     fallCandidate: Boolean(flags & 0x08),
+    wearDetected: Boolean(flags & 0x40),
+    accelX: view.getInt16(8, true),
+    accelY: view.getInt16(10, true),
+    accelZ: view.getInt16(12, true),
   };
 }
 

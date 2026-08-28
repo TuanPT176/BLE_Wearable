@@ -61,5 +61,8 @@ lis2dux12_motion_result_t LIS2DUX12_MotionSetClassRules(
     const lis2dux12_class_rule_t *rules, size_t rule_count);
 lis2dux12_motion_result_t LIS2DUX12_MotionProcessInterrupt(void);
 bool LIS2DUX12_MotionGetLatestEvent(lis2dux12_motion_event_t *event);
+lis2dux12_motion_result_t LIS2DUX12_MotionInitQvar(void);
+lis2dux12_motion_result_t LIS2DUX12_MotionReadQvar(int16_t *qvar_value);
+
 
 #endif /* LIS2DUX12_MOTION_H */
