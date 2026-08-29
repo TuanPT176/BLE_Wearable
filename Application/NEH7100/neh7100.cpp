@@ -7,6 +7,7 @@ extern "C" I2C_HandleTypeDef hi2c1;
 static const uint32_t NEH7100_I2C_TIMEOUT_MS = 20U;
 static uint8_t neh7100_registers[NEH7100_REGISTER_COUNT];
 static bool neh7100_present;
+static EnvironmentState current_env = ENV_INDOOR;
 
 static bool NEH7100_ReadRegister(uint8_t register_address, uint8_t *value)
 {
@@ -150,4 +151,60 @@ uint16_t NEH7100_GetCurrent_uA_x10(void)
 bool NEH7100_IsPresent(void)
 {
   return neh7100_present;
+}
+
+float NEH7100_Get_Charging_Current(void)
+{
+    uint8_t i_range_reg = 0;
+    uint8_t i_measured_reg = 0;
+    float ibat_ua = 0.0f;
+
+    if (!NEH7100_ReadRegister(0x09U, &i_range_reg) ||
+        !NEH7100_ReadRegister(0x0AU, &i_measured_reg)) {
+        return -1.0f;
+    }
+
+    uint8_t i_range = i_range_reg & 0x03U; 
+    switch (i_range) {
+        case 0x00U: ibat_ua = static_cast<float>(i_measured_reg) * 0.0706f; break;
+        case 0x01U: ibat_ua = static_cast<float>(i_measured_reg) * 0.478f; break;
+        case 0x02U: ibat_ua = static_cast<float>(i_measured_reg) * 4.71f; break;
+        case 0x03U: ibat_ua = static_cast<float>(i_measured_reg) * 67.5f; break;
+        default: break;
+    }
+    return ibat_ua;
+}
+
+void NEH7100_Set_Environment(EnvironmentState env)
+{
+    if (env == ENV_INDOOR) {
+        NEH7100_WriteRegister(0x03U, CONFIG_FREQ_INDOOR);
+        NEH7100_WriteRegister(0x04U, CONFIG_BF_INDOOR);
+        current_env = ENV_INDOOR;
+    } 
+    else if (env == ENV_OUTDOOR) {
+        NEH7100_WriteRegister(0x03U, CONFIG_FREQ_OUTDOOR);
+        NEH7100_WriteRegister(0x04U, CONFIG_BF_OUTDOOR);
+        current_env = ENV_OUTDOOR;
+    }
+}
+
+void NEH7100_Dynamic_Optimization_Task(void)
+{
+    float current_ibat = NEH7100_Get_Charging_Current();
+    
+    if (current_ibat < 0.0f) {
+        return;
+    }
+
+    if (current_env == ENV_INDOOR) {
+        if (current_ibat >= THRESHOLD_TO_OUTDOOR) {
+            NEH7100_Set_Environment(ENV_OUTDOOR);
+        }
+    } 
+    else if (current_env == ENV_OUTDOOR) {
+        if (current_ibat <= THRESHOLD_TO_INDOOR) {
+            NEH7100_Set_Environment(ENV_INDOOR);
+        }
+    }
 }

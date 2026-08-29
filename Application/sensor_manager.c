@@ -3,7 +3,7 @@
 #include <stddef.h>
 
 #include "main.h"
-#include "neh7100.h"
+#include "NEH7100/neh7100.h"
 #include "../Drivers/max30208.h"
 #include "../Drivers/supercap_monitor.h"
 #include "../Drivers/Sensors/LIS2DUXS12TR/lis2dux12_motion.h"

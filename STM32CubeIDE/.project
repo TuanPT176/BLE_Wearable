@@ -300,7 +300,7 @@
 		<link>
 			<name>Application/User/Wearable/neh7100.cpp</name>
 			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/Application/neh7100.cpp</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/Application/NEH7100/neh7100.cpp</locationURI>
 		</link>
 		<link>
 			<name>Application/User/Wearable/wearable_state_manager.c</name>
