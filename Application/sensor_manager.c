@@ -206,16 +206,30 @@ void SensorManager_Process(void)
 
   /* Log to NFC EEPROM if BLE is disconnected */
   APP_BLE_ConnStatus_t ble_status = APP_BLE_Get_Server_Connection_Status();
+  static uint16_t log_timer_s = 0;
+
   if (ble_status != APP_BLE_CONNECTED_SERVER)
   {
-    NFC_SensorRecord_t record;
-    record.heart_rate = latest_data.heart_rate_bpm;
-    record.spo2 = latest_data.spo2_percent;
-    record.temperature_centi_c = latest_data.temperature_centi_c;
-    record.motion_state = 0; // Using flags instead
-    record.flags = latest_data.flags;
-    record.sequence = 0; // Handled internally by NFC_Log_Add
-    NFC_Log_Add(&record);
+    log_timer_s++;
+    /* nfc_config is accessible here because we included nfc_config.c above */
+    if (log_timer_s >= nfc_config.hr_interval_s)
+    {
+      NFC_SensorRecord_t record;
+      record.heart_rate = latest_data.heart_rate_bpm;
+      record.spo2 = latest_data.spo2_percent;
+      record.temperature_centi_c = latest_data.temperature_centi_c;
+      record.motion_state = 0; // Using flags instead
+      record.flags = latest_data.flags;
+      record.sequence = 0; // Handled internally by NFC_Log_Add
+      NFC_Log_Add(&record);
+      
+      log_timer_s = 0;
+    }
+  }
+  else
+  {
+    // Ready to log immediately when connection is lost
+    log_timer_s = nfc_config.hr_interval_s; 
   }
 }
 
