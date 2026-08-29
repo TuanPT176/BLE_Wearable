@@ -13,7 +13,7 @@ Thiết bị quảng bá với GAP Device Name: **`BLEWearable`**.
 - Điều khiển phép đo và chế độ hoạt động qua BLE.
 - Đọc trực tiếp hoặc nhận notification từ các characteristic.
 - Chu kỳ gửi dữ liệu cảm biến mặc định: **1 giây** khi đang đo và notification đã được bật.
-- Dự kiến tích hợp ST25 để bổ sung giao tiếp NFC/RFID.
+- Đã tích hợp ST25DV04K để lưu trữ cấu hình, backup dữ liệu cảm biến qua circular buffer và hỗ trợ giao tiếp qua NFC Mailbox.
 - Dự kiến tích hợp SX1262 để truyền dữ liệu tầm xa qua LoRa/LoRaWAN.
 
 ## Phần cứng và cảm biến
@@ -26,10 +26,10 @@ Thiết bị quảng bá với GAP Device Name: **`BLEWearable`**.
 | LIS2DUXS12TR | Đo gia tốc và xử lý Machine Learning Core (MLC); thay thế ST1VAFE3BX |
 | NEH7100 | Energy-harvesting PMIC; quản lý nguồn và theo dõi dòng điện qua I2C |
 | Supercapacitor monitor | Theo dõi điện áp nguồn |
-| ST25 *(planned)* | Giao tiếp NFC/RFID; driver và source code chưa được tích hợp |
+| ST25DV04K | Dynamic NFC/RFID Tag; lưu trữ cấu hình thiết bị, log cảm biến, và hỗ trợ Energy Harvesting |
 | SX1262 *(planned)* | LoRa transceiver cho kết nối LoRa/LoRaWAN; driver và stack chưa được tích hợp |
 
-> **Trạng thái tích hợp:** NEH7100 đã có source tại `Application/neh7100.cpp` và `Application/neh7100.h`. ST25 và SX1262 hiện mới nằm trong kế hoạch phần cứng. Model ST25 cụ thể, driver SX1262 và LoRaWAN stack sẽ được bổ sung sau.
+> **Trạng thái tích hợp:** NEH7100 đã có source tại `Application/neh7100.cpp` và `Application/neh7100.h`. ST25DV04K đã được tích hợp đầy đủ driver và logic xử lý (config, logger, FTM mailbox). SX1262 hiện mới nằm trong kế hoạch phần cứng, driver SX1262 và LoRaWAN stack sẽ được bổ sung sau.
 
 > **Migration cảm biến:** Driver register, HAL I2C, đọc gia tốc và khung nạp MLC cho LIS2DUXS12TR đã được tích hợp; cần thêm file UCF sinh từ Unico và bảng ánh xạ class để kích hoạt model MLC thực tế. MAX86150 hiện vẫn ở chế độ optical-only, vì vậy phần thu nhận ECG cần được bổ sung tiếp.
 
@@ -38,8 +38,12 @@ Thiết bị quảng bá với GAP Device Name: **`BLEWearable`**.
 ```text
 BLE_Wearable_GATT/
 ├── Application/                 # Logic ứng dụng độc lập với BLE
+│   ├── nfc_config.*             # Quản lý cấu hình EEPROM ST25DV
+│   ├── nfc_io.*                 # ST25DV I2C low-level wrapper
+│   ├── nfc_log.*                # Circular buffer logger trên EEPROM
+│   ├── nfc_manager.*            # Controller giao tiếp NFC Mailbox
 │   ├── sensor_manager.*         # Khởi tạo, đọc và quản lý cảm biến
-│   ├── neh7100.*                 # Driver I2C cho NEH7100 PMIC
+│   ├── neh7100.*                # Driver I2C cho NEH7100 PMIC
 │   ├── wearable_data.*          # Định dạng/encode BLE payload
 │   └── wearable_state_manager.* # Máy trạng thái của thiết bị
 ├── Core/
@@ -48,7 +52,8 @@ BLE_Wearable_GATT/
 ├── Drivers/
 │   ├── CMSIS/                   # CMSIS cho STM32WB0
 │   ├── STM32WB0x_HAL_Driver/    # STM32 HAL/LL
-│   └── Sensors/                 # MAX86150 (PPG/ECG), MAX30208 và LIS2DUXS12TR (accel/MLC)
+│   ├── Sensors/                 # MAX86150 (PPG/ECG), MAX30208 và LIS2DUXS12TR (accel/MLC)
+│   └── ST25DV/                  # Official ST25DV BSP driver (st25dv.c, st25dv_reg.c)
 ├── Middlewares/ST/STM32_BLE/    # BLE stack và thư viện ST
 ├── Projects/Common/BLE/         # BLE interfaces/modules dùng chung
 ├── STM32_BLE/
@@ -60,12 +65,11 @@ BLE_Wearable_GATT/
 ├── STM32CubeIDE/                # Project, linker script và startup
 ├── System/                      # Debug và USART interface
 ├── Utilities/                   # Sequencer, low-power và trace
-├── ST25/                        # Planned: driver NFC/RFID (chưa có source)
 ├── LoRaWAN/                     # Planned: SX1262 driver và LoRaWAN stack
 └── BLE_p2pServer_GATT.ioc       # Cấu hình STM32CubeMX
 ```
 
-Các thư mục `ST25/` và `LoRaWAN/` trong sơ đồ thể hiện kiến trúc dự kiến và chưa tồn tại trong source tree hiện tại.
+Thư mục `LoRaWAN/` trong sơ đồ thể hiện kiến trúc dự kiến và chưa tồn tại trong source tree hiện tại.
 
 ## BLE GATT profile
 

@@ -7,6 +7,9 @@
 #include "../Drivers/max30208.h"
 #include "../Drivers/supercap_monitor.h"
 #include "../Drivers/Sensors/LIS2DUXS12TR/lis2dux12_motion.h"
+#include "nfc_log.h"
+#include "../../STM32_BLE/App/app_ble.h"
+
 
 /*
  * Driver implementation bundle
@@ -22,6 +25,13 @@
 #include "../Drivers/Sensors/LIS2DUXS12TR/lis2dux12_reg.c"
 #include "../Drivers/Sensors/LIS2DUXS12TR/lis2dux12_platform.c"
 #include "../Drivers/Sensors/LIS2DUXS12TR/lis2dux12_motion.c"
+
+#include "nfc_config.c"
+#include "nfc_io.c"
+#include "nfc_log.c"
+#include "nfc_manager.c"
+#include "../Drivers/ST25DV/st25dv.c"
+#include "../Drivers/ST25DV/st25dv_reg.c"
 
 #define TEMPERATURE_FIRST_POLL_DELAY_MS   20U
 #define TEMPERATURE_RETRY_DELAY_MS         5U
@@ -192,6 +202,20 @@ void SensorManager_Process(void)
   if (latest_data.heart_rate_bpm > 82U)
   {
     latest_data.heart_rate_bpm = 68U;
+  }
+
+  /* Log to NFC EEPROM if BLE is disconnected */
+  APP_BLE_ConnStatus_t ble_status = APP_BLE_Get_Server_Connection_Status();
+  if (ble_status != APP_BLE_CONNECTED_SERVER)
+  {
+    NFC_SensorRecord_t record;
+    record.heart_rate = latest_data.heart_rate_bpm;
+    record.spo2 = latest_data.spo2_percent;
+    record.temperature_centi_c = latest_data.temperature_centi_c;
+    record.motion_state = 0; // Using flags instead
+    record.flags = latest_data.flags;
+    record.sequence = 0; // Handled internally by NFC_Log_Add
+    NFC_Log_Add(&record);
   }
 }
 
