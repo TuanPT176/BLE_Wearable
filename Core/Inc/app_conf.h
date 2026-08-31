@@ -120,7 +120,7 @@
  * Maximum number of attributes that can be stored in the GATT database in addition to the attributes number already defined for the GATT and GAP services
  * (BLE_STACK_NUM_GATT_MANDATORY_ATTRIBUTES value on STM32_BLE middleware, ble_stack.h header file).
  */
-#define CFG_BLE_NUM_GATT_ATTRIBUTES                     (9)
+#define CFG_BLE_NUM_GATT_ATTRIBUTES                     (21)
 
 /**
  * Maximum number of concurrent Client's Procedures. This value must be less
@@ -249,12 +249,6 @@
 #define CFG_BLE_NUM_CIS_MAX                             (2U)
 
 /**
-* Maximum number of simultaneous Link Layer procedures that can be managed, in addition to the minimum required by the stack.
-*  The minimum number guarantees one LL procedure initiated by the peer for each link, one LL procedure automatically initiated by the Controller and one LL procedure initiated by the Host.
-*/
-#define  CFG_BLE_EXTRA_LL_PROCEDURE_CONTEXTS        (0)
-
-/**
  * Size of the internal FIFO used for critical controller events produced by the
  * ISR (e.g. rx data packets).
  */
@@ -314,7 +308,7 @@
                                                         CFG_BLE_NUM_BRC_BIS_MAX,\
                                                         CFG_BLE_NUM_CIG_MAX,\
                                                         CFG_BLE_NUM_CIS_MAX,\
-                                                        CFG_BLE_EXTRA_LL_PROCEDURE_CONTEXTS,\
+                                                        0,\
                                                         CFG_BLE_ISR0_FIFO_SIZE,\
                                                         CFG_BLE_ISR1_FIFO_SIZE,\
                                                         CFG_BLE_USER_FIFO_SIZE))

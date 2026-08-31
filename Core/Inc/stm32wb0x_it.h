@@ -53,11 +53,11 @@ void PendSV_Handler(void);
 void SysTick_Handler(void);
 void USART1_IRQHandler(void);
 void PKA_IRQHandler(void);
+void GPIOB_IRQHandler(void);
 void RADIO_TIMER_CPU_WKUP_IRQHandler(void);
 void RADIO_TIMER_ERROR_IRQHandler(void);
 void RADIO_TXRX_IRQHandler(void);
 void RADIO_TXRX_SEQ_IRQHandler(void);
-void RADIO_RRM_IRQHandler(void);
 /* USER CODE BEGIN EFP */
 
 void GPIOB_IRQHandler(void);

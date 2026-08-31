@@ -133,7 +133,6 @@ uint32_t MX_APPE_Init(void *p_param)
 static PowerSaveLevels App_PowerSaveLevel_Check(void)
 {
   PowerSaveLevels output_level = POWER_SAVE_LEVEL_STOP;
-
   /* USER CODE BEGIN App_PowerSaveLevel_Check_1 */
 
   /* USER CODE END App_PowerSaveLevel_Check_1 */
@@ -183,7 +182,6 @@ void UTIL_SEQ_Idle( void )
     dummy[i] = 0;
     __NOP();
   }
-  (void)dummy[0];
 
   PowerSaveLevels app_powerSave_level, vtimer_powerSave_level, final_level, pka_level;
 

@@ -174,6 +174,20 @@ void PKA_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles GPIOB interrupt.
+  */
+void GPIOB_IRQHandler(void)
+{
+  /* USER CODE BEGIN GPIOB_IRQn 0 */
+
+  /* USER CODE END GPIOB_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIOB,GPIO_PIN_2);
+  /* USER CODE BEGIN GPIOB_IRQn 1 */
+
+  /* USER CODE END GPIOB_IRQn 1 */
+}
+
+/**
   * @brief This function handles RADIO_TIMER_CPU_WKUP global interrupt.
   */
 void RADIO_TIMER_CPU_WKUP_IRQHandler(void)
@@ -229,26 +243,7 @@ void RADIO_TXRX_SEQ_IRQHandler(void)
   /* USER CODE END RADIO_TXRX_SEQ_IRQn 1 */
 }
 
-/**
-  * @brief This function handles RADIO_RRM global interrupt.
-  */
-void RADIO_RRM_IRQHandler(void)
-{
-  /* USER CODE BEGIN RADIO_RRM_IRQn 0 */
-
-  /* USER CODE END RADIO_RRM_IRQn 0 */
-  HAL_RADIO_RRM_IRQHandler();
-  /* USER CODE BEGIN RADIO_RRM_IRQn 1 */
-
-  /* USER CODE END RADIO_RRM_IRQn 1 */
-}
-
 /* USER CODE BEGIN 1 */
-
-void GPIOB_IRQHandler(void)
-{
-  HAL_GPIO_EXTI_IRQHandler(LIS2DUXS12_INT_GPIO_Port, LIS2DUXS12_INT_Pin);
-}
 
 void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin)
 {

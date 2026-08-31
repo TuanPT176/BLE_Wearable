@@ -284,3 +284,7 @@ function decodeDeviceStatus(input) {
 4. Flash qua ST-LINK vÃ  theo dÃµi log debug náº¿u cáº§n.
 
 > LÆ°u Ã½: cÃ¡c thÆ° má»¥c output build Ä‘Æ°á»£c loáº¡i khá»i Git báº±ng `.gitignore`.
+
+## C?p nh?t g?n dây
+- T?i uu b? nh?: Tang Stack size lên 6KB chu?n b? cho các thu?t toán x? lı d? li?u ph?c t?p (PPG, ECG).
+- Kh?c ph?c l?i sinh code c?a STM32CubeMX: X? lı tri?t d? các l?i ghi dè c?u hình GATT, l?i thi?u bi?n ADC, và l?i khai báo c?a thu vi?n BLE stack (BLEPLAT_CNTR_IsEnabledTimer1).

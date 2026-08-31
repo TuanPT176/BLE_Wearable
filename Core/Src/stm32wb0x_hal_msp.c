@@ -76,62 +76,142 @@ void HAL_MspInit(void)
   /* USER CODE END MspInit 1 */
 }
 
+/**
+  * @brief ADC MSP Initialization
+  * This function configures the hardware resources used in this example
+  * @param hadc: ADC handle pointer
+  * @retval None
+  */
 void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-  if (hadc->Instance == ADC1)
+  if(hadc->Instance==ADC1)
   {
+    /* USER CODE BEGIN ADC1_MspInit 0 */
+
+    /* USER CODE END ADC1_MspInit 0 */
+    /* Peripheral clock enable */
     __HAL_RCC_ADCANA_CLK_ENABLE();
     __HAL_RCC_ADCDIG_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
 
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    /**ADC1 GPIO Configuration
+    PB1     ------> ADC1_VINP1
+    */
     GPIO_InitStruct.Pin = GPIO_PIN_1;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
     HAL_PWREx_DisableGPIOPullUp(PWR_GPIO_B, PWR_GPIO_BIT_1);
+
     HAL_PWREx_DisableGPIOPullDown(PWR_GPIO_B, PWR_GPIO_BIT_1);
+
+    /* USER CODE BEGIN ADC1_MspInit 1 */
+
+    /* USER CODE END ADC1_MspInit 1 */
+
   }
+
 }
 
+/**
+  * @brief ADC MSP De-Initialization
+  * This function freeze the hardware resources used in this example
+  * @param hadc: ADC handle pointer
+  * @retval None
+  */
 void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 {
-  if (hadc->Instance == ADC1)
+  if(hadc->Instance==ADC1)
   {
+    /* USER CODE BEGIN ADC1_MspDeInit 0 */
+
+    /* USER CODE END ADC1_MspDeInit 0 */
+    /* Peripheral clock disable */
     __HAL_RCC_ADCANA_CLK_DISABLE();
     __HAL_RCC_ADCDIG_CLK_DISABLE();
+
+    /**ADC1 GPIO Configuration
+    PB1     ------> ADC1_VINP1
+    */
     HAL_GPIO_DeInit(GPIOB, GPIO_PIN_1);
+
+    /* USER CODE BEGIN ADC1_MspDeInit 1 */
+
+    /* USER CODE END ADC1_MspDeInit 1 */
   }
+
 }
 
+/**
+  * @brief I2C MSP Initialization
+  * This function configures the hardware resources used in this example
+  * @param hi2c: I2C handle pointer
+  * @retval None
+  */
 void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-  if (hi2c->Instance == I2C1)
+  if(hi2c->Instance==I2C1)
   {
-    __HAL_RCC_GPIOB_CLK_ENABLE();
+    /* USER CODE BEGIN I2C1_MspInit 0 */
 
-    GPIO_InitStruct.Pin = GPIO_PIN_6 | GPIO_PIN_7;
+    /* USER CODE END I2C1_MspInit 0 */
+
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    /**I2C1 GPIO Configuration
+    PB7     ------> I2C1_SDA
+    PB6     ------> I2C1_SCL
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_6;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF0_I2C1;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-    HAL_PWREx_EnableGPIOPullUp(PWR_GPIO_B, PWR_GPIO_BIT_6 | PWR_GPIO_BIT_7);
 
+    HAL_PWREx_EnableGPIOPullUp(PWR_GPIO_B, PWR_GPIO_BIT_7|PWR_GPIO_BIT_6);
+
+    /* Peripheral clock enable */
     __HAL_RCC_I2C1_CLK_ENABLE();
+    /* USER CODE BEGIN I2C1_MspInit 1 */
+
+    /* USER CODE END I2C1_MspInit 1 */
+
   }
+
 }
 
+/**
+  * @brief I2C MSP De-Initialization
+  * This function freeze the hardware resources used in this example
+  * @param hi2c: I2C handle pointer
+  * @retval None
+  */
 void HAL_I2C_MspDeInit(I2C_HandleTypeDef* hi2c)
 {
-  if (hi2c->Instance == I2C1)
+  if(hi2c->Instance==I2C1)
   {
+    /* USER CODE BEGIN I2C1_MspDeInit 0 */
+
+    /* USER CODE END I2C1_MspDeInit 0 */
+    /* Peripheral clock disable */
     __HAL_RCC_I2C1_CLK_DISABLE();
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_6 | GPIO_PIN_7);
+
+    /**I2C1 GPIO Configuration
+    PB7     ------> I2C1_SDA
+    PB6     ------> I2C1_SCL
+    */
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_7);
+
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_6);
+
+    /* USER CODE BEGIN I2C1_MspDeInit 1 */
+
+    /* USER CODE END I2C1_MspDeInit 1 */
   }
+
 }
 
 /**
@@ -230,8 +310,6 @@ void HAL_RADIO_MspInit(RADIO_HandleTypeDef* hradio)
     HAL_NVIC_EnableIRQ(RADIO_TXRX_IRQn);
     HAL_NVIC_SetPriority(RADIO_TXRX_SEQ_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(RADIO_TXRX_SEQ_IRQn);
-    HAL_NVIC_SetPriority(RADIO_RRM_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(RADIO_RRM_IRQn);
     /* USER CODE BEGIN RADIO_MspInit 1 */
 
     /* USER CODE END RADIO_MspInit 1 */
@@ -261,7 +339,6 @@ void HAL_RADIO_MspDeInit(RADIO_HandleTypeDef* hradio)
     /* RADIO interrupt DeInit */
     HAL_NVIC_DisableIRQ(RADIO_TXRX_IRQn);
     HAL_NVIC_DisableIRQ(RADIO_TXRX_SEQ_IRQn);
-    HAL_NVIC_DisableIRQ(RADIO_RRM_IRQn);
     /* USER CODE BEGIN RADIO_MspDeInit 1 */
 
     /* USER CODE END RADIO_MspDeInit 1 */

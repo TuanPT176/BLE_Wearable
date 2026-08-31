@@ -1,0 +1,716 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<ScratchFile FileVersion="3.0">
+  <FileVersion>3.0</FileVersion>
+  <Workspace>
+    <WorkspaceType>Single-project</WorkspaceType>
+    <WorkspacePath>D:\Phan_Thanh_Tuan\UIT-Online\TTLab\STM32WB09\BLE_Wearable_GATT\</WorkspacePath>
+    <underRoot>false</underRoot>
+    <TrustZone>0</TrustZone>
+    <HAL_Driver>C:\Users\TuanPT\STM32Cube\Repository\STM32Cube_FW_WB0_V1.4.1</HAL_Driver>
+    <CMSIS>Drivers/CMSIS</CMSIS>
+    <Toolchain>STM32CubeIDE</Toolchain>
+    <IocFile>BLE_Wearable_GATT.ioc</IocFile>
+    <Project>
+              
+      <ProjectName>BLE_Wearable_GATT</ProjectName>
+           
+      <ProjectNature>C</ProjectNature>
+       
+      <Secure/>
+            
+      <filestoremove>                           </filestoremove>
+          
+      <configs>
+        <config>
+              
+          <name>BLE_Wearable_GATT</name>
+          	 
+          <mainSourceRepo>Core</mainSourceRepo>
+             
+          <sourceStructure>Advanced</sourceStructure>
+           
+          <device>STM32WB09KEVx</device>
+          		     
+          <cpucore>ARM Cortex-M0+</cpucore>
+                  
+          <fpu>None</fpu>
+                
+          <memories>
+                       
+            <memory access="xrw" name="RAM" size="11264" start="0x20000008"/>
+                    
+            <memory access="xrw" name="RAM_SHARED" size="9216" start="0x20030000"/>
+                    
+            <memory access="rx" name="FLASH" size="111616" start="0x08000000"/>
+                
+          </memories>
+              
+          <startup>C:\Users\TuanPT\STM32Cube\Repository\STM32Cube_FW_WB0_V1.4.1\Drivers\CMSIS\Device\ST\STM32WB0X\Source\Templates\gcc\startup_stm32wb09.s</startup>
+                
+          <LinkSettings>
+            	
+            <LinkAdditionalLibs>	</LinkAdditionalLibs>
+          </LinkSettings>
+              
+          <heapSize>0x000</heapSize>
+              
+          <stackSize>0x1800</stackSize>
+                  
+          <cpuclock>-0</cpuclock>
+                  
+          <board>NUCLEO-WB09KE</board>
+              
+          <optimization/>
+              
+          <Aincludes>        </Aincludes>
+              
+          <Adefines>        </Adefines>
+                
+          <Cdefines>
+                    
+            <define>USE_FULL_LL_DRIVER</define>
+                    
+            <define>USE_HAL_DRIVER</define>
+                    
+            <define>STM32WB09</define>
+                    
+          </Cdefines>
+              
+          <Ldefines>        </Ldefines>
+                  
+          <Cincludes>
+            		        
+            <include>Core\Inc</include>
+                    
+            <include>STM32_BLE\App</include>
+                    
+            <include>STM32_BLE\Target</include>
+                    
+            <include>System\Config\Debug_GPIO</include>
+                    
+            <include>System\Interfaces</include>
+                    
+            <include>Drivers\STM32WB0x_HAL_Driver\Inc</include>
+                    
+            <include>Drivers\STM32WB0x_HAL_Driver\Inc\Legacy</include>
+                    
+            <include>Utilities\trace\adv_trace</include>
+                    
+            <include>Projects\Common\BLE\Interfaces</include>
+                    
+            <include>Projects\Common\BLE\Modules</include>
+                    
+            <include>Projects\Common\BLE\Modules\RTDebug</include>
+                    
+            <include>Projects\Common\BLE\Modules\RADIO_utils\Inc</include>
+                    
+            <include>Projects\Common\BLE\Modules\Profiles\Inc</include>
+                    
+            <include>Projects\Common\BLE\Modules\PKAMGR\Inc</include>
+                    
+            <include>Projects\Common\BLE\Modules\NVMDB\Inc</include>
+                    
+            <include>Projects\Common\BLE\Modules\Flash</include>
+                    
+            <include>Projects\Common\BLE\Startup</include>
+                    
+            <include>Utilities\misc</include>
+                    
+            <include>Utilities\sequencer</include>
+                    
+            <include>Utilities\lpm\tiny_lpm</include>
+                    
+            <include>Middlewares\ST\STM32_BLE</include>
+                    
+            <include>Middlewares\ST\STM32_BLE\cryptolib\Inc</include>
+                    
+            <include>Middlewares\ST\STM32_BLE\cryptolib\Inc\Common</include>
+                    
+            <include>Middlewares\ST\STM32_BLE\cryptolib\Inc\AES</include>
+                    
+            <include>Middlewares\ST\STM32_BLE\cryptolib\Inc\AES\CBC</include>
+                    
+            <include>Middlewares\ST\STM32_BLE\cryptolib\Inc\AES\CMAC</include>
+                    
+            <include>Middlewares\ST\STM32_BLE\cryptolib\Inc\AES\Common</include>
+                    
+            <include>Middlewares\ST\STM32_BLE\cryptolib\Inc\AES\ECB</include>
+                    
+            <include>Drivers\CMSIS\Device\ST\STM32WB0X\Include</include>
+                    
+            <include>Middlewares\ST\STM32_BLE\evt_handler\inc</include>
+                    
+            <include>Middlewares\ST\STM32_BLE\queued_writes\inc</include>
+                    
+            <include>Middlewares\ST\STM32_BLE\stack\include</include>
+                    
+            <include>Drivers\CMSIS\Include</include>
+                    
+          </Cincludes>
+              
+          <definestoremove>
+                    
+            <Adefines>            </Adefines>
+                    
+            <Cdefines>
+                                  
+              <define>USE_FULL_ASSERT=1U</define>
+                          
+            </Cdefines>
+                     
+            <Ldefines>            </Ldefines>
+                     
+          </definestoremove>
+              
+          <inctoremove>
+                    
+            <Aincludes>
+                          
+              <include/>
+                          
+            </Aincludes>
+                    
+            <Cincludes>            </Cincludes>
+                    
+          </inctoremove>
+                 
+        </config>
+                
+      </configs>
+       
+      <copyAsReference>false</copyAsReference>
+       
+      <Groups>
+            
+        <group>
+                  
+          <name>Middlewares</name>
+           		        
+          <group>
+                        
+            <name>STM32_BLE</name>
+                        
+            <file>
+                              
+              <name>Middlewares\ST\STM32_BLE\cryptolib\libcrypto.a</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Middlewares\ST\STM32_BLE\stack\lib\stm32wb0x_ble_stack.a</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Middlewares\ST\STM32_BLE\evt_handler\src\ble_evt.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Middlewares\ST\STM32_BLE\queued_writes\src\eatt_pwrq.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Middlewares\ST\STM32_BLE\stack\config\ble_stack_user_cfg.c</name>
+                              
+            </file>
+                        
+          </group>
+                  
+        </group>
+             
+        <group>
+                  
+          <name>Drivers</name>
+                                       
+          <group>
+                        
+            <name>STM32WB0x_HAL_Driver</name>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_adc.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_rcc.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_rcc_ex.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_flash.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_flash_ex.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_gpio.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_dma.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_pwr.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_pwr_ex.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_cortex.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_i2c.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_i2c_ex.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_pka.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_radio.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_radio_timer.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_rng.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_uart.c</name>
+                              
+            </file>
+                        
+            <file>
+                              
+              <name>Drivers\STM32WB0x_HAL_Driver\Src\stm32wb0x_hal_uart_ex.c</name>
+                              
+            </file>
+                        
+          </group>
+                  
+          <group>
+                        
+            <name>CMSIS</name>
+                            
+            <file>
+                                          
+              <name>Core/Src/system_stm32wb0x.c</name>
+                                          
+            </file>
+                                    
+          </group>
+                  
+        </group>
+               
+        <group>
+                      
+          <name>Utilities</name>
+                  
+          <file>
+                        
+            <name>Utilities\trace\adv_trace\stm32_adv_trace.c</name>
+                        
+          </file>
+                  
+          <file>
+                        
+            <name>Utilities\misc\stm32_mem.c</name>
+                        
+          </file>
+                  
+          <file>
+                        
+            <name>Utilities\sequencer\stm32_seq.c</name>
+                        
+          </file>
+                  
+          <file>
+                        
+            <name>Utilities\lpm\tiny_lpm\stm32_lpm.c</name>
+                        
+          </file>
+                  
+        </group>
+            
+        <group>
+              	    
+          <name>Common</name>
+              	
+          <group>
+                    
+            <name>BLE</name>
+                        
+            <group>
+                          
+              <name>Interface</name>
+                                  
+              <file>
+                                    
+                <name>Projects/Common/BLE/Interfaces/stm32_lpm_if.c</name>
+                                
+              </file>
+                                  
+              <file>
+                                    
+                <name>Projects/Common/BLE/Interfaces/hw_rng.c</name>
+                                
+              </file>
+                                  
+              <file>
+                                    
+                <name>Projects/Common/BLE/Interfaces/hw_pka.c</name>
+                                
+              </file>
+                                  
+              <file>
+                                    
+                <name>Projects/Common/BLE/Interfaces/hw_aes.c</name>
+                                
+              </file>
+                                  
+              <file>
+                                    
+                <name>Projects/Common/BLE/Interfaces/cryptolib_hw_aes.c</name>
+                                
+              </file>
+                          
+            </group>
+                        
+            <group>
+                          
+              <name>Modules</name>
+                                  
+              <file>
+                                    
+                <name>Projects/Common/BLE/Modules/stm_list.c</name>
+                                
+              </file>
+                                  
+              <file>
+                                    
+                <name>Projects/Common/BLE/Modules/osal_memcpy.s</name>
+                                
+              </file>
+                                  
+              <file>
+                                    
+                <name>Projects/Common/BLE/Modules/osal.c</name>
+                                
+              </file>
+                                  
+              <file>
+                                    
+                <name>Projects/Common/BLE/Modules/miscutil.c</name>
+                                
+              </file>
+                                  
+              <file>
+                                    
+                <name>Projects/Common/BLE/Modules/blue_unit_conversion.s</name>
+                                
+              </file>
+                               
+              <group>
+                                    
+                <name>RTDebug</name>
+                                    
+                <file>
+                                      
+                  <name>Projects/Common/BLE/Modules/RTDebug/RTDebug.c</name>
+                                  
+                </file>
+                                 
+              </group>
+                                 
+              <group>
+                                    
+                <name>RADIO_utils</name>
+                                    
+                <file>
+                                      
+                  <name>Projects/Common/BLE/Modules/RADIO_utils/Src/RADIO_utils.c</name>
+                                  
+                </file>
+                                 
+              </group>
+                                 
+              <group>
+                                    
+                <name>Profiles</name>
+                                    
+                <file>
+                                      
+                  <name>Projects/Common/BLE/Modules/Profiles/Src/gatt_profile.c</name>
+                                  
+                </file>
+                                    
+                <file>
+                                      
+                  <name>Projects/Common/BLE/Modules/Profiles/Src/gap_profile.c</name>
+                                  
+                </file>
+                                 
+              </group>
+                                 
+              <group>
+                                    
+                <name>PKAMGR</name>
+                                    
+                <file>
+                                      
+                  <name>Projects/Common/BLE/Modules/PKAMGR/Src/pka_manager.c</name>
+                                  
+                </file>
+                                 
+              </group>
+                                 
+              <group>
+                                    
+                <name>NVMDB</name>
+                                    
+                <file>
+                                      
+                  <name>Projects/Common/BLE/Modules/NVMDB/Src/nvm_db_conf.c</name>
+                                  
+                </file>
+                                    
+                <file>
+                                      
+                  <name>Projects/Common/BLE/Modules/NVMDB/Src/nvm_db.c</name>
+                                  
+                </file>
+                                 
+              </group>
+                                 
+              <group>
+                                    
+                <name>Flash</name>
+                                    
+                <file>
+                                      
+                  <name>Projects/Common/BLE/Modules/Flash/flash_manager.c</name>
+                                  
+                </file>
+                                    
+                <file>
+                                      
+                  <name>Projects/Common/BLE/Modules/Flash/flash_driver.c</name>
+                                  
+                </file>
+                                 
+              </group>
+                            
+            </group>
+                        
+            <group>
+                          
+              <name>Startup</name>
+                                  
+              <file>
+                                    
+                <name>Projects/Common/BLE/Startup/device_context_switch.c</name>
+                                
+              </file>
+                                  
+              <file>
+                                    
+                <name>Projects/Common/BLE/Startup/cpu_context_switch.s</name>
+                                
+              </file>
+                          
+            </group>
+                    
+          </group>
+                      
+        </group>
+            
+        <group>
+                  
+          <name>Application</name>
+                  
+          <group>
+                        
+            <name>User</name>
+                              
+            <group>
+                              
+              <name>Core</name>
+                                
+              <file>
+                                    
+                <name>Core\Src\main.c</name>
+                                    
+              </file>
+                              
+              <file>
+                                    
+                <name>Core\Src\app_entry.c</name>
+                                    
+              </file>
+                              
+              <file>
+                                    
+                <name>Core\Src\stm32wb0x_it.c</name>
+                                    
+              </file>
+                              
+              <file>
+                                    
+                <name>Core\Src\stm32wb0x_hal_msp.c</name>
+                                    
+              </file>
+                              
+            </group>
+                              
+            <group>
+                   
+              <name>System</name>
+              <group>
+                     
+                <name>Interfaces</name>
+                        
+                <file>
+                              
+                  <name>System\Interfaces\usart_if.c</name>
+                          
+                </file>
+                    
+              </group>
+              <group>
+                     
+                <name>Config</name>
+                <group>
+                       
+                  <name>Debug_GPIO</name>
+                          
+                  <file>
+                                
+                    <name>System\Config\Debug_GPIO\app_debug.c</name>
+                            
+                  </file>
+                      
+                </group>
+                    
+              </group>
+                  
+            </group>
+            <group>
+                   
+              <name>STM32_BLE</name>
+              <group>
+                     
+                <name>Target</name>
+                        
+                <file>
+                              
+                  <name>STM32_BLE\Target\blenvm.c</name>
+                          
+                </file>
+                        
+                <file>
+                              
+                  <name>STM32_BLE\Target\bleplat.c</name>
+                          
+                </file>
+                        
+                <file>
+                              
+                  <name>STM32_BLE\Target\bleplat_cntr.c</name>
+                          
+                </file>
+                    
+              </group>
+              <group>
+                     
+                <name>App</name>
+                        
+                <file>
+                              
+                  <name>STM32_BLE\App\app_ble.c</name>
+                          
+                </file>
+                        
+                <file>
+                              
+                  <name>STM32_BLE\App\wearable.c</name>
+                          
+                </file>
+                        
+                <file>
+                              
+                  <name>STM32_BLE\App\wearable_app.c</name>
+                          
+                </file>
+                    
+              </group>
+                  
+            </group>
+                        
+          </group>
+                   
+        </group>
+                
+      </Groups>
+    </Project>
+  </Workspace>
+</ScratchFile>

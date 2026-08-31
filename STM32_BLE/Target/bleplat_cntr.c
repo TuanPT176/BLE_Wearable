@@ -40,6 +40,11 @@
 * @{
 */
 
+#define ATOMIC_SECTION_BEGIN() uint32_t uwPRIMASK_Bit = __get_PRIMASK(); \
+__disable_irq(); \
+  /* Must be called in the same or in a lower scope of ATOMIC_SECTION_BEGIN */
+#define ATOMIC_SECTION_END() __set_PRIMASK(uwPRIMASK_Bit)
+
 #define MAX_PA_LEVEL    31
 #define HP_PA_LEVEL     32 /* Fake PA level that can be reached in high power mode. */
 
@@ -70,10 +75,26 @@
         BLUE_STATUSREG_CONFIGERROR_Msk          \
         )
 
+#define WAKEUPINITDELAY_MT                   (64U)
+#define TIMER12_INIT_DELAY_CAL               (63U)
+#define TIMER2_INIT_DELAY_NO_CAL              (9U)
+#define RCV_LEN_MARGIN_US                    (16U)
+#define TX_DELAY_START                       (16U)
+#define TX_DELAY_END                         (16U)
+
 #define RADIO_FSM_RX_DELAY_CAL              (116U)
 #define RADIO_FSM_RX_DELAY_NO_CAL            (56U)
 #define RADIO_FSM_TX_DELAY_CAL              (118U)
 #define RADIO_FSM_TX_DELAY_NO_CAL            (58U)
+
+#define RECEIVE_CAL_DELAY_CHECK              (RADIO_FSM_RX_DELAY_CAL)
+#define RECEIVE_NO_CAL_DELAY_CHECK           (RADIO_FSM_RX_DELAY_NO_CAL)
+#define TRANSMIT_CAL_DELAY_CHECK             (RADIO_FSM_TX_DELAY_CAL)
+#define TRANSMIT_NO_CAL_DELAY_CHECK          (RADIO_FSM_TX_DELAY_NO_CAL)
+
+#define CONFIG_END_DURATION                  (20U)
+#define TX_DATA_READY_CHECK                   (5U)
+#define TX_READY_TIMEOUT                      (5U)
 
 #elif defined (STM32WB05) || defined (STM32WB09)
 
@@ -93,10 +114,26 @@
         BLUE_STATUSREG_CONFIGERROR_Msk          \
         )
 
+#define WAKEUPINITDELAY_MT                   (64U)
+#define TIMER12_INIT_DELAY_CAL               (63U)
+#define TIMER2_INIT_DELAY_NO_CAL              (9U)
+#define RCV_LEN_MARGIN_US                    (16U)
+#define TX_DELAY_START                       (16U)
+#define TX_DELAY_END                         (16U)
+
 #define RADIO_FSM_RX_DELAY_CAL               (90U)
 #define RADIO_FSM_RX_DELAY_NO_CAL            (50U)
 #define RADIO_FSM_TX_DELAY_CAL               (92U)
 #define RADIO_FSM_TX_DELAY_NO_CAL            (52U)
+
+#define RECEIVE_CAL_DELAY_CHECK              (RADIO_FSM_RX_DELAY_CAL)
+#define RECEIVE_NO_CAL_DELAY_CHECK           (RADIO_FSM_RX_DELAY_NO_CAL)
+#define TRANSMIT_CAL_DELAY_CHECK             (RADIO_FSM_TX_DELAY_CAL - 2U)
+#define TRANSMIT_NO_CAL_DELAY_CHECK          (RADIO_FSM_TX_DELAY_NO_CAL - 2U)
+
+#define CONFIG_END_DURATION                  (20U)
+#define TX_DATA_READY_CHECK                   (5U)
+#define TX_READY_TIMEOUT                      (4U)
 
 #endif
 
@@ -116,6 +153,8 @@
 #define PHY_2MBPS          (0x1U)
 #define PHY_CODED_S2       (0x6U)
 #define PHY_CODED_S8       (0x4U)
+
+#define BIT_TX_SKIP (0x0UL)
 
 /**
 * @}
@@ -168,151 +207,107 @@ BLEPLAT_CNTR_ResultStatus BLEPLAT_CNTR_Deinit(void)
   return BLEPLAT_CNTR_SUCCESS;
 }
 
+/* Moved from the Stack library to the application environment
+ *
+ */
 /* Calculate the Timeout to be programmed on Timer2 to obtain a give T_IFS
-   when the next packet is a transmit one */
+ * when the next packet is a transmit one
+*/
 uint32_t BLEPLAT_CNTR_GetTimer2TimeoutForIfs(uint32_t T_Ifs, BLEPLAT_CNTR_Transaction Transaction, uint8_t Rx_Phy, uint8_t Tx_Phy, uint8_t Cal_Enabled)
 {
-  uint32_t Timeout = T_Ifs;
-  uint32_t Tx_Delay_Comp;
-  uint32_t Init_Delay;
+    uint32_t Timeout = T_Ifs;
+    uint32_t Tx_Delay_Comp;
+    uint32_t Init_Delay;
 
-  if(Transaction == BLEPLAT_CNTR_RxTx)
-  {
-    /* The correction values below have been determined by T_IFS measurements in
-       connection, initiating and active scanning */
-#if defined(STM32WB06) || defined(STM32WB07)
-
-    const int32_t Adjust_Value = 4;
-
-#elif defined (STM32WB05) || defined (STM32WB09)
-
-    int32_t Adjust_Value;
-
-    if((Rx_Phy == PHY_1MBPS) &&
-       (Tx_Phy == PHY_1MBPS))
+    if(Transaction == BLEPLAT_CNTR_RxTx)
     {
-      Adjust_Value = 4;
+        /* The correction values below have been determined by sniffer
+         * T_IFS measurements in connection, initiating and active
+         * scanning
+         */
+#ifdef STM32WB05
+        const int32_t Adjust_Value = 4;
+#else
+        const int32_t Adjust_Value = 6;
+#endif
+        Tx_Delay_Comp = (TX_DELAY_START>>3) + Adjust_Value;
     }
-    else if((Rx_Phy == PHY_1MBPS) &&
-            (Tx_Phy == PHY_2MBPS))
+    else if(Transaction == BLEPLAT_CNTR_TxRx)
     {
-      Adjust_Value = 3;
+        /* The correction values below have been set to correspond to the hardcoded
+         * values used in prrevious versions of the stack.
+         * They could be optimized after careful analysis of timing margins and
+         * AGC behavior.
+         */
+#ifdef STM32WB05
+        const int32_t Adjust_Value = 4;
+#else
+        const int32_t Adjust_Value = 4;
+#endif
+        Tx_Delay_Comp = (TX_DELAY_END>>3) + Adjust_Value;
     }
-    else if((Rx_Phy == PHY_1MBPS) &&
-            ((Tx_Phy == PHY_CODED_S2) || (Tx_Phy == PHY_CODED_S8)))
+    else if(Transaction == BLEPLAT_CNTR_TxTx)
     {
-      Adjust_Value = 4;
-    }
-    else if((Rx_Phy == PHY_2MBPS) &&
-            ((Tx_Phy == PHY_1MBPS) || (Tx_Phy == PHY_CODED_S2) || (Tx_Phy == PHY_CODED_S8)))
-    {
-      Adjust_Value = 6;
-    }
-    else if((Rx_Phy == PHY_2MBPS) &&
-            (Tx_Phy == PHY_2MBPS))
-    {
-      Adjust_Value = 4;
-    }
-    else if(((Rx_Phy == PHY_CODED_S2) || (Rx_Phy == PHY_CODED_S8)) &&
-            (Tx_Phy == PHY_1MBPS))
-    {
-      Adjust_Value = 5;
-    }
-    else if(((Rx_Phy == PHY_CODED_S2) || (Rx_Phy == PHY_CODED_S8)) &&
-            (Tx_Phy == PHY_2MBPS))
-    {
-      Adjust_Value = 4;
-    }
-    else if(((Rx_Phy == PHY_CODED_S2) || (Rx_Phy == PHY_CODED_S8)) &&
-            ((Tx_Phy == PHY_CODED_S2) || (Tx_Phy == PHY_CODED_S8)))
-    {
-      Adjust_Value = 5;
+        /* The correction values below have been determined by sniffer
+         * T_IFS measurements in extended advertising (AUX_CHAIN_IND)
+         */
+#ifdef STM32WB05
+        const int32_t Adjust_Value = 1;
+#else
+        const int32_t Adjust_Value = 2;
+#endif
+        Tx_Delay_Comp = ((TX_DELAY_START + TX_DELAY_END)>>3) + Adjust_Value;
     }
     else
     {
-      Adjust_Value = 6;
+        Tx_Delay_Comp = 0;
     }
-#endif
 
-    Tx_Delay_Comp = (RADIO_TXDELAY_START>>3) + Adjust_Value;
-  }
-  else if(Transaction == BLEPLAT_CNTR_TxRx)
-  {
-    /* The correction values below have been set to correspond to the hardcoded
-       values used in previous versions of the stack.
-       They could be optimized after careful analysis of timing margins and
-       AGC behavior. */
-    const int32_t Adjust_Value = 4;
-
-    Tx_Delay_Comp = (RADIO_TXDELAY_END>>3) + Adjust_Value;
-  }
-  else if(Transaction == BLEPLAT_CNTR_TxTx)
-  {
-    /* The correction values below have been determined by sniffer
-    * T_IFS measurements in extended advertising (AUX_CHAIN_IND)
-    */
-#if defined(STM32WB06) || defined(STM32WB07)
-
-    const int32_t Adjust_Value = 1;
-
-#elif defined (STM32WB05) || defined (STM32WB09)
-
-    const int32_t Adjust_Value = 2;
-
-#endif
-
-    Tx_Delay_Comp = ((RADIO_TXDELAY_START + RADIO_TXDELAY_END)>>3) + Adjust_Value;
-  }
-  else
-  {
-    Tx_Delay_Comp = 0;
-  }
-
-  if((Transaction == BLEPLAT_CNTR_RxTx) || (Transaction == BLEPLAT_CNTR_TxTx))
-  {
-    if(Cal_Enabled == TRUE)
+    if((Transaction == BLEPLAT_CNTR_RxTx) || (Transaction == BLEPLAT_CNTR_TxTx))
     {
-      Init_Delay = RADIO_INITDELAY_TIMER12_CAL + RADIO_FSM_TX_DELAY_CAL;
+        if(Cal_Enabled == TRUE)
+        {
+            Init_Delay = TIMER12_INIT_DELAY_CAL + RADIO_FSM_TX_DELAY_CAL;
+        }
+        else
+        {
+            Init_Delay = TIMER2_INIT_DELAY_NO_CAL + RADIO_FSM_TX_DELAY_NO_CAL;
+        }
     }
-    else
+    else if((Transaction == BLEPLAT_CNTR_TxRx) || (Transaction == BLEPLAT_CNTR_RxRx))
     {
-      Init_Delay = RADIO_INITDELAY_TIMER2_NOCAL + RADIO_FSM_TX_DELAY_NO_CAL;
-    }
-  }
-  else if((Transaction == BLEPLAT_CNTR_TxRx) || (Transaction == BLEPLAT_CNTR_RxRx))
-  {
-    /* The calculation below is based on the following sequence:
+        /* The calculation below is based on the following sequence:
          * - When Timer2 expires the sequencer performs the 1st initialization step and sends
-    *   a take_req to the radio
-    * - When RADIO_INITDELAY_TIMER12_CAL or RADIO_INITDELAY_TIMER2_NOCAL expire the sequencer sends
-    *   a tx_rx_req to the radio
-    * - When the radio FSM reaches the RX state (after RADIO_FSM_RX_DELAY_CAL or
-    *   RADIO_FSM_RX_DELAY_NO_CAL) the demodulator is turned on
-    *
-    * The sum of Timer2 timeout +  TIMER(1)2_INIT_DELAY(_NO)_CAL + RADIO_FSM_RX_DELAY(_NO)_CAL
-    * must be equal to the T IFS.
-    *
-    * The current calculation of Timer2 for TX-RX events is slightly conservative
-    * since it soes not consider the delay from digital modulator to antenna and from
-    * antenna to digital demodulator. As a consequence the demodulator is turned on
-    * a few microseconds earlier than stricty needed.
-    */
-    if(Cal_Enabled == TRUE)
-    {
-      Init_Delay = RADIO_INITDELAY_TIMER12_CAL + RADIO_FSM_RX_DELAY_CAL;
+         *   a take_req to the radio
+         * - When TIMER12_INIT_DELAY_CAL or TIMER2_INIT_DELAY_NO_CAL expire the sequencer sends
+         *   a tx_rx_req to the radio
+         * - When the radio FSM reaches the RX state (after RADIO_FSM_RX_DELAY_CAL or
+         *   RADIO_FSM_RX_DELAY_NO_CAL) the demodulator is turned on
+         *
+         * The sum of Timer2 timeout +  TIMER(1)2_INIT_DELAY(_NO)_CAL + RADIO_FSM_RX_DELAY(_NO)_CAL
+         * must be equal to the T IFS.
+         *
+         * The current calculation of Timer2 for TX-RX events is slightly conservative
+         * since it soes not consider the delay from digital modulator to antenna and from
+         * antenna to digital demodulator. As a consequence the demodulator is turned on
+         * a few microseconds earlier than stricty needed.
+         */
+        if(Cal_Enabled == TRUE)
+        {
+            Init_Delay = TIMER12_INIT_DELAY_CAL + RADIO_FSM_RX_DELAY_CAL;
+        }
+        else
+        {
+            Init_Delay = TIMER2_INIT_DELAY_NO_CAL + RADIO_FSM_RX_DELAY_NO_CAL;
+        }
     }
     else
     {
-      Init_Delay = RADIO_INITDELAY_TIMER2_NOCAL + RADIO_FSM_RX_DELAY_NO_CAL;
     }
-  }
-  else
-  {
-  }
 
-  Timeout -= (Init_Delay + Tx_Delay_Comp);
+    Timeout -= (Init_Delay + Tx_Delay_Comp);
 
-  return Timeout;
+    return Timeout;
 }
 
 void BLEPLAT_CNTR_ClearInterrupt(uint32_t x)
@@ -1248,7 +1243,7 @@ uint8_t BLEPLAT_CNTR_DemodDelaySt(uint8_t RxPHY)
 
 uint32_t BLEPLAT_CNTR_IsEnabledTimer1(void)
 {
-  return LL_RADIO_TIMER_IsEnabledTimer1(BLUE);
+    return (WAKEUP->WAKEUP_CM0_IRQ_ENABLE & WAKEUP_WAKEUP_CM0_IRQ_ENABLE_WAKEUP_IT) ? 1 : 0;
 }
 
 /**

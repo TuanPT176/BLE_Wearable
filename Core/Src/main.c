@@ -31,7 +31,12 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#ifndef uADCxCalibrationPoint1_Gain
+#define uADCxCalibrationPoint1_Gain 0
+#endif
+#ifndef uADCxCalibrationPoint1_Offset
+#define uADCxCalibrationPoint1_Offset 0
+#endif
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -40,10 +45,11 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+
+I2C_HandleTypeDef hi2c1;
 
 PKA_HandleTypeDef hpka;
-ADC_HandleTypeDef hadc1;
-I2C_HandleTypeDef hi2c1;
 
 /* USER CODE BEGIN PV */
 
@@ -125,82 +131,6 @@ int main(void)
 }
 
 /**
-  * @brief ADC1 Initialization Function
-  * @retval None
-  */
-static void MX_ADC1_Init(void)
-{
-  ADC_ChannelConfTypeDef config_channel = {0};
-  uint32_t calibration_gain;
-  uint32_t calibration_offset;
-
-  calibration_gain = LL_ADC_GET_CALIB_GAIN_FOR_VINPX_3V6();
-  calibration_offset = LL_ADC_GET_CALIB_OFFSET_FOR_VINPX_3V6();
-  if (calibration_gain == 0xFFFUL)
-  {
-    calibration_gain = LL_ADC_DEFAULT_RANGE_VALUE_3V6;
-    calibration_offset = 0UL;
-  }
-
-  hadc1.Instance = ADC1;
-  hadc1.Init.ConversionType = ADC_CONVERSION_WITH_DS;
-  hadc1.Init.SequenceLength = 1;
-  hadc1.Init.SamplingMode = ADC_SAMPLING_AT_START;
-  /* Slowest sample rate gives the 667 kohm divider more acquisition time. */
-  hadc1.Init.SampleRate = ADC_SAMPLE_RATE_140;
-  hadc1.Init.InvertOutputMode = ADC_DATA_INVERT_NONE;
-  hadc1.Init.Overrun = ADC_NEW_DATA_IS_LOST;
-  hadc1.Init.ContinuousConvMode = DISABLE;
-  hadc1.Init.DownSamplerConfig.DataWidth = ADC_DS_DATA_WIDTH_12_BIT;
-  hadc1.Init.DownSamplerConfig.DataRatio = ADC_DS_RATIO_1;
-  if (HAL_ADC_Init(&hadc1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  config_channel.Channel = ADC_CHANNEL_VINP1;
-  config_channel.Rank = ADC_RANK_1;
-  config_channel.VoltRange = ADC_VIN_RANGE_3V6;
-  config_channel.CalibrationPoint.Number = ADC_CALIB_POINT_1;
-  config_channel.CalibrationPoint.Gain = calibration_gain;
-  config_channel.CalibrationPoint.Offset = calibration_offset;
-  if (HAL_ADC_ConfigChannel(&hadc1, &config_channel) != HAL_OK)
-  {
-    Error_Handler();
-  }
-}
-
-/**
-  * @brief I2C1 Initialization Function (NEH7100 on PB6/PB7)
-  * @retval None
-  */
-static void MX_I2C1_Init(void)
-{
-  hi2c1.Instance = I2C1;
-  /* 100 kHz standard mode from the WB0 16 MHz I2C kernel clock. */
-  hi2c1.Init.Timing = 0x30420F17UL;
-  hi2c1.Init.OwnAddress1 = 0;
-  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c1.Init.OwnAddress2 = 0;
-  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-}
-
-/**
   * @brief System Clock Configuration
   * @retval None
   */
@@ -248,6 +178,107 @@ void PeriphCommonClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_ChannelConfTypeDef ConfigChannel = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+
+  /** Common config
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ConversionType = ADC_CONVERSION_WITH_DS;
+  hadc1.Init.SequenceLength = 1;
+  hadc1.Init.SamplingMode = ADC_SAMPLING_AT_START;
+  hadc1.Init.SampleRate = ADC_SAMPLE_RATE_140;
+  hadc1.Init.InvertOutputMode = ADC_DATA_INVERT_NONE;
+  hadc1.Init.Overrun = ADC_NEW_DATA_IS_LOST;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.DownSamplerConfig.DataWidth = ADC_DS_DATA_WIDTH_12_BIT;
+  hadc1.Init.DownSamplerConfig.DataRatio = ADC_DS_RATIO_1;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  ConfigChannel.Channel = ADC_CHANNEL_VINP1;
+  ConfigChannel.Rank = ADC_RANK_1;
+  ConfigChannel.VoltRange = ADC_VIN_RANGE_3V6;
+  ConfigChannel.CalibrationPoint.Number = ADC_CALIB_POINT_1;
+  ConfigChannel.CalibrationPoint.Gain = 0;
+  ConfigChannel.CalibrationPoint.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc1, &ConfigChannel) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.Timing = 0x00503D58;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Analogue filter
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Digital filter
+  */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
 }
 
 /**
@@ -366,8 +397,18 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
+  /*Configure GPIO pin : LIS2DUXS12_INT_Pin */
+  GPIO_InitStruct.Pin = LIS2DUXS12_INT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(LIS2DUXS12_INT_GPIO_Port, &GPIO_InitStruct);
+
   /*RT DEBUG GPIO_Init */
   RT_DEBUG_GPIO_Init();
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(GPIOB_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(GPIOB_IRQn);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 

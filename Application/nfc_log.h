@@ -3,11 +3,12 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "wearable_data.h"
 
 #define NFC_LOG_HEADER_ADDR 0x0020
-#define NFC_LOG_RECORD_ADDR 0x0030
-#define NFC_LOG_RECORD_SIZE 8
-#define NFC_LOG_MAX_RECORDS 58
+#define NFC_LOG_RECORD_ADDR 0x0040
+#define NFC_LOG_RECORD_SIZE 24
+#define NFC_LOG_MAX_RECORDS 19
 
 typedef struct
 {
@@ -16,7 +17,8 @@ typedef struct
 
     uint16_t write_index;
     uint16_t record_count;
-    uint16_t sequence;
+    uint16_t newest_sequence;
+    uint16_t oldest_sequence;
 
     uint16_t crc16;
     uint8_t  reserved[2]; // Pad to 16 bytes
@@ -24,15 +26,10 @@ typedef struct
 
 typedef struct
 {
-    uint8_t  heart_rate;
-    uint8_t  spo2;
-
-    int16_t  temperature_centi_c;
-
-    uint8_t  motion_state;
-    uint8_t  flags;
-
     uint16_t sequence;
+    uint32_t timestamp;
+    wearable_sensor_data_t sensor_data;
+    uint16_t crc16;
 } NFC_SensorRecord_t;
 
 extern NFC_LogHeader_t nfc_log_header;

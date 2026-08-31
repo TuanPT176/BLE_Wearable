@@ -64,6 +64,8 @@ extern I2C_HandleTypeDef hi2c1;
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define LIS2DUXS12_INT_Pin GPIO_PIN_2
+#define LIS2DUXS12_INT_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

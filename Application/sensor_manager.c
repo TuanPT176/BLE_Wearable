@@ -9,7 +9,8 @@
 #include "../Drivers/Sensors/LIS2DUXS12TR/lis2dux12_motion.h"
 #include "nfc_log.h"
 #include "../../STM32_BLE/App/app_ble.h"
-
+#include "device_time.h"
+#include <string.h>
 
 /*
  * Driver implementation bundle
@@ -23,6 +24,8 @@
  */
 #include "../Drivers/max30208.c"
 #include "../Drivers/Sensors/LIS2DUXS12TR/lis2dux12_reg.c"
+#include "power_policy.c"
+#include "data_recovery_manager.c"
 #include "../Drivers/Sensors/LIS2DUXS12TR/lis2dux12_platform.c"
 #include "../Drivers/Sensors/LIS2DUXS12TR/lis2dux12_motion.c"
 
@@ -215,11 +218,9 @@ void SensorManager_Process(void)
     if (log_timer_s >= nfc_config.hr_interval_s)
     {
       NFC_SensorRecord_t record;
-      record.heart_rate = latest_data.heart_rate_bpm;
-      record.spo2 = latest_data.spo2_percent;
-      record.temperature_centi_c = latest_data.temperature_centi_c;
-      record.motion_state = 0; // Using flags instead
-      record.flags = latest_data.flags;
+      memset(&record, 0, sizeof(record));
+      record.timestamp = DeviceTime_GetUnixSeconds();
+      memcpy(&record.sensor_data, &latest_data, sizeof(wearable_sensor_data_t));
       record.sequence = 0; // Handled internally by NFC_Log_Add
       NFC_Log_Add(&record);
       
