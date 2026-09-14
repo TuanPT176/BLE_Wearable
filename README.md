@@ -285,6 +285,6 @@ function decodeDeviceStatus(input) {
 
 > Lưu ý: các thư mục output build được loại khỏi Git bằng `.gitignore`.
 
-## C?p nh?t g?n d�y
-- T?i uu b? nh?: Tang Stack size l�n 6KB chu?n b? cho c�c thu?t to�n x? l� d? li?u ph?c t?p (PPG, ECG).
-- Kh?c ph?c l?i sinh code c?a STM32CubeMX: X? l� tri?t d? c�c l?i ghi d� c?u h�nh GATT, l?i thi?u bi?n ADC, v� l?i khai b�o c?a thu vi?n BLE stack (BLEPLAT_CNTR_IsEnabledTimer1).
+## Cập nhật gần đây
+- Tối ưu bộ nhớ: Tăng Stack size lên 6KB chuẩn bị cho các thuật toán xử lý dữ liệu phức tạp (PPG, ECG).
+- Khắc phục lỗi sinh code của STM32CubeMX: Xử lý triệt để các lỗi ghi đè cấu hình GATT, lỗi thiếu biến ADC, và lỗi khai báo của thư viện BLE stack (BLEPLAT_CNTR_IsEnabledTimer1).

@@ -2,6 +2,7 @@
 #include "nfc_log.h"
 #include "wearable_data.h"
 #include "../STM32_BLE/App/wearable.h"
+#include "../STM32_BLE/App/wearable_app.h"
 #include "ble.h"
 
 static RecoveryState_t current_state = RECOVERY_STATE_IDLE;
@@ -83,7 +84,12 @@ void DataRecovery_Process(void)
             current_state = RECOVERY_STATE_IDLE;
             return;
         }
-        
+
+        uint16_t connection_handle = WEARABLE_APP_GetConnectionHandle();
+        if (connection_handle == 0xFFFFU) {
+            return; // Not connected, wait until a central reconnects
+        }
+
         uint16_t log_index = GetIndexForSequence(current_recovery_seq);
         if (log_index == 0xFFFF) {
             current_recovery_seq++;
@@ -107,10 +113,7 @@ void DataRecovery_Process(void)
             ble_data.p_Payload = buffer;
             ble_data.Length = WEARABLE_RECOVERY_PAYLOAD_LENGTH;
             
-            // Assume ConnectionHandle is available or managed elsewhere. Typically 0x0001 or stored in context.
-            // Using a dummy handle 0x0001 for now. Real implementation should track connection handle.
-            // In ST stack, connection handle is passed to notify function.
-            tBleStatus ret = WEARABLE_NotifyValue(WEARABLE_RECOVERY_DATA, &ble_data, 0x0001); 
+            tBleStatus ret = WEARABLE_NotifyValue(WEARABLE_RECOVERY_DATA, &ble_data, connection_handle);
             if (ret == BLE_STATUS_SUCCESS) {
                 current_recovery_seq++;
                 last_tx_time = HAL_GetTick();

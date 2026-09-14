@@ -37,6 +37,15 @@ max86150_optical_result_t MAX86150_OpticalConfigureRedIr(
     max86150_optical_t *device,
     uint8_t red_current,
     uint8_t ir_current);
+/* FIFO_WR_PTR/FIFO_RD_PTR delta, wrapped to the 32-deep FIFO: how many
+ * complete IR+RED sample pairs are waiting to be read (0-31). Call this
+ * before OpticalReadSample() so a call with an empty FIFO isn't mistaken
+ * for a fresh sample (the read pointer does not advance past the write
+ * pointer, so re-reading FIFO_DATA on an empty FIFO just repeats the last
+ * sample). */
+max86150_optical_result_t MAX86150_OpticalGetAvailableSamples(
+    max86150_optical_t *device,
+    uint8_t *count);
 max86150_optical_result_t MAX86150_OpticalReadSample(
     max86150_optical_t *device,
     uint32_t *red,

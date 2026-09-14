@@ -482,6 +482,12 @@ void HAL_RADIO_TxRxCallback(uint32_t flags)
   NVM_Process_Schedule();
 }
 
+/* Function called from RADIO_RRM_IRQHandler() context. */
+void HAL_RADIO_RRMCallback(uint32_t ble_irq_status)
+{
+  BLE_STACK_RRMHandler(ble_irq_status);
+}
+
 void BLE_STACK_ProcessRequest(void)
 {
   BLEStack_Process_Schedule();

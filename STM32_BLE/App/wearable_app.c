@@ -201,6 +201,7 @@ void WEARABLE_Notification(WEARABLE_NotificationEvt_t *p_Notification)
             WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_INVALID_COMMAND;
             WearableState_Set(WEARABLE_STATE_ERROR);
           }
+          WEARABLE_SendStatus();
           APP_DBG_MSG("-- WEARABLE COMMAND: START MEASUREMENT\n");
           break;
 
@@ -210,6 +211,7 @@ void WEARABLE_Notification(WEARABLE_NotificationEvt_t *p_Notification)
           WearableState_Set(WEARABLE_STATE_IDLE);
           HAL_RADIO_TIMER_StopVirtualTimer(&wearable_sensor_timer);
           WEARABLE_StopSensorAsyncTask();
+          WEARABLE_SendStatus();
           APP_DBG_MSG("-- WEARABLE COMMAND: STOP MEASUREMENT\n");
           break;
 
@@ -304,6 +306,7 @@ void WEARABLE_Notification(WEARABLE_NotificationEvt_t *p_Notification)
               }
             }
           }
+          WEARABLE_SendStatus();
           break;
 
         case WEARABLE_CMD_GET_RECOVERY_INFO:
@@ -396,13 +399,13 @@ void WEARABLE_Notification(WEARABLE_NotificationEvt_t *p_Notification)
 
     case WEARABLE_NFC_DATA_NOTIFY_ENABLED_EVT:
       /* USER CODE BEGIN Service1Char4_NOTIFY_ENABLED_EVT */
-
+      WEARABLE_APP_Context.Nfc_data_Notification_Status = Nfc_data_NOTIFICATION_ON;
       /* USER CODE END Service1Char4_NOTIFY_ENABLED_EVT */
       break;
 
     case WEARABLE_NFC_DATA_NOTIFY_DISABLED_EVT:
       /* USER CODE BEGIN Service1Char4_NOTIFY_DISABLED_EVT */
-
+      WEARABLE_APP_Context.Nfc_data_Notification_Status = Nfc_data_NOTIFICATION_OFF;
       /* USER CODE END Service1Char4_NOTIFY_DISABLED_EVT */
       break;
 
@@ -414,13 +417,13 @@ void WEARABLE_Notification(WEARABLE_NotificationEvt_t *p_Notification)
 
     case WEARABLE_ECG_DATA_NOTIFY_ENABLED_EVT:
       /* USER CODE BEGIN Service1Char5_NOTIFY_ENABLED_EVT */
-
+      WEARABLE_APP_Context.Ecg_data_Notification_Status = Ecg_data_NOTIFICATION_ON;
       /* USER CODE END Service1Char5_NOTIFY_ENABLED_EVT */
       break;
 
     case WEARABLE_ECG_DATA_NOTIFY_DISABLED_EVT:
       /* USER CODE BEGIN Service1Char5_NOTIFY_DISABLED_EVT */
-
+      WEARABLE_APP_Context.Ecg_data_Notification_Status = Ecg_data_NOTIFICATION_OFF;
       /* USER CODE END Service1Char5_NOTIFY_DISABLED_EVT */
       break;
 
@@ -438,13 +441,13 @@ void WEARABLE_Notification(WEARABLE_NotificationEvt_t *p_Notification)
 
     case WEARABLE_DEBUG_DATA_NOTIFY_ENABLED_EVT:
       /* USER CODE BEGIN Service1Char6_NOTIFY_ENABLED_EVT */
-
+      WEARABLE_APP_Context.Debug_data_Notification_Status = Debug_data_NOTIFICATION_ON;
       /* USER CODE END Service1Char6_NOTIFY_ENABLED_EVT */
       break;
 
     case WEARABLE_DEBUG_DATA_NOTIFY_DISABLED_EVT:
       /* USER CODE BEGIN Service1Char6_NOTIFY_DISABLED_EVT */
-
+      WEARABLE_APP_Context.Debug_data_Notification_Status = Debug_data_NOTIFICATION_OFF;
       /* USER CODE END Service1Char6_NOTIFY_DISABLED_EVT */
       break;
 
@@ -456,13 +459,13 @@ void WEARABLE_Notification(WEARABLE_NotificationEvt_t *p_Notification)
 
     case WEARABLE_RECOVERY_DATA_NOTIFY_ENABLED_EVT:
       /* USER CODE BEGIN Service1Char7_NOTIFY_ENABLED_EVT */
-
+      WEARABLE_APP_Context.Recovery_data_Notification_Status = Recovery_data_NOTIFICATION_ON;
       /* USER CODE END Service1Char7_NOTIFY_ENABLED_EVT */
       break;
 
     case WEARABLE_RECOVERY_DATA_NOTIFY_DISABLED_EVT:
       /* USER CODE BEGIN Service1Char7_NOTIFY_DISABLED_EVT */
-
+      WEARABLE_APP_Context.Recovery_data_Notification_Status = Recovery_data_NOTIFICATION_OFF;
       /* USER CODE END Service1Char7_NOTIFY_DISABLED_EVT */
       break;
 
@@ -500,6 +503,10 @@ void WEARABLE_APP_EvtRx(WEARABLE_APP_ConnHandleNotEvt_t *p_Notification)
       /* USER CODE BEGIN Service1_APP_DISCON_HANDLE_EVT */
       WEARABLE_APP_Context.Sensor_data_Notification_Status = Sensor_data_NOTIFICATION_OFF;
       WEARABLE_APP_Context.Device_status_Notification_Status = Device_status_NOTIFICATION_OFF;
+      WEARABLE_APP_Context.Nfc_data_Notification_Status = Nfc_data_NOTIFICATION_OFF;
+      WEARABLE_APP_Context.Ecg_data_Notification_Status = Ecg_data_NOTIFICATION_OFF;
+      WEARABLE_APP_Context.Debug_data_Notification_Status = Debug_data_NOTIFICATION_OFF;
+      WEARABLE_APP_Context.Recovery_data_Notification_Status = Recovery_data_NOTIFICATION_OFF;
       HAL_RADIO_TIMER_StopVirtualTimer(&wearable_sensor_timer);
       WEARABLE_StopSensorAsyncTask();
       SensorManager_Stop();
@@ -576,6 +583,11 @@ void WEARABLE_APP_NotifyMotionInterruptFromISR(void)
   /* PB2 ISR only schedules work; the task performs all I2C accesses. */
   UTIL_SEQ_SetTask(1U << CFG_TASK_WEARABLE_MOTION_INT_ID, CFG_SEQ_PRIO_0);
 }
+
+uint16_t WEARABLE_APP_GetConnectionHandle(void)
+{
+  return WEARABLE_APP_Context.ConnectionHandle;
+}
 /* USER CODE END FD */
 
 /*************************************************************
@@ -651,7 +663,10 @@ __USED void WEARABLE_Nfc_data_SendNotification(void) /* Property Notification */
   wearable_notification_data.Length = 0;
 
   /* USER CODE BEGIN Service1Char4_NS_1*/
-
+  if (WEARABLE_APP_Context.Nfc_data_Notification_Status == Nfc_data_NOTIFICATION_ON)
+  {
+    notification_on_off = Nfc_data_NOTIFICATION_ON;
+  }
   /* USER CODE END Service1Char4_NS_1*/
 
   if (notification_on_off != Nfc_data_NOTIFICATION_OFF && WEARABLE_APP_Context.ConnectionHandle != 0xFFFF)
@@ -675,7 +690,10 @@ __USED void WEARABLE_Ecg_data_SendNotification(void) /* Property Notification */
   wearable_notification_data.Length = 0;
 
   /* USER CODE BEGIN Service1Char5_NS_1*/
-
+  if (WEARABLE_APP_Context.Ecg_data_Notification_Status == Ecg_data_NOTIFICATION_ON)
+  {
+    notification_on_off = Ecg_data_NOTIFICATION_ON;
+  }
   /* USER CODE END Service1Char5_NS_1*/
 
   if (notification_on_off != Ecg_data_NOTIFICATION_OFF && WEARABLE_APP_Context.ConnectionHandle != 0xFFFF)
@@ -699,7 +717,10 @@ __USED void WEARABLE_Debug_data_SendNotification(void) /* Property Notification 
   wearable_notification_data.Length = 0;
 
   /* USER CODE BEGIN Service1Char6_NS_1*/
-
+  if (WEARABLE_APP_Context.Debug_data_Notification_Status == Debug_data_NOTIFICATION_ON)
+  {
+    notification_on_off = Debug_data_NOTIFICATION_ON;
+  }
   /* USER CODE END Service1Char6_NS_1*/
 
   if (notification_on_off != Debug_data_NOTIFICATION_OFF && WEARABLE_APP_Context.ConnectionHandle != 0xFFFF)
@@ -723,7 +744,10 @@ __USED void WEARABLE_Recovery_data_SendNotification(void) /* Property Notificati
   wearable_notification_data.Length = 0;
 
   /* USER CODE BEGIN Service1Char7_NS_1*/
-
+  if (WEARABLE_APP_Context.Recovery_data_Notification_Status == Recovery_data_NOTIFICATION_ON)
+  {
+    notification_on_off = Recovery_data_NOTIFICATION_ON;
+  }
   /* USER CODE END Service1Char7_NS_1*/
 
   if (notification_on_off != Recovery_data_NOTIFICATION_OFF && WEARABLE_APP_Context.ConnectionHandle != 0xFFFF)

@@ -188,6 +188,34 @@ max86150_optical_result_t MAX86150_OpticalConfigureRedIr(
   return MAX86150_OPTICAL_OK;
 }
 
+max86150_optical_result_t MAX86150_OpticalGetAvailableSamples(
+    max86150_optical_t *device,
+    uint8_t *count)
+{
+  uint8_t write_ptr;
+  uint8_t read_ptr;
+
+  if (count == NULL)
+  {
+    return MAX86150_OPTICAL_INVALID_ARGUMENT;
+  }
+  if ((device == NULL) || !device->present)
+  {
+    return MAX86150_OPTICAL_NOT_PRESENT;
+  }
+
+  if ((MAX86150_Read(device, MAX86150_REG_FIFO_WRITE_PTR, &write_ptr, 1U) !=
+       MAX86150_OPTICAL_OK) ||
+      (MAX86150_Read(device, MAX86150_REG_FIFO_READ_PTR, &read_ptr, 1U) !=
+       MAX86150_OPTICAL_OK))
+  {
+    return MAX86150_OPTICAL_BUS_ERROR;
+  }
+
+  *count = (uint8_t)((write_ptr - read_ptr) & 0x1FU);
+  return MAX86150_OPTICAL_OK;
+}
+
 max86150_optical_result_t MAX86150_OpticalReadSample(
     max86150_optical_t *device,
     uint32_t *red,

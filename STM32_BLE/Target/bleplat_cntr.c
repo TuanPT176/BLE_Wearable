@@ -1243,7 +1243,7 @@ uint8_t BLEPLAT_CNTR_DemodDelaySt(uint8_t RxPHY)
 
 uint32_t BLEPLAT_CNTR_IsEnabledTimer1(void)
 {
-    return (WAKEUP->WAKEUP_CM0_IRQ_ENABLE & WAKEUP_WAKEUP_CM0_IRQ_ENABLE_WAKEUP_IT) ? 1 : 0;
+    return LL_RADIO_TIMER_IsEnabledTimer1(BLUE);
 }
 
 /**

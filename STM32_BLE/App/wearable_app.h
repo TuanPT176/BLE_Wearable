@@ -78,6 +78,7 @@ void WEARABLE_APP_EvtRx(WEARABLE_APP_ConnHandleNotEvt_t *p_Notification);
 const uint8_t *WEARABLE_APP_GetLatestSensorData(uint16_t *length);
 const uint8_t *WEARABLE_APP_GetLatestDeviceStatus(uint16_t *length);
 void WEARABLE_APP_NotifyMotionInterruptFromISR(void);
+uint16_t WEARABLE_APP_GetConnectionHandle(void);
 /* USER CODE END EF */
 
 #ifdef __cplusplus

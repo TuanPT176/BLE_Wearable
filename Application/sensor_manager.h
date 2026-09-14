@@ -23,6 +23,13 @@ typedef enum
   SENSOR_MOTION_BUS_ERROR
 } sensor_motion_status_t;
 
+typedef enum
+{
+  SENSOR_OPTICAL_NOT_PRESENT = 0,
+  SENSOR_OPTICAL_IDLE,
+  SENSOR_OPTICAL_ACTIVE
+} sensor_optical_status_t;
+
 bool SensorManager_Init(void);
 bool SensorManager_Start(void);
 bool SensorManager_Stop(void);
@@ -32,6 +39,7 @@ void SensorManager_ProcessAsync(void);
 bool SensorManager_GetAsyncDelayMs(uint32_t *delay_ms);
 sensor_temperature_status_t SensorManager_GetTemperatureStatus(void);
 sensor_motion_status_t SensorManager_GetMotionStatus(void);
+sensor_optical_status_t SensorManager_GetOpticalStatus(void);
 void SensorManager_ProcessMotionInterrupt(void);
 void SensorManager_ProcessMotionTimeout(void);
 bool SensorManager_GetMotionDelayMs(uint32_t *delay_ms);
