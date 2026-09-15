@@ -20,6 +20,8 @@ void WearableData_EncodeSensor(const wearable_sensor_data_t *data,
   payload[11] = (uint8_t)((uint16_t)data->accel_y >> 8);
   payload[12] = (uint8_t)((uint16_t)data->accel_z & 0xFFU);
   payload[13] = (uint8_t)((uint16_t)data->accel_z >> 8);
+  payload[14] = (uint8_t)((uint16_t)data->qvar_raw & 0xFFU);
+  payload[15] = (uint8_t)((uint16_t)data->qvar_raw >> 8);
 }
 
 void WearableData_EncodeStatus(const wearable_device_status_t *status,

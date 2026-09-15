@@ -7,7 +7,7 @@
 #include "NEH7100/neh7100.h"
 #include "../Drivers/max30208.h"
 #include "../Drivers/supercap_monitor.h"
-#include "../Drivers/Sensors/LIS2DUXS12TR/lis2dux12_motion.h"
+#include "../Drivers/Sensors/LIS2DUXS12TR/lis2duxs12_motion.h"
 #include "../Drivers/Sensors/MAX86150/max86150_optical.h"
 #include "nfc_log.h"
 #include "../../STM32_BLE/App/app_ble.h"
@@ -25,11 +25,11 @@
  * standalone build resources.
  */
 #include "../Drivers/max30208.c"
-#include "../Drivers/Sensors/LIS2DUXS12TR/lis2dux12_reg.c"
+#include "../Drivers/Sensors/LIS2DUXS12TR/lis2duxs12_reg.c"
 #include "power_policy.c"
 #include "data_recovery_manager.c"
-#include "../Drivers/Sensors/LIS2DUXS12TR/lis2dux12_platform.c"
-#include "../Drivers/Sensors/LIS2DUXS12TR/lis2dux12_motion.c"
+#include "../Drivers/Sensors/LIS2DUXS12TR/lis2duxs12_platform.c"
+#include "../Drivers/Sensors/LIS2DUXS12TR/lis2duxs12_motion.c"
 /* max86150_optical.c is already a standalone CubeIDE build resource
  * (unlike the LIS2DUXS12TR files above) - it must NOT be bundled here too,
  * or it gets compiled twice and the linker reports duplicate symbols. */
@@ -48,6 +48,17 @@
  * re-probe the bus for a missing MAX30208 every this many calls instead of
  * every call, so a genuinely absent sensor doesn't waste bus time. */
 #define TEMPERATURE_REPROBE_INTERVAL_CALLS 5U
+/* Same idea for LIS2DUXS12TR (accel/QVar) and MAX86150 (PPG): unlike the
+ * temperature path, neither previously had any recovery once a boot-time
+ * probe/config attempt failed, so a transient I2C glitch at startup would
+ * leave accel/QVar/HR/SpO2 stuck forever (mock HR, flat SpO2, zeroed accel,
+ * QVar wear flag never set). */
+#define MOTION_REPROBE_INTERVAL_CALLS 5U
+/* Shorter than the motion/temperature reprobe interval: an I2C probe + FIFO
+ * config write is cheap, and while diagnosing a MAX86150 that never comes up
+ * a faster retry gives quicker feedback on whether it is a transient bus
+ * glitch or a persistent (wiring/hardware) failure. */
+#define OPTICAL_REPROBE_INTERVAL_CALLS 2U
 
 /*
  * MAX86150 Red/IR optical (PPG) pipeline.
@@ -81,6 +92,23 @@
 #define OPTICAL_BEAT_HISTORY_LEN           4U
 #define OPTICAL_SPO2_WINDOW_DRAINS         5U   /* ~1s of samples before recomputing SpO2 */
 
+/* QVar (LIS2DUXS12TR AH_QVAR channel) wear detection.
+ * On real hardware the raw channel previously sat on a large, erratic offset
+ * (tens of thousands of LSB) regardless of touch - later traced to
+ * lis2duxs12_motion.c using an older register-driver snapshot whose
+ * ah_qvar_data_get() read OUT_T_AH_QVAR_L/H directly, instead of priming the
+ * read by first reading the preceding OUT_Z_H register in the same I2C
+ * burst (what the chip needs to latch a coherent QVar sample - see ST's own
+ * lis2duxs12_reg.c). That has since been fixed by switching to ST's current
+ * official lis2duxs12-pid driver. This baseline-relative deviation check is
+ * kept anyway as a robustness measure (the channel may still carry a
+ * nonzero DC offset even when read correctly), but ALPHA/THRESHOLD are a
+ * first guess, not calibrated against a real touch/release capture - expect
+ * to retune once you have one with clearly marked touch vs release
+ * segments. */
+#define QVAR_BASELINE_ALPHA              0.05f
+#define QVAR_WEAR_DEVIATION_THRESHOLD  500.0f
+
 static wearable_sensor_data_t latest_data;
 static bool initialized;
 static bool running;
@@ -90,7 +118,11 @@ static sensor_optical_status_t optical_status;
 static uint32_t temperature_conversion_elapsed_ms;
 static uint32_t temperature_async_delay_ms;
 static uint32_t temperature_reprobe_calls;
+static uint32_t motion_reprobe_calls;
+static uint32_t optical_reprobe_calls;
 static uint32_t motion_delay_ms;
+static float qvar_baseline;
+static bool qvar_baseline_ready;
 
 static max86150_optical_t optical_device;
 static bool optical_baseline_ready;
@@ -155,6 +187,77 @@ static void SensorManager_DebugScanI2CBus(void)
       APP_DBG_MSG("   ACK at 0x%02x\n", (unsigned int)address);
     }
   }
+}
+
+static void SensorManager_QvarResetBaseline(void)
+{
+  qvar_baseline_ready = false;
+}
+
+/*
+ * Software-only QVar diagnostic - no multimeter/scope needed, just read the
+ * UART debug log. Two checks:
+ *
+ * 1) AH_QVAR disabled: OUT_T_AH_QVAR_L/H then reports plain ambient
+ *    temperature (raw/355.5 + 25 = deg C), a small number - nowhere near the
+ *    ~32000 seen with AH_QVAR enabled. If this ALSO reads ~32000, the fault
+ *    is upstream of the analog front-end (register write not taking effect,
+ *    stuck I2C value, wrong register), not the QVar circuit itself.
+ * 2) Gain sweep 0.5x/1x/2x/4x at the lowest (most stable) input impedance:
+ *    a genuine analog signal should scale roughly with gain. If the reading
+ *    stays flat/unrelated across gains, that points at a stuck value or
+ *    hardware fault rather than a real (if noisy) analog signal.
+ *
+ * Restores the normal operating config (ST's own reference default: gain
+ * 0.5x, 520MOhm, enabled - see lis2duxs12_qvar_read_data.c) and resets the
+ * wear baseline before returning.
+ */
+static void SensorManager_QvarSelfTest(void)
+{
+  int16_t qvar_raw;
+  uint8_t i;
+  static const lis2duxs12_ah_qvar_gain_t gains[4] = {
+    LIS2DUXS12_GAIN_0_5, LIS2DUXS12_GAIN_1, LIS2DUXS12_GAIN_2, LIS2DUXS12_GAIN_4
+  };
+  static const uint16_t gain_x10[4] = { 5U, 10U, 20U, 40U };
+  uint8_t g;
+
+  APP_DBG_MSG("== QVar self-test start ==\n");
+
+  if (LIS2DUXS12_MotionConfigureQvar(false, LIS2DUXS12_GAIN_1, LIS2DUXS12_75MOhm) ==
+      LIS2DUXS12_MOTION_OK)
+  {
+    HAL_Delay(50U);
+    for (i = 0U; i < 3U; i++)
+    {
+      if (LIS2DUXS12_MotionReadQvar(&qvar_raw) == LIS2DUXS12_MOTION_OK)
+      {
+        APP_DBG_MSG("   AH_QVAR disabled (expect small, temperature-like): raw #%u = %d\n",
+                    (unsigned int)i, (int)qvar_raw);
+      }
+      HAL_Delay(20U);
+    }
+  }
+
+  for (g = 0U; g < 4U; g++)
+  {
+    if (LIS2DUXS12_MotionConfigureQvar(true, gains[g], LIS2DUXS12_75MOhm) ==
+        LIS2DUXS12_MOTION_OK)
+    {
+      HAL_Delay(100U);
+      if (LIS2DUXS12_MotionReadQvar(&qvar_raw) == LIS2DUXS12_MOTION_OK)
+      {
+        APP_DBG_MSG("   AH_QVAR gain=%u.%ux: raw = %d\n",
+                    (unsigned int)(gain_x10[g] / 10U),
+                    (unsigned int)(gain_x10[g] % 10U), (int)qvar_raw);
+      }
+    }
+  }
+
+  APP_DBG_MSG("== QVar self-test end ==\n");
+
+  (void)LIS2DUXS12_MotionInitQvar();
+  SensorManager_QvarResetBaseline();
 }
 
 static void SensorManager_OpticalResetState(void)
@@ -341,7 +444,7 @@ static void SensorManager_ProcessOpticalAsync(void)
 
 bool SensorManager_Init(void)
 {
-  lis2dux12_acceleration_t acceleration;
+  lis2duxs12_acceleration_t acceleration;
   latest_data.heart_rate_bpm = 72U;
   latest_data.spo2_percent = 98U;
   latest_data.temperature_centi_c = WEARABLE_TEMPERATURE_INVALID_CENTI_C;
@@ -351,6 +454,8 @@ bool SensorManager_Init(void)
   latest_data.accel_x = 0;
   latest_data.accel_y = 0;
   latest_data.accel_z = 0;
+  latest_data.qvar_raw = 0;
+  qvar_baseline_ready = false;
   running = false;
   initialized = SupercapMonitor_Init();
   if (initialized)
@@ -391,15 +496,15 @@ bool SensorManager_Init(void)
     APP_DBG_MSG("-- MAX86150: not present\n");
   }
 
-  motion_status = (LIS2DUX12_MotionInit(&hi2c1) == LIS2DUX12_MOTION_OK) ?
+  motion_status = (LIS2DUXS12_MotionInit(&hi2c1) == LIS2DUXS12_MOTION_OK) ?
                   SENSOR_MOTION_ACCELEROMETER_READY : SENSOR_MOTION_NOT_PRESENT;
   motion_delay_ms = 0U;
   if (motion_status == SENSOR_MOTION_ACCELEROMETER_READY)
   {
     APP_DBG_MSG("-- LIS2DUXS12TR: WHO_AM_I OK, I2C=0x%02x\n",
-                (unsigned int)(LIS2DUX12_MotionGetHalAddress() >> 1U));
-    if (LIS2DUX12_MotionReadAcceleration(&acceleration) ==
-        LIS2DUX12_MOTION_OK)
+                (unsigned int)(LIS2DUXS12_MotionGetHalAddress() >> 1U));
+    if (LIS2DUXS12_MotionReadAcceleration(&acceleration) ==
+        LIS2DUXS12_MOTION_OK)
     {
       APP_DBG_MSG("-- LIS2DUXS12TR XYZ [mg]: %ld, %ld, %ld\n",
                   (long)acceleration.mg[0],
@@ -407,9 +512,11 @@ bool SensorManager_Init(void)
                   (long)acceleration.mg[2]);
     }
     
-    if (LIS2DUX12_MotionInitQvar() == LIS2DUX12_MOTION_OK)
+    if (LIS2DUXS12_MotionInitQvar() == LIS2DUXS12_MOTION_OK)
     {
+      SensorManager_QvarResetBaseline();
       APP_DBG_MSG("-- LIS2DUXS12TR QVar initialized on INT1\n");
+      SensorManager_QvarSelfTest();
     }
     else
     {
@@ -423,6 +530,8 @@ bool SensorManager_Init(void)
   temperature_conversion_elapsed_ms = 0U;
   temperature_async_delay_ms = 0U;
   temperature_reprobe_calls = 0U;
+  motion_reprobe_calls = 0U;
+  optical_reprobe_calls = 0U;
   return initialized;
 }
 
@@ -508,24 +617,68 @@ void SensorManager_Process(void)
 
   SensorManager_StartTemperatureConversion();
 
+  if ((motion_status == SENSOR_MOTION_NOT_PRESENT) ||
+      (motion_status == SENSOR_MOTION_BUS_ERROR))
+  {
+    motion_reprobe_calls++;
+    if (motion_reprobe_calls >= MOTION_REPROBE_INTERVAL_CALLS)
+    {
+      motion_reprobe_calls = 0U;
+      motion_status = (LIS2DUXS12_MotionInit(&hi2c1) == LIS2DUXS12_MOTION_OK) ?
+                      SENSOR_MOTION_ACCELEROMETER_READY : SENSOR_MOTION_NOT_PRESENT;
+      if (motion_status == SENSOR_MOTION_ACCELEROMETER_READY)
+      {
+        APP_DBG_MSG("-- LIS2DUXS12TR: recovered, I2C=0x%02x\n",
+                    (unsigned int)(LIS2DUXS12_MotionGetHalAddress() >> 1U));
+        if (LIS2DUXS12_MotionInitQvar() == LIS2DUXS12_MOTION_OK)
+        {
+          SensorManager_QvarResetBaseline();
+        }
+        else
+        {
+          APP_DBG_MSG("-- LIS2DUXS12TR: QVar init FAILED after recovery\n");
+        }
+      }
+    }
+  }
+
   if (motion_status == SENSOR_MOTION_ACCELEROMETER_READY || motion_status == SENSOR_MOTION_CLASSIFIER_READY)
   {
-    lis2dux12_acceleration_t acceleration;
+    lis2duxs12_acceleration_t acceleration;
     int16_t qvar_raw = 0;
     
-    if (LIS2DUX12_MotionReadAcceleration(&acceleration) == LIS2DUX12_MOTION_OK)
+    if (LIS2DUXS12_MotionReadAcceleration(&acceleration) == LIS2DUXS12_MOTION_OK)
     {
       latest_data.accel_x = (int16_t)acceleration.mg[0];
       latest_data.accel_y = (int16_t)acceleration.mg[1];
       latest_data.accel_z = (int16_t)acceleration.mg[2];
     }
     
-    if (LIS2DUX12_MotionReadQvar(&qvar_raw) == LIS2DUX12_MOTION_OK)
+    if (LIS2DUXS12_MotionReadQvar(&qvar_raw) == LIS2DUXS12_MOTION_OK)
     {
+       float qvar_deviation;
+
        APP_DBG_MSG("-- QVar raw = %d\n", (int)qvar_raw);
-       /* Simple wear/no-wear logic (0x40 is the arbitrary WEARING flag for now) */
-       /* A proper threshold should be calibrated based on your hardware design */
-       if (qvar_raw > 1000 || qvar_raw < -1000)
+       latest_data.qvar_raw = qvar_raw;
+
+       /* Wear/no-wear from deviation off a slow-moving baseline, not an
+        * absolute value - see QVAR_BASELINE_ALPHA/QVAR_WEAR_DEVIATION_THRESHOLD
+        * comment above for why (raw sits on a large hardware-specific DC
+        * offset, not centered near 0). */
+       if (!qvar_baseline_ready)
+       {
+          qvar_baseline = (float)qvar_raw;
+          qvar_baseline_ready = true;
+       }
+       else
+       {
+          qvar_baseline += QVAR_BASELINE_ALPHA * ((float)qvar_raw - qvar_baseline);
+       }
+
+       qvar_deviation = (float)qvar_raw - qvar_baseline;
+       APP_DBG_MSG("-- QVar baseline = %d, deviation = %d\n",
+                   (int)qvar_baseline, (int)qvar_deviation);
+       if (fabsf(qvar_deviation) > QVAR_WEAR_DEVIATION_THRESHOLD)
        {
           latest_data.flags |= 0x40; /* Wear detected */
        }
@@ -537,6 +690,35 @@ void SensorManager_Process(void)
     else
     {
        APP_DBG_MSG("-- QVar read FAILED\n");
+    }
+  }
+
+  if (optical_status != SENSOR_OPTICAL_ACTIVE)
+  {
+    optical_reprobe_calls++;
+    if (optical_reprobe_calls >= OPTICAL_REPROBE_INTERVAL_CALLS)
+    {
+      optical_reprobe_calls = 0U;
+      if (optical_status == SENSOR_OPTICAL_NOT_PRESENT)
+      {
+        if (MAX86150_OpticalProbe(&optical_device) == MAX86150_OPTICAL_OK)
+        {
+          optical_status = SENSOR_OPTICAL_IDLE;
+          APP_DBG_MSG("-- MAX86150: recovered (Red/IR optical)\n");
+        }
+      }
+      if (optical_status == SENSOR_OPTICAL_IDLE)
+      {
+        SensorManager_OpticalResetState();
+        if (MAX86150_OpticalConfigureRedIr(&optical_device,
+                                           OPTICAL_DEFAULT_LED_CURRENT_CODE,
+                                           OPTICAL_DEFAULT_LED_CURRENT_CODE) ==
+            MAX86150_OPTICAL_OK)
+        {
+          optical_status = SENSOR_OPTICAL_ACTIVE;
+          APP_DBG_MSG("-- MAX86150: PPG active\n");
+        }
+      }
     }
   }
 
@@ -660,8 +842,8 @@ sensor_optical_status_t SensorManager_GetOpticalStatus(void)
 
 void SensorManager_ProcessMotionInterrupt(void)
 {
-  lis2dux12_motion_result_t result;
-  lis2dux12_motion_event_t event;
+  lis2duxs12_motion_result_t result;
+  lis2duxs12_motion_event_t event;
 
   if ((motion_status == SENSOR_MOTION_NOT_PRESENT) ||
       (motion_status == SENSOR_MOTION_BUS_ERROR))
@@ -669,10 +851,10 @@ void SensorManager_ProcessMotionInterrupt(void)
     return;
   }
 
-  result = LIS2DUX12_MotionProcessInterrupt();
-  if (result == LIS2DUX12_MOTION_OK)
+  result = LIS2DUXS12_MotionProcessInterrupt();
+  if (result == LIS2DUXS12_MOTION_OK)
   {
-    if (!LIS2DUX12_MotionGetLatestEvent(&event))
+    if (!LIS2DUXS12_MotionGetLatestEvent(&event))
     {
       return;
     }
@@ -680,13 +862,13 @@ void SensorManager_ProcessMotionInterrupt(void)
     {
       motion_status = SENSOR_MOTION_CLASSIFIER_READY;
     }
-    if (event.activity == LIS2DUX12_ACTIVITY_FALL)
+    if (event.activity == LIS2DUXS12_ACTIVITY_FALL)
     {
       SensorManager_SetFlag(WEARABLE_FLAG_FALL_CANDIDATE, true);
       APP_DBG_MSG("-- LIS2DUXS12TR: MLC fall candidate\n");
     }
   }
-  else if (result == LIS2DUX12_MOTION_BUS_ERROR)
+  else if (result == LIS2DUXS12_MOTION_BUS_ERROR)
   {
     motion_status = SENSOR_MOTION_BUS_ERROR;
   }

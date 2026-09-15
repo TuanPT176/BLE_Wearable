@@ -145,7 +145,7 @@ Payload dài **16 byte**. Các số nhiều byte dùng **little-endian**.
 | 8 | 2 | `int16 LE` | Gia tốc X | mg |
 | 10 | 2 | `int16 LE` | Gia tốc Y | mg |
 | 12 | 2 | `int16 LE` | Gia tốc Z | mg |
-| 14 | 2 | — | Reserved | Hiện bằng `0` |
+| 14 | 2 | `int16 LE` | QVar raw | Giá trị thô kênh electrometer (AH_QVAR) của LIS2DUXS12TR; cùng đơn vị/thang đo dùng để so ngưỡng cờ `Wear detected` (`0x40`) bên dưới. Không phải điện áp, là LSB thô từ cảm biến |
 
 ### Sensor/status flags
 
@@ -170,6 +170,7 @@ Decode:
 - Supercapacitor: `0x0CE4` = **3300 mV**
 - Power state: **Normal**
 - Flags `0x20`: **ECG active**
+- QVar raw: `0x0000` = **0** (không đeo/không có tín hiệu điện dung ở ví dụ này)
 
 ## Decode Device Status
 
@@ -242,6 +243,7 @@ function decodeSensorData(input) {
     accelX: view.getInt16(8, true),
     accelY: view.getInt16(10, true),
     accelZ: view.getInt16(12, true),
+    qvarRaw: view.getInt16(14, true),
   };
 }
 

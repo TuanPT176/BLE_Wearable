@@ -1,9 +1,9 @@
 /*
  ******************************************************************************
- * @file    lis2dux12_reg.h
+ * @file    lis2duxs12_reg.h
  * @author  Sensors Software Solution Team
  * @brief   This file contains all the functions prototypes for the
- *          lis2dux12_reg.c driver.
+ *          lis2duxs12_reg.c driver.
  ******************************************************************************
  * @attention
  *
@@ -18,8 +18,8 @@
  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef LIS2DUX12_REGS_H
-#define LIS2DUX12_REGS_H
+#ifndef LIS2DUXS12_REGS_H
+#define LIS2DUXS12_REGS_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,9 +31,9 @@ extern "C" {
 #include <math.h>
 
 /**
-  * @defgroup    LIS2DUX12 LIS2DUX12
+  * @defgroup    LIS2DUXS12 LIS2DUXS12
   * @brief       This file provides a set of functions needed to drive the
-  *              lis2dux12 sensor.
+  *              lis2duxs12 sensor.
   * @{
   *
   */
@@ -168,18 +168,18 @@ typedef struct
   *
   */
 
-/** @defgroup LIS2DUX12_Infos Infos
+/** @defgroup LIS2DUXS12_Infos Infos
   * @brief Available I2C Addresses and Sensor Identification
   * @{
   *
   */
 
 /** I2C Device Address 8 bit format  if SA0=0 -> 0x if SA0=1 -> 0x **/
-#define LIS2DUX12_I2C_ADD_L                            0x31U
-#define LIS2DUX12_I2C_ADD_H                            0x33U
+#define LIS2DUXS12_I2C_ADD_L                            0x31U
+#define LIS2DUXS12_I2C_ADD_H                            0x33U
 
 /** Device Identification (Who am I) **/
-#define LIS2DUX12_ID                                   0x47U
+#define LIS2DUXS12_ID                                   0x47U
 
 /**
   * @}
@@ -191,7 +191,7 @@ typedef struct
   *
   */
 
-#define LIS2DUX12_EXT_CLK_CFG                          0x08U
+#define LIS2DUXS12_EXT_CLK_CFG                          0x08U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -201,9 +201,9 @@ typedef struct
   uint8_t ext_clk_en                   : 1;
   uint8_t not_used0                    : 7;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_ext_clk_cfg_t;
+} lis2duxs12_ext_clk_cfg_t;
 
-#define LIS2DUX12_PIN_CTRL                             0x0CU
+#define LIS2DUXS12_PIN_CTRL                             0x0CU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -225,9 +225,9 @@ typedef struct
   uint8_t pp_od                        : 1;
   uint8_t sim                          : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_pin_ctrl_t;
+} lis2duxs12_pin_ctrl_t;
 
-#define LIS2DUX12_WAKE_UP_DUR_EXT                      0x0EU
+#define LIS2DUXS12_WAKE_UP_DUR_EXT                      0x0EU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -239,9 +239,9 @@ typedef struct
   uint8_t wu_dur_extended              : 1;
   uint8_t not_used0                    : 4;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_wake_up_dur_ext_t;
+} lis2duxs12_wake_up_dur_ext_t;
 
-#define LIS2DUX12_WHO_AM_I                             0x0FU
+#define LIS2DUXS12_WHO_AM_I                             0x0FU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -249,9 +249,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t id                           : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_who_am_i_t;
+} lis2duxs12_who_am_i_t;
 
-#define LIS2DUX12_CTRL1                                0x10U
+#define LIS2DUXS12_CTRL1                                0x10U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -273,9 +273,9 @@ typedef struct
   uint8_t wu_y_en                      : 1;
   uint8_t wu_z_en                      : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_ctrl1_t;
+} lis2duxs12_ctrl1_t;
 
-#define LIS2DUX12_CTRL2                                0x11U
+#define LIS2DUXS12_CTRL2                                0x11U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -293,9 +293,9 @@ typedef struct
   uint8_t int1_drdy                    : 1;
   uint8_t not_used0                    : 3;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_ctrl2_t;
+} lis2duxs12_ctrl2_t;
 
-#define LIS2DUX12_CTRL3                                0x12U
+#define LIS2DUXS12_CTRL3                                0x12U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -317,9 +317,9 @@ typedef struct
   uint8_t st_sign_y                    : 1;
   uint8_t st_sign_x                    : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_ctrl3_t;
+} lis2duxs12_ctrl3_t;
 
-#define LIS2DUX12_CTRL4                                0x13U
+#define LIS2DUXS12_CTRL4                                0x13U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -339,9 +339,9 @@ typedef struct
   uint8_t soc                          : 1;
   uint8_t boot                         : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_ctrl4_t;
+} lis2duxs12_ctrl4_t;
 
-#define LIS2DUX12_CTRL5                                0x14U
+#define LIS2DUXS12_CTRL5                                0x14U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -353,9 +353,9 @@ typedef struct
   uint8_t bw                           : 2;
   uint8_t fs                           : 2;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_ctrl5_t;
+} lis2duxs12_ctrl5_t;
 
-#define LIS2DUX12_FIFO_CTRL                            0x15U
+#define LIS2DUXS12_FIFO_CTRL                            0x15U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -373,9 +373,9 @@ typedef struct
   uint8_t stop_on_fth                  : 1;
   uint8_t fifo_mode                    : 3;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fifo_ctrl_t;
+} lis2duxs12_fifo_ctrl_t;
 
-#define LIS2DUX12_FIFO_WTM                             0x16U
+#define LIS2DUXS12_FIFO_WTM                             0x16U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -385,9 +385,9 @@ typedef struct
   uint8_t xl_only_fifo                 : 1;
   uint8_t fth                          : 7;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fifo_wtm_t;
+} lis2duxs12_fifo_wtm_t;
 
-#define LIS2DUX12_INTERRUPT_CFG                        0x17U
+#define LIS2DUXS12_INTERRUPT_CFG                        0x17U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -409,9 +409,9 @@ typedef struct
   uint8_t lir                          : 1;
   uint8_t interrupts_enable            : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_interrupt_cfg_t;
+} lis2duxs12_interrupt_cfg_t;
 
-#define LIS2DUX12_SIXD                                 0x18U
+#define LIS2DUXS12_SIXD                                 0x18U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -423,9 +423,9 @@ typedef struct
   uint8_t d6d_ths                      : 2;
   uint8_t not_used0                    : 5;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_sixd_t;
+} lis2duxs12_sixd_t;
 
-#define LIS2DUX12_WAKE_UP_THS                          0x1CU
+#define LIS2DUXS12_WAKE_UP_THS                          0x1CU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -437,9 +437,9 @@ typedef struct
   uint8_t sleep_on                     : 1;
   uint8_t wk_ths                       : 6;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_wake_up_ths_t;
+} lis2duxs12_wake_up_ths_t;
 
-#define LIS2DUX12_WAKE_UP_DUR                          0x1DU
+#define LIS2DUXS12_WAKE_UP_DUR                          0x1DU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -453,9 +453,9 @@ typedef struct
   uint8_t st_sign_z                    : 1;
   uint8_t sleep_dur                    : 4;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_wake_up_dur_t;
+} lis2duxs12_wake_up_dur_t;
 
-#define LIS2DUX12_FREE_FALL                            0x1EU
+#define LIS2DUXS12_FREE_FALL                            0x1EU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -465,9 +465,9 @@ typedef struct
   uint8_t ff_dur                       : 5;
   uint8_t ff_ths                       : 3;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_free_fall_t;
+} lis2duxs12_free_fall_t;
 
-#define LIS2DUX12_MD1_CFG                              0x1FU
+#define LIS2DUXS12_MD1_CFG                              0x1FU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -489,9 +489,9 @@ typedef struct
   uint8_t int1_timestamp               : 1;
   uint8_t int1_emb_func                : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_md1_cfg_t;
+} lis2duxs12_md1_cfg_t;
 
-#define LIS2DUX12_MD2_CFG                              0x20U
+#define LIS2DUXS12_MD2_CFG                              0x20U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -513,9 +513,9 @@ typedef struct
   uint8_t int2_timestamp               : 1;
   uint8_t int2_emb_func                : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_md2_cfg_t;
+} lis2duxs12_md2_cfg_t;
 
-#define LIS2DUX12_WAKE_UP_SRC                          0x21U
+#define LIS2DUXS12_WAKE_UP_SRC                          0x21U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -537,9 +537,9 @@ typedef struct
   uint8_t y_wu                         : 1;
   uint8_t z_wu                         : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_wake_up_src_t;
+} lis2duxs12_wake_up_src_t;
 
-#define LIS2DUX12_TAP_SRC                              0x22U
+#define LIS2DUXS12_TAP_SRC                              0x22U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -555,9 +555,9 @@ typedef struct
   uint8_t triple_tap_ia                : 1;
   uint8_t not_used0                    : 4;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_tap_src_t;
+} lis2duxs12_tap_src_t;
 
-#define LIS2DUX12_SIXD_SRC                             0x23U
+#define LIS2DUXS12_SIXD_SRC                             0x23U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -579,9 +579,9 @@ typedef struct
   uint8_t xh                           : 1;
   uint8_t xl                           : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_sixd_src_t;
+} lis2duxs12_sixd_src_t;
 
-#define LIS2DUX12_ALL_INT_SRC                          0x24U
+#define LIS2DUXS12_ALL_INT_SRC                          0x24U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -603,9 +603,9 @@ typedef struct
   uint8_t wu_ia_all                    : 1;
   uint8_t ff_ia_all                    : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_all_int_src_t;
+} lis2duxs12_all_int_src_t;
 
-#define LIS2DUX12_STATUS                               0x25U
+#define LIS2DUXS12_STATUS                               0x25U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -619,9 +619,9 @@ typedef struct
   uint8_t not_used0                    : 4;
   uint8_t drdy                         : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_status_register_t;
+} lis2duxs12_status_register_t;
 
-#define LIS2DUX12_FIFO_STATUS1                         0x26U
+#define LIS2DUXS12_FIFO_STATUS1                         0x26U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -633,9 +633,9 @@ typedef struct
   uint8_t fifo_ovr_ia                  : 1;
   uint8_t not_used0                    : 6;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fifo_status1_t;
+} lis2duxs12_fifo_status1_t;
 
-#define LIS2DUX12_FIFO_STATUS2                         0x27U
+#define LIS2DUXS12_FIFO_STATUS2                         0x27U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -643,9 +643,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t fss                          : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fifo_status2_t;
+} lis2duxs12_fifo_status2_t;
 
-#define LIS2DUX12_OUT_X_L                              0x28U
+#define LIS2DUXS12_OUT_X_L                              0x28U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -653,9 +653,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t outx                         : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_out_x_l_t;
+} lis2duxs12_out_x_l_t;
 
-#define LIS2DUX12_OUT_X_H                              0x29U
+#define LIS2DUXS12_OUT_X_H                              0x29U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -663,9 +663,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t outx                         : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_out_x_h_t;
+} lis2duxs12_out_x_h_t;
 
-#define LIS2DUX12_OUT_Y_L                              0x2AU
+#define LIS2DUXS12_OUT_Y_L                              0x2AU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -673,9 +673,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t outy                         : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_out_y_l_t;
+} lis2duxs12_out_y_l_t;
 
-#define LIS2DUX12_OUT_Y_H                              0x2BU
+#define LIS2DUXS12_OUT_Y_H                              0x2BU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -683,9 +683,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t outy                         : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_out_y_h_t;
+} lis2duxs12_out_y_h_t;
 
-#define LIS2DUX12_OUT_Z_L                              0x2CU
+#define LIS2DUXS12_OUT_Z_L                              0x2CU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -693,9 +693,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t outz                         : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_out_z_l_t;
+} lis2duxs12_out_z_l_t;
 
-#define LIS2DUX12_OUT_Z_H                              0x2DU
+#define LIS2DUXS12_OUT_Z_H                              0x2DU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -703,9 +703,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t outz                         : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_out_z_h_t;
+} lis2duxs12_out_z_h_t;
 
-#define LIS2DUX12_OUT_T_L                              0x2EU
+#define LIS2DUXS12_OUT_T_AH_QVAR_L                      0x2EU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -713,9 +713,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t outt                         : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_out_t_l_t;
+} lis2duxs12_out_t_ah_qvar_l_t;
 
-#define LIS2DUX12_OUT_T_H                              0x2FU
+#define LIS2DUXS12_OUT_T_AH_QVAR_H                      0x2FU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -723,13 +723,33 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t outt                         : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_out_t_h_t;
+} lis2duxs12_out_t_ah_qvar_h_t;
 
-#define LIS2DUX12_SELF_TEST                            0x32U
+#define LIS2DUXS12_AH_QVAR_CFG                          0x31U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
-  uint8_t t_dis                        : 1;
+  uint8_t not_used0                    : 1;
+  uint8_t ah_qvar_gain                 : 2;
+  uint8_t ah_qvar_c_zin                : 2;
+  uint8_t ah_qvar_notch_cutoff         : 1;
+  uint8_t ah_qvar_notch_en             : 1;
+  uint8_t ah_qvar_en                   : 1;
+#elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
+  uint8_t ah_qvar_en                   : 1;
+  uint8_t ah_qvar_notch_en             : 1;
+  uint8_t ah_qvar_notch_cutoff         : 1;
+  uint8_t ah_qvar_c_zin                : 2;
+  uint8_t ah_qvar_gain                 : 2;
+  uint8_t not_used0                    : 1;
+#endif /* DRV_BYTE_ORDER */
+} lis2duxs12_ah_qvar_cfg_t;
+
+#define LIS2DUXS12_SELF_TEST                            0x32U
+typedef struct
+{
+#if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
+  uint8_t t_ah_qvar_dis                : 1;
   uint8_t not_used0                    : 3;
   uint8_t st                           : 2;
   uint8_t not_used1                    : 2;
@@ -737,11 +757,11 @@ typedef struct
   uint8_t not_used1                    : 2;
   uint8_t st                           : 2;
   uint8_t not_used0                    : 3;
-  uint8_t t_dis                        : 1;
+  uint8_t t_ah_qvar_dis                : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_self_test_t;
+} lis2duxs12_self_test_t;
 
-#define LIS2DUX12_I3C_IF_CTRL                          0x33U
+#define LIS2DUXS12_I3C_IF_CTRL                          0x33U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -757,9 +777,9 @@ typedef struct
   uint8_t not_used0                    : 3;
   uint8_t bus_act_sel                  : 2;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_i3c_if_ctrl_t;
+} lis2duxs12_i3c_if_ctrl_t;
 
-#define LIS2DUX12_EMB_FUNC_STATUS_MAINPAGE             0x34U
+#define LIS2DUXS12_EMB_FUNC_STATUS_MAINPAGE             0x34U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -777,9 +797,9 @@ typedef struct
   uint8_t is_step_det                  : 1;
   uint8_t not_used0                    : 3;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_emb_func_status_mainpage_t;
+} lis2duxs12_emb_func_status_mainpage_t;
 
-#define LIS2DUX12_FSM_STATUS_MAINPAGE                  0x35U
+#define LIS2DUXS12_FSM_STATUS_MAINPAGE                  0x35U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -801,9 +821,9 @@ typedef struct
   uint8_t is_fsm2                      : 1;
   uint8_t is_fsm1                      : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_status_mainpage_t;
+} lis2duxs12_fsm_status_mainpage_t;
 
-#define LIS2DUX12_MLC_STATUS_MAINPAGE                  0x36U
+#define LIS2DUXS12_MLC_STATUS_MAINPAGE                  0x36U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -819,9 +839,9 @@ typedef struct
   uint8_t is_mlc2                      : 1;
   uint8_t is_mlc1                      : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_mlc_status_mainpage_t;
+} lis2duxs12_mlc_status_mainpage_t;
 
-#define LIS2DUX12_SLEEP                                0x3DU
+#define LIS2DUXS12_SLEEP                                0x3DU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -831,9 +851,9 @@ typedef struct
   uint8_t not_used0                    : 7;
   uint8_t deep_pd                      : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_sleep_t;
+} lis2duxs12_sleep_t;
 
-#define LIS2DUX12_EN_DEVICE_CONFIG                     0x3EU
+#define LIS2DUXS12_EN_DEVICE_CONFIG                     0x3EU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -843,9 +863,9 @@ typedef struct
   uint8_t not_used0                    : 7;
   uint8_t soft_pd                      : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_en_device_config_t;
+} lis2duxs12_en_device_config_t;
 
-#define LIS2DUX12_FUNC_CFG_ACCESS                      0x3FU
+#define LIS2DUXS12_FUNC_CFG_ACCESS                      0x3FU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -857,9 +877,9 @@ typedef struct
   uint8_t not_used0                    : 6;
   uint8_t fsm_wr_ctrl_en               : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_func_cfg_access_t;
+} lis2duxs12_func_cfg_access_t;
 
-#define LIS2DUX12_FIFO_DATA_OUT_TAG                    0x40U
+#define LIS2DUXS12_FIFO_DATA_OUT_TAG                    0x40U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -869,9 +889,9 @@ typedef struct
   uint8_t tag_sensor                   : 5;
   uint8_t not_used0                    : 3;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fifo_data_out_tag_t;
+} lis2duxs12_fifo_data_out_tag_t;
 
-#define LIS2DUX12_FIFO_DATA_OUT_X_L                    0x41U
+#define LIS2DUXS12_FIFO_DATA_OUT_X_L                    0x41U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -879,9 +899,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t fifo_data_out                : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fifo_data_out_x_l_t;
+} lis2duxs12_fifo_data_out_x_l_t;
 
-#define LIS2DUX12_FIFO_DATA_OUT_X_H                    0x42U
+#define LIS2DUXS12_FIFO_DATA_OUT_X_H                    0x42U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -889,9 +909,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t fifo_data_out                : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fifo_data_out_x_h_t;
+} lis2duxs12_fifo_data_out_x_h_t;
 
-#define LIS2DUX12_FIFO_DATA_OUT_Y_L                    0x43U
+#define LIS2DUXS12_FIFO_DATA_OUT_Y_L                    0x43U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -899,9 +919,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t fifo_data_out                : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fifo_data_out_y_l_t;
+} lis2duxs12_fifo_data_out_y_l_t;
 
-#define LIS2DUX12_FIFO_DATA_OUT_Y_H                    0x44U
+#define LIS2DUXS12_FIFO_DATA_OUT_Y_H                    0x44U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -909,9 +929,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t fifo_data_out                : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fifo_data_out_y_h_t;
+} lis2duxs12_fifo_data_out_y_h_t;
 
-#define LIS2DUX12_FIFO_DATA_OUT_Z_L                    0x45U
+#define LIS2DUXS12_FIFO_DATA_OUT_Z_L                    0x45U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -919,9 +939,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t fifo_data_out                : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fifo_data_out_z_l_t;
+} lis2duxs12_fifo_data_out_z_l_t;
 
-#define LIS2DUX12_FIFO_DATA_OUT_Z_H                    0x46U
+#define LIS2DUXS12_FIFO_DATA_OUT_Z_H                    0x46U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -929,9 +949,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t fifo_data_out                : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fifo_data_out_z_h_t;
+} lis2duxs12_fifo_data_out_z_h_t;
 
-#define LIS2DUX12_FIFO_BATCH_DEC                       0x47U
+#define LIS2DUXS12_FIFO_BATCH_DEC                       0x47U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -943,9 +963,9 @@ typedef struct
   uint8_t dec_ts_batch                 : 2;
   uint8_t bdr_xl                       : 3;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fifo_batch_dec_t;
+} lis2duxs12_fifo_batch_dec_t;
 
-#define LIS2DUX12_TAP_CFG0                             0x6FU
+#define LIS2DUXS12_TAP_CFG0                             0x6FU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -957,9 +977,9 @@ typedef struct
   uint8_t invert_t                     : 5;
   uint8_t not_used0                    : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_tap_cfg0_t;
+} lis2duxs12_tap_cfg0_t;
 
-#define LIS2DUX12_TAP_CFG1                             0x70U
+#define LIS2DUXS12_TAP_CFG1                             0x70U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -969,9 +989,9 @@ typedef struct
   uint8_t pre_still_ths                : 4;
   uint8_t post_still_t                 : 4;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_tap_cfg1_t;
+} lis2duxs12_tap_cfg1_t;
 
-#define LIS2DUX12_TAP_CFG2                             0x71U
+#define LIS2DUXS12_TAP_CFG2                             0x71U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -981,9 +1001,9 @@ typedef struct
   uint8_t post_still_t                 : 2;
   uint8_t wait_t                       : 6;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_tap_cfg2_t;
+} lis2duxs12_tap_cfg2_t;
 
-#define LIS2DUX12_TAP_CFG3                             0x72U
+#define LIS2DUXS12_TAP_CFG3                             0x72U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -993,9 +1013,9 @@ typedef struct
   uint8_t post_still_ths               : 4;
   uint8_t latency_t                    : 4;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_tap_cfg3_t;
+} lis2duxs12_tap_cfg3_t;
 
-#define LIS2DUX12_TAP_CFG4                             0x73U
+#define LIS2DUXS12_TAP_CFG4                             0x73U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1007,9 +1027,9 @@ typedef struct
   uint8_t not_used0                    : 1;
   uint8_t peak_ths                     : 6;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_tap_cfg4_t;
+} lis2duxs12_tap_cfg4_t;
 
-#define LIS2DUX12_TAP_CFG5                             0x74U
+#define LIS2DUXS12_TAP_CFG5                             0x74U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1023,9 +1043,9 @@ typedef struct
   uint8_t single_tap_en                : 1;
   uint8_t rebound_t                    : 5;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_tap_cfg5_t;
+} lis2duxs12_tap_cfg5_t;
 
-#define LIS2DUX12_TAP_CFG6                             0x75U
+#define LIS2DUXS12_TAP_CFG6                             0x75U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1035,9 +1055,9 @@ typedef struct
   uint8_t pre_still_st                 : 4;
   uint8_t pre_still_n                  : 4;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_tap_cfg6_t;
+} lis2duxs12_tap_cfg6_t;
 
-#define LIS2DUX12_TIMESTAMP0                           0x7AU
+#define LIS2DUXS12_TIMESTAMP0                           0x7AU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1045,9 +1065,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t timestamp                    : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_timestamp0_t;
+} lis2duxs12_timestamp0_t;
 
-#define LIS2DUX12_TIMESTAMP1                           0x7BU
+#define LIS2DUXS12_TIMESTAMP1                           0x7BU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1055,9 +1075,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t timestamp                    : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_timestamp1_t;
+} lis2duxs12_timestamp1_t;
 
-#define LIS2DUX12_TIMESTAMP2                           0x7CU
+#define LIS2DUXS12_TIMESTAMP2                           0x7CU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1065,9 +1085,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t timestamp                    : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_timestamp2_t;
+} lis2duxs12_timestamp2_t;
 
-#define LIS2DUX12_TIMESTAMP3                           0x7DU
+#define LIS2DUXS12_TIMESTAMP3                           0x7DU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1075,7 +1095,7 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t timestamp                    : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_timestamp3_t;
+} lis2duxs12_timestamp3_t;
 
 /**
   * @}
@@ -1087,7 +1107,7 @@ typedef struct
   *
   */
 
-#define LIS2DUX12_PAGE_SEL                             0x2U
+#define LIS2DUXS12_PAGE_SEL                             0x2U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1097,9 +1117,9 @@ typedef struct
   uint8_t page_sel                     : 4;
   uint8_t not_used0                    : 4;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_page_sel_t;
+} lis2duxs12_page_sel_t;
 
-#define LIS2DUX12_EMB_FUNC_EN_A                        0x4U
+#define LIS2DUXS12_EMB_FUNC_EN_A                        0x4U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1117,9 +1137,9 @@ typedef struct
   uint8_t pedo_en                      : 1;
   uint8_t not_used0                    : 3;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_emb_func_en_a_t;
+} lis2duxs12_emb_func_en_a_t;
 
-#define LIS2DUX12_EMB_FUNC_EN_B                        0x5U
+#define LIS2DUXS12_EMB_FUNC_EN_B                        0x5U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1133,9 +1153,9 @@ typedef struct
   uint8_t not_used0                    : 3;
   uint8_t fsm_en                       : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_emb_func_en_b_t;
+} lis2duxs12_emb_func_en_b_t;
 
-#define LIS2DUX12_EMB_FUNC_EXEC_STATUS                 0x7U
+#define LIS2DUXS12_EMB_FUNC_EXEC_STATUS                 0x7U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1147,9 +1167,9 @@ typedef struct
   uint8_t emb_func_exec_ovr            : 1;
   uint8_t emb_func_endop               : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_emb_func_exec_status_t;
+} lis2duxs12_emb_func_exec_status_t;
 
-#define LIS2DUX12_PAGE_ADDRESS                         0x8U
+#define LIS2DUXS12_PAGE_ADDRESS                         0x8U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1157,9 +1177,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t page_addr                    : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_page_address_t;
+} lis2duxs12_page_address_t;
 
-#define LIS2DUX12_PAGE_VALUE                           0x9U
+#define LIS2DUXS12_PAGE_VALUE                           0x9U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1167,9 +1187,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t page_value                   : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_page_value_t;
+} lis2duxs12_page_value_t;
 
-#define LIS2DUX12_EMB_FUNC_INT1                        0x0AU
+#define LIS2DUXS12_EMB_FUNC_INT1                        0x0AU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1187,9 +1207,9 @@ typedef struct
   uint8_t int1_step_det                : 1;
   uint8_t not_used0                    : 3;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_emb_func_int1_t;
+} lis2duxs12_emb_func_int1_t;
 
-#define LIS2DUX12_FSM_INT1                             0x0BU
+#define LIS2DUXS12_FSM_INT1                             0x0BU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1211,9 +1231,9 @@ typedef struct
   uint8_t int1_fsm2                    : 1;
   uint8_t int1_fsm1                    : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_int1_t;
+} lis2duxs12_fsm_int1_t;
 
-#define LIS2DUX12_MLC_INT1                             0x0DU
+#define LIS2DUXS12_MLC_INT1                             0x0DU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1229,9 +1249,9 @@ typedef struct
   uint8_t int1_mlc2                    : 1;
   uint8_t int1_mlc1                    : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_mlc_int1_t;
+} lis2duxs12_mlc_int1_t;
 
-#define LIS2DUX12_EMB_FUNC_INT2                        0x0EU
+#define LIS2DUXS12_EMB_FUNC_INT2                        0x0EU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1249,9 +1269,9 @@ typedef struct
   uint8_t int2_step_det                : 1;
   uint8_t not_used0                    : 3;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_emb_func_int2_t;
+} lis2duxs12_emb_func_int2_t;
 
-#define LIS2DUX12_FSM_INT2                             0x0FU
+#define LIS2DUXS12_FSM_INT2                             0x0FU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1273,9 +1293,9 @@ typedef struct
   uint8_t int2_fsm2                    : 1;
   uint8_t int2_fsm1                    : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_int2_t;
+} lis2duxs12_fsm_int2_t;
 
-#define LIS2DUX12_MLC_INT2                             0x11U
+#define LIS2DUXS12_MLC_INT2                             0x11U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1291,9 +1311,9 @@ typedef struct
   uint8_t int2_mlc2                    : 1;
   uint8_t int2_mlc1                    : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_mlc_int2_t;
+} lis2duxs12_mlc_int2_t;
 
-#define LIS2DUX12_EMB_FUNC_STATUS                      0x12U
+#define LIS2DUXS12_EMB_FUNC_STATUS                      0x12U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1311,9 +1331,9 @@ typedef struct
   uint8_t is_step_det                  : 1;
   uint8_t not_used0                    : 3;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_emb_func_status_t;
+} lis2duxs12_emb_func_status_t;
 
-#define LIS2DUX12_FSM_STATUS                           0x13U
+#define LIS2DUXS12_FSM_STATUS                           0x13U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1335,9 +1355,9 @@ typedef struct
   uint8_t is_fsm2                      : 1;
   uint8_t is_fsm1                      : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_status_t;
+} lis2duxs12_fsm_status_t;
 
-#define LIS2DUX12_MLC_STATUS                           0x15U
+#define LIS2DUXS12_MLC_STATUS                           0x15U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1353,9 +1373,9 @@ typedef struct
   uint8_t is_mlc2                      : 1;
   uint8_t is_mlc1                      : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_mlc_status_t;
+} lis2duxs12_mlc_status_t;
 
-#define LIS2DUX12_PAGE_RW                              0x17U
+#define LIS2DUXS12_PAGE_RW                              0x17U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1369,9 +1389,9 @@ typedef struct
   uint8_t page_read                    : 1;
   uint8_t not_used0                    : 5;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_page_rw_t;
+} lis2duxs12_page_rw_t;
 
-#define LIS2DUX12_EMB_FUNC_FIFO_EN                     0x18U
+#define LIS2DUXS12_EMB_FUNC_FIFO_EN                     0x18U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1387,9 +1407,9 @@ typedef struct
   uint8_t mlc_fifo_en                  : 1;
   uint8_t step_counter_fifo_en         : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_emb_func_fifo_en_t;
+} lis2duxs12_emb_func_fifo_en_t;
 
-#define LIS2DUX12_FSM_ENABLE                           0x1AU
+#define LIS2DUXS12_FSM_ENABLE                           0x1AU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1411,9 +1431,9 @@ typedef struct
   uint8_t fsm2_en                      : 1;
   uint8_t fsm1_en                      : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_enable_t;
+} lis2duxs12_fsm_enable_t;
 
-#define LIS2DUX12_FSM_LONG_COUNTER_L                   0x1CU
+#define LIS2DUXS12_FSM_LONG_COUNTER_L                   0x1CU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1421,9 +1441,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t fsm_lc                       : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_long_counter_l_t;
+} lis2duxs12_fsm_long_counter_l_t;
 
-#define LIS2DUX12_FSM_LONG_COUNTER_H                   0x1DU
+#define LIS2DUXS12_FSM_LONG_COUNTER_H                   0x1DU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1431,9 +1451,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t fsm_lc                       : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_long_counter_h_t;
+} lis2duxs12_fsm_long_counter_h_t;
 
-#define LIS2DUX12_INT_ACK_MASK                         0x1FU
+#define LIS2DUXS12_INT_ACK_MASK                         0x1FU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1455,9 +1475,9 @@ typedef struct
   uint8_t iack_mask1                   : 1;
   uint8_t iack_mask0                   : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_int_ack_mask_t;
+} lis2duxs12_int_ack_mask_t;
 
-#define LIS2DUX12_FSM_OUTS1                            0x20U
+#define LIS2DUXS12_FSM_OUTS1                            0x20U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1479,9 +1499,9 @@ typedef struct
   uint8_t p_v                          : 1;
   uint8_t n_v                          : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_outs1_t;
+} lis2duxs12_fsm_outs1_t;
 
-#define LIS2DUX12_FSM_OUTS2                            0x21U
+#define LIS2DUXS12_FSM_OUTS2                            0x21U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1503,9 +1523,9 @@ typedef struct
   uint8_t p_v                          : 1;
   uint8_t n_v                          : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_outs2_t;
+} lis2duxs12_fsm_outs2_t;
 
-#define LIS2DUX12_FSM_OUTS3                            0x22U
+#define LIS2DUXS12_FSM_OUTS3                            0x22U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1527,9 +1547,9 @@ typedef struct
   uint8_t p_v                          : 1;
   uint8_t n_v                          : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_outs3_t;
+} lis2duxs12_fsm_outs3_t;
 
-#define LIS2DUX12_FSM_OUTS4                            0x23U
+#define LIS2DUXS12_FSM_OUTS4                            0x23U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1551,9 +1571,9 @@ typedef struct
   uint8_t p_v                          : 1;
   uint8_t n_v                          : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_outs4_t;
+} lis2duxs12_fsm_outs4_t;
 
-#define LIS2DUX12_FSM_OUTS5                            0x24U
+#define LIS2DUXS12_FSM_OUTS5                            0x24U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1575,9 +1595,9 @@ typedef struct
   uint8_t p_v                          : 1;
   uint8_t n_v                          : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_outs5_t;
+} lis2duxs12_fsm_outs5_t;
 
-#define LIS2DUX12_FSM_OUTS6                            0x25U
+#define LIS2DUXS12_FSM_OUTS6                            0x25U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1599,9 +1619,9 @@ typedef struct
   uint8_t p_v                          : 1;
   uint8_t n_v                          : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_outs6_t;
+} lis2duxs12_fsm_outs6_t;
 
-#define LIS2DUX12_FSM_OUTS7                            0x26U
+#define LIS2DUXS12_FSM_OUTS7                            0x26U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1623,9 +1643,9 @@ typedef struct
   uint8_t p_v                          : 1;
   uint8_t n_v                          : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_outs7_t;
+} lis2duxs12_fsm_outs7_t;
 
-#define LIS2DUX12_FSM_OUTS8                            0x27U
+#define LIS2DUXS12_FSM_OUTS8                            0x27U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1647,19 +1667,9 @@ typedef struct
   uint8_t p_v                          : 1;
   uint8_t n_v                          : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_outs8_t;
+} lis2duxs12_fsm_outs8_t;
 
-#define LIS2DUX12_STEP_COUNTER_L                       0x28U
-typedef struct
-{
-#if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
-  uint8_t step                         : 8;
-#elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
-  uint8_t step                         : 8;
-#endif /* DRV_BYTE_ORDER */
-} lis2dux12_step_counter_l_t;
-
-#define LIS2DUX12_STEP_COUNTER_H                       0x29U
+#define LIS2DUXS12_STEP_COUNTER_L                       0x28U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1667,9 +1677,19 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t step                         : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_step_counter_h_t;
+} lis2duxs12_step_counter_l_t;
 
-#define LIS2DUX12_EMB_FUNC_SRC                         0x2AU
+#define LIS2DUXS12_STEP_COUNTER_H                       0x29U
+typedef struct
+{
+#if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
+  uint8_t step                         : 8;
+#elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
+  uint8_t step                         : 8;
+#endif /* DRV_BYTE_ORDER */
+} lis2duxs12_step_counter_h_t;
+
+#define LIS2DUXS12_EMB_FUNC_SRC                         0x2AU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1689,9 +1709,9 @@ typedef struct
   uint8_t stepcounter_bit_set          : 1;
   uint8_t not_used0                    : 2;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_emb_func_src_t;
+} lis2duxs12_emb_func_src_t;
 
-#define LIS2DUX12_EMB_FUNC_INIT_A                      0x2CU
+#define LIS2DUXS12_EMB_FUNC_INIT_A                      0x2CU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1709,9 +1729,9 @@ typedef struct
   uint8_t step_det_init                : 1;
   uint8_t not_used0                    : 3;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_emb_func_init_a_t;
+} lis2duxs12_emb_func_init_a_t;
 
-#define LIS2DUX12_EMB_FUNC_INIT_B                      0x2DU
+#define LIS2DUXS12_EMB_FUNC_INIT_B                      0x2DU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1725,9 +1745,9 @@ typedef struct
   uint8_t not_used0                    : 3;
   uint8_t fsm_init                     : 1;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_emb_func_init_b_t;
+} lis2duxs12_emb_func_init_b_t;
 
-#define LIS2DUX12_MLC1_SRC                             0x34U
+#define LIS2DUXS12_MLC1_SRC                             0x34U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1735,9 +1755,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t mlc1_src                     : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_mlc1_src_t;
+} lis2duxs12_mlc1_src_t;
 
-#define LIS2DUX12_MLC2_SRC                             0x35U
+#define LIS2DUXS12_MLC2_SRC                             0x35U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1745,9 +1765,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t mlc2_src                     : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_mlc2_src_t;
+} lis2duxs12_mlc2_src_t;
 
-#define LIS2DUX12_MLC3_SRC                             0x36U
+#define LIS2DUXS12_MLC3_SRC                             0x36U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1755,9 +1775,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t mlc3_src                     : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_mlc3_src_t;
+} lis2duxs12_mlc3_src_t;
 
-#define LIS2DUX12_MLC4_SRC                             0x37U
+#define LIS2DUXS12_MLC4_SRC                             0x37U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1765,9 +1785,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t mlc4_src                     : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_mlc4_src_t;
+} lis2duxs12_mlc4_src_t;
 
-#define LIS2DUX12_FSM_ODR                              0x39U
+#define LIS2DUXS12_FSM_ODR                              0x39U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1779,9 +1799,9 @@ typedef struct
   uint8_t fsm_odr                      : 3;
   uint8_t not_used0                    : 3;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_odr_t;
+} lis2duxs12_fsm_odr_t;
 
-#define LIS2DUX12_MLC_ODR                              0x3AU
+#define LIS2DUXS12_MLC_ODR                              0x3AU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1793,7 +1813,7 @@ typedef struct
   uint8_t mlc_odr                      : 3;
   uint8_t not_used0                    : 4;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_mlc_odr_t;
+} lis2duxs12_mlc_odr_t;
 
 /**
   * @}
@@ -1804,9 +1824,9 @@ typedef struct
   * @{
   *
   */
-#define LIS2DUX12_EMB_ADV_PG_0                         0x000U
+#define LIS2DUXS12_EMB_ADV_PG_0                         0x000U
 
-#define LIS2DUX12_FSM_LC_TIMEOUT_L                     0x54U
+#define LIS2DUXS12_FSM_LC_TIMEOUT_L                     0x54U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1814,9 +1834,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t fsm_lc_timeout               : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_lc_timeout_l_t;
+} lis2duxs12_fsm_lc_timeout_l_t;
 
-#define LIS2DUX12_FSM_LC_TIMEOUT_H                     0x55U
+#define LIS2DUXS12_FSM_LC_TIMEOUT_H                     0x55U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1824,9 +1844,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t fsm_lc_timeout               : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_lc_timeout_h_t;
+} lis2duxs12_fsm_lc_timeout_h_t;
 
-#define LIS2DUX12_FSM_PROGRAMS                         0x56U
+#define LIS2DUXS12_FSM_PROGRAMS                         0x56U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1834,9 +1854,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t fsm_n_prog                   : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_programs_t;
+} lis2duxs12_fsm_programs_t;
 
-#define LIS2DUX12_FSM_START_ADD_L                      0x58U
+#define LIS2DUXS12_FSM_START_ADD_L                      0x58U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1844,9 +1864,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t fsm_start                    : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_start_add_l_t;
+} lis2duxs12_fsm_start_add_l_t;
 
-#define LIS2DUX12_FSM_START_ADD_H                      0x59U
+#define LIS2DUXS12_FSM_START_ADD_H                      0x59U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1854,9 +1874,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t fsm_start                    : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_fsm_start_add_h_t;
+} lis2duxs12_fsm_start_add_h_t;
 
-#define LIS2DUX12_PEDO_CMD_REG                         0x5DU
+#define LIS2DUXS12_PEDO_CMD_REG                         0x5DU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1870,9 +1890,9 @@ typedef struct
   uint8_t fp_rejection_en              : 1;
   uint8_t not_used0                    : 2;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_pedo_cmd_reg_t;
+} lis2duxs12_pedo_cmd_reg_t;
 
-#define LIS2DUX12_PEDO_DEB_STEPS_CONF                  0x5EU
+#define LIS2DUXS12_PEDO_DEB_STEPS_CONF                  0x5EU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1880,9 +1900,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t deb_step                     : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_pedo_deb_steps_conf_t;
+} lis2duxs12_pedo_deb_steps_conf_t;
 
-#define LIS2DUX12_PEDO_SC_DELTAT_L                     0xAAU
+#define LIS2DUXS12_PEDO_SC_DELTAT_L                     0xAAU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1890,9 +1910,9 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t pd_sc                        : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_pedo_sc_deltat_l_t;
+} lis2duxs12_pedo_sc_deltat_l_t;
 
-#define LIS2DUX12_PEDO_SC_DELTAT_H                     0xABU
+#define LIS2DUXS12_PEDO_SC_DELTAT_H                     0xABU
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1900,29 +1920,29 @@ typedef struct
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
   uint8_t pd_sc                        : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_pedo_sc_deltat_h_t;
+} lis2duxs12_pedo_sc_deltat_h_t;
 
-#define LIS2DUX12_T_SENSITIVITY_L                      0xB6U
+#define LIS2DUXS12_T_AH_QVAR_SENSITIVITY_L              0xB6U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
-  uint8_t t_s                          : 8;
+  uint8_t t_ah_qvar_s                  : 8;
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
-  uint8_t t_s                          : 8;
+  uint8_t t_ah_qvar_s                  : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_t_sensitivity_l_t;
+} lis2duxs12_t_ah_qvar_sensitivity_l_t;
 
-#define LIS2DUX12_T_SENSITIVITY_H                      0xB7U
+#define LIS2DUXS12_T_AH_QVAR_SENSITIVITY_H              0xB7U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
-  uint8_t t_s                          : 8;
+  uint8_t t_ah_qvar_s                  : 8;
 #elif DRV_BYTE_ORDER == DRV_BIG_ENDIAN
-  uint8_t t_s                          : 8;
+  uint8_t t_ah_qvar_s                  : 8;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_t_sensitivity_h_t;
+} lis2duxs12_t_ah_qvar_sensitivity_h_t;
 
-#define LIS2DUX12_SMART_POWER_CTRL                     0xD2U
+#define LIS2DUXS12_SMART_POWER_CTRL                     0xD2U
 typedef struct
 {
 #if DRV_BYTE_ORDER == DRV_LITTLE_ENDIAN
@@ -1932,7 +1952,7 @@ typedef struct
   uint8_t smart_power_ctrl_dur         : 4;
   uint8_t smart_power_ctrl_win         : 4;
 #endif /* DRV_BYTE_ORDER */
-} lis2dux12_smart_power_ctrl_t;
+} lis2duxs12_smart_power_ctrl_t;
 
 /**
   * @}
@@ -1941,120 +1961,121 @@ typedef struct
 
 typedef union
 {
-  lis2dux12_pin_ctrl_t    pin_ctrl;
-  lis2dux12_wake_up_dur_ext_t    wake_up_dur_ext;
-  lis2dux12_who_am_i_t    who_am_i;
-  lis2dux12_ctrl1_t    ctrl1;
-  lis2dux12_ctrl2_t    ctrl2;
-  lis2dux12_ctrl3_t    ctrl3;
-  lis2dux12_ctrl4_t    ctrl4;
-  lis2dux12_ctrl5_t    ctrl5;
-  lis2dux12_fifo_ctrl_t    fifo_ctrl;
-  lis2dux12_fifo_wtm_t    fifo_wtm;
-  lis2dux12_interrupt_cfg_t    interrupt_cfg;
-  lis2dux12_sixd_t    sixd;
-  lis2dux12_wake_up_ths_t    wake_up_ths;
-  lis2dux12_wake_up_dur_t    wake_up_dur;
-  lis2dux12_free_fall_t    free_fall;
-  lis2dux12_md1_cfg_t    md1_cfg;
-  lis2dux12_md2_cfg_t    md2_cfg;
-  lis2dux12_wake_up_src_t    wake_up_src;
-  lis2dux12_tap_src_t    tap_src;
-  lis2dux12_sixd_src_t    sixd_src;
-  lis2dux12_all_int_src_t    all_int_src;
-  lis2dux12_status_register_t    status;
-  lis2dux12_fifo_status1_t    fifo_status1;
-  lis2dux12_fifo_status2_t    fifo_status2;
-  lis2dux12_out_x_l_t    out_x_l;
-  lis2dux12_out_x_h_t    out_x_h;
-  lis2dux12_out_y_l_t    out_y_l;
-  lis2dux12_out_y_h_t    out_y_h;
-  lis2dux12_out_z_l_t    out_z_l;
-  lis2dux12_out_z_h_t    out_z_h;
-  lis2dux12_out_t_l_t    out_t_l;
-  lis2dux12_out_t_h_t    out_t_h;
-  lis2dux12_self_test_t    self_test;
-  lis2dux12_i3c_if_ctrl_t    i3c_if_ctrl;
-  lis2dux12_emb_func_status_mainpage_t    emb_func_status_mainpage;
-  lis2dux12_fsm_status_mainpage_t    fsm_status_mainpage;
-  lis2dux12_mlc_status_mainpage_t    mlc_status_mainpage;
-  lis2dux12_sleep_t    sleep;
-  lis2dux12_en_device_config_t    en_device_config;
-  lis2dux12_func_cfg_access_t    func_cfg_access;
-  lis2dux12_fifo_data_out_tag_t    fifo_data_out_tag;
-  lis2dux12_fifo_data_out_x_l_t    fifo_data_out_x_l;
-  lis2dux12_fifo_data_out_x_h_t    fifo_data_out_x_h;
-  lis2dux12_fifo_data_out_y_l_t    fifo_data_out_y_l;
-  lis2dux12_fifo_data_out_y_h_t    fifo_data_out_y_h;
-  lis2dux12_fifo_data_out_z_l_t    fifo_data_out_z_l;
-  lis2dux12_fifo_data_out_z_h_t    fifo_data_out_z_h;
-  lis2dux12_fifo_batch_dec_t    fifo_batch_dec;
-  lis2dux12_tap_cfg0_t    tap_cfg0;
-  lis2dux12_tap_cfg1_t    tap_cfg1;
-  lis2dux12_tap_cfg2_t    tap_cfg2;
-  lis2dux12_tap_cfg3_t    tap_cfg3;
-  lis2dux12_tap_cfg4_t    tap_cfg4;
-  lis2dux12_tap_cfg5_t    tap_cfg5;
-  lis2dux12_tap_cfg6_t    tap_cfg6;
-  lis2dux12_timestamp0_t    timestamp0;
-  lis2dux12_timestamp1_t    timestamp1;
-  lis2dux12_timestamp2_t    timestamp2;
-  lis2dux12_timestamp3_t    timestamp3;
-  lis2dux12_page_sel_t    page_sel;
-  lis2dux12_emb_func_en_a_t    emb_func_en_a;
-  lis2dux12_emb_func_en_b_t    emb_func_en_b;
-  lis2dux12_emb_func_exec_status_t    emb_func_exec_status;
-  lis2dux12_page_address_t    page_address;
-  lis2dux12_page_value_t    page_value;
-  lis2dux12_emb_func_int1_t    emb_func_int1;
-  lis2dux12_fsm_int1_t    fsm_int1;
-  lis2dux12_mlc_int1_t    mlc_int1;
-  lis2dux12_emb_func_int2_t    emb_func_int2;
-  lis2dux12_fsm_int2_t    fsm_int2;
-  lis2dux12_mlc_int2_t    mlc_int2;
-  lis2dux12_emb_func_status_t    emb_func_status;
-  lis2dux12_fsm_status_t    fsm_status;
-  lis2dux12_mlc_status_t    mlc_status;
-  lis2dux12_page_rw_t    page_rw;
-  lis2dux12_emb_func_fifo_en_t    emb_func_fifo_en;
-  lis2dux12_fsm_enable_t    fsm_enable;
-  lis2dux12_fsm_long_counter_l_t    fsm_long_counter_l;
-  lis2dux12_fsm_long_counter_h_t    fsm_long_counter_h;
-  lis2dux12_int_ack_mask_t    int_ack_mask;
-  lis2dux12_fsm_outs1_t    fsm_outs1;
-  lis2dux12_fsm_outs2_t    fsm_outs2;
-  lis2dux12_fsm_outs3_t    fsm_outs3;
-  lis2dux12_fsm_outs4_t    fsm_outs4;
-  lis2dux12_fsm_outs5_t    fsm_outs5;
-  lis2dux12_fsm_outs6_t    fsm_outs6;
-  lis2dux12_fsm_outs7_t    fsm_outs7;
-  lis2dux12_fsm_outs8_t    fsm_outs8;
-  lis2dux12_step_counter_l_t    step_counter_l;
-  lis2dux12_step_counter_h_t    step_counter_h;
-  lis2dux12_emb_func_src_t    emb_func_src;
-  lis2dux12_emb_func_init_a_t    emb_func_init_a;
-  lis2dux12_emb_func_init_b_t    emb_func_init_b;
-  lis2dux12_mlc1_src_t    mlc1_src;
-  lis2dux12_mlc2_src_t    mlc2_src;
-  lis2dux12_mlc3_src_t    mlc3_src;
-  lis2dux12_mlc4_src_t    mlc4_src;
-  lis2dux12_fsm_odr_t    fsm_odr;
-  lis2dux12_mlc_odr_t    mlc_odr;
-  lis2dux12_fsm_lc_timeout_l_t    fsm_lc_timeout_l;
-  lis2dux12_fsm_lc_timeout_h_t    fsm_lc_timeout_h;
-  lis2dux12_fsm_programs_t    fsm_programs;
-  lis2dux12_fsm_start_add_l_t    fsm_start_add_l;
-  lis2dux12_fsm_start_add_h_t    fsm_start_add_h;
-  lis2dux12_pedo_cmd_reg_t    pedo_cmd_reg;
-  lis2dux12_pedo_deb_steps_conf_t    pedo_deb_steps_conf;
-  lis2dux12_pedo_sc_deltat_l_t    pedo_sc_deltat_l;
-  lis2dux12_pedo_sc_deltat_h_t    pedo_sc_deltat_h;
-  lis2dux12_t_sensitivity_l_t    t_sensitivity_l;
-  lis2dux12_t_sensitivity_h_t    t_sensitivity_h;
-  lis2dux12_smart_power_ctrl_t   smart_power_ctrl;
+  lis2duxs12_pin_ctrl_t    pin_ctrl;
+  lis2duxs12_wake_up_dur_ext_t    wake_up_dur_ext;
+  lis2duxs12_who_am_i_t    who_am_i;
+  lis2duxs12_ctrl1_t    ctrl1;
+  lis2duxs12_ctrl2_t    ctrl2;
+  lis2duxs12_ctrl3_t    ctrl3;
+  lis2duxs12_ctrl4_t    ctrl4;
+  lis2duxs12_ctrl5_t    ctrl5;
+  lis2duxs12_fifo_ctrl_t    fifo_ctrl;
+  lis2duxs12_fifo_wtm_t    fifo_wtm;
+  lis2duxs12_interrupt_cfg_t    interrupt_cfg;
+  lis2duxs12_sixd_t    sixd;
+  lis2duxs12_wake_up_ths_t    wake_up_ths;
+  lis2duxs12_wake_up_dur_t    wake_up_dur;
+  lis2duxs12_free_fall_t    free_fall;
+  lis2duxs12_md1_cfg_t    md1_cfg;
+  lis2duxs12_md2_cfg_t    md2_cfg;
+  lis2duxs12_wake_up_src_t    wake_up_src;
+  lis2duxs12_tap_src_t    tap_src;
+  lis2duxs12_sixd_src_t    sixd_src;
+  lis2duxs12_all_int_src_t    all_int_src;
+  lis2duxs12_status_register_t    status;
+  lis2duxs12_fifo_status1_t    fifo_status1;
+  lis2duxs12_fifo_status2_t    fifo_status2;
+  lis2duxs12_out_x_l_t    out_x_l;
+  lis2duxs12_out_x_h_t    out_x_h;
+  lis2duxs12_out_y_l_t    out_y_l;
+  lis2duxs12_out_y_h_t    out_y_h;
+  lis2duxs12_out_z_l_t    out_z_l;
+  lis2duxs12_out_z_h_t    out_z_h;
+  lis2duxs12_out_t_ah_qvar_l_t    out_t_ah_qvar_l;
+  lis2duxs12_out_t_ah_qvar_h_t    out_t_ah_qvar_h;
+  lis2duxs12_ah_qvar_cfg_t    ah_qvar_cfg;
+  lis2duxs12_self_test_t    self_test;
+  lis2duxs12_i3c_if_ctrl_t    i3c_if_ctrl;
+  lis2duxs12_emb_func_status_mainpage_t    emb_func_status_mainpage;
+  lis2duxs12_fsm_status_mainpage_t    fsm_status_mainpage;
+  lis2duxs12_mlc_status_mainpage_t    mlc_status_mainpage;
+  lis2duxs12_sleep_t    sleep;
+  lis2duxs12_en_device_config_t    en_device_config;
+  lis2duxs12_func_cfg_access_t    func_cfg_access;
+  lis2duxs12_fifo_data_out_tag_t    fifo_data_out_tag;
+  lis2duxs12_fifo_data_out_x_l_t    fifo_data_out_x_l;
+  lis2duxs12_fifo_data_out_x_h_t    fifo_data_out_x_h;
+  lis2duxs12_fifo_data_out_y_l_t    fifo_data_out_y_l;
+  lis2duxs12_fifo_data_out_y_h_t    fifo_data_out_y_h;
+  lis2duxs12_fifo_data_out_z_l_t    fifo_data_out_z_l;
+  lis2duxs12_fifo_data_out_z_h_t    fifo_data_out_z_h;
+  lis2duxs12_fifo_batch_dec_t    fifo_batch_dec;
+  lis2duxs12_tap_cfg0_t    tap_cfg0;
+  lis2duxs12_tap_cfg1_t    tap_cfg1;
+  lis2duxs12_tap_cfg2_t    tap_cfg2;
+  lis2duxs12_tap_cfg3_t    tap_cfg3;
+  lis2duxs12_tap_cfg4_t    tap_cfg4;
+  lis2duxs12_tap_cfg5_t    tap_cfg5;
+  lis2duxs12_tap_cfg6_t    tap_cfg6;
+  lis2duxs12_timestamp0_t    timestamp0;
+  lis2duxs12_timestamp1_t    timestamp1;
+  lis2duxs12_timestamp2_t    timestamp2;
+  lis2duxs12_timestamp3_t    timestamp3;
+  lis2duxs12_page_sel_t    page_sel;
+  lis2duxs12_emb_func_en_a_t    emb_func_en_a;
+  lis2duxs12_emb_func_en_b_t    emb_func_en_b;
+  lis2duxs12_emb_func_exec_status_t    emb_func_exec_status;
+  lis2duxs12_page_address_t    page_address;
+  lis2duxs12_page_value_t    page_value;
+  lis2duxs12_emb_func_int1_t    emb_func_int1;
+  lis2duxs12_fsm_int1_t    fsm_int1;
+  lis2duxs12_mlc_int1_t    mlc_int1;
+  lis2duxs12_emb_func_int2_t    emb_func_int2;
+  lis2duxs12_fsm_int2_t    fsm_int2;
+  lis2duxs12_mlc_int2_t    mlc_int2;
+  lis2duxs12_emb_func_status_t    emb_func_status;
+  lis2duxs12_fsm_status_t    fsm_status;
+  lis2duxs12_mlc_status_t    mlc_status;
+  lis2duxs12_page_rw_t    page_rw;
+  lis2duxs12_emb_func_fifo_en_t    emb_func_fifo_en;
+  lis2duxs12_fsm_enable_t    fsm_enable;
+  lis2duxs12_fsm_long_counter_l_t    fsm_long_counter_l;
+  lis2duxs12_fsm_long_counter_h_t    fsm_long_counter_h;
+  lis2duxs12_int_ack_mask_t    int_ack_mask;
+  lis2duxs12_fsm_outs1_t    fsm_outs1;
+  lis2duxs12_fsm_outs2_t    fsm_outs2;
+  lis2duxs12_fsm_outs3_t    fsm_outs3;
+  lis2duxs12_fsm_outs4_t    fsm_outs4;
+  lis2duxs12_fsm_outs5_t    fsm_outs5;
+  lis2duxs12_fsm_outs6_t    fsm_outs6;
+  lis2duxs12_fsm_outs7_t    fsm_outs7;
+  lis2duxs12_fsm_outs8_t    fsm_outs8;
+  lis2duxs12_step_counter_l_t    step_counter_l;
+  lis2duxs12_step_counter_h_t    step_counter_h;
+  lis2duxs12_emb_func_src_t    emb_func_src;
+  lis2duxs12_emb_func_init_a_t    emb_func_init_a;
+  lis2duxs12_emb_func_init_b_t    emb_func_init_b;
+  lis2duxs12_mlc1_src_t    mlc1_src;
+  lis2duxs12_mlc2_src_t    mlc2_src;
+  lis2duxs12_mlc3_src_t    mlc3_src;
+  lis2duxs12_mlc4_src_t    mlc4_src;
+  lis2duxs12_fsm_odr_t    fsm_odr;
+  lis2duxs12_mlc_odr_t    mlc_odr;
+  lis2duxs12_fsm_lc_timeout_l_t    fsm_lc_timeout_l;
+  lis2duxs12_fsm_lc_timeout_h_t    fsm_lc_timeout_h;
+  lis2duxs12_fsm_programs_t    fsm_programs;
+  lis2duxs12_fsm_start_add_l_t    fsm_start_add_l;
+  lis2duxs12_fsm_start_add_h_t    fsm_start_add_h;
+  lis2duxs12_pedo_cmd_reg_t    pedo_cmd_reg;
+  lis2duxs12_pedo_deb_steps_conf_t    pedo_deb_steps_conf;
+  lis2duxs12_pedo_sc_deltat_l_t    pedo_sc_deltat_l;
+  lis2duxs12_pedo_sc_deltat_h_t    pedo_sc_deltat_h;
+  lis2duxs12_t_ah_qvar_sensitivity_l_t    t_ah_qvar_sensitivity_l;
+  lis2duxs12_t_ah_qvar_sensitivity_h_t    t_ah_qvar_sensitivity_h;
+  lis2duxs12_smart_power_ctrl_t   smart_power_ctrl;
   bitwise_t    bitwise;
   uint8_t    byte;
-} lis2dux12_reg_t;
+} lis2duxs12_reg_t;
 
 #ifndef __weak
 #define __weak __attribute__((weak))
@@ -2085,9 +2106,9 @@ typedef union
   * @retval       interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_read_reg(const stmdev_ctx_t *ctx, uint8_t reg,
-                           uint8_t *data,
-                           uint16_t len);
+int32_t lis2duxs12_read_reg(const stmdev_ctx_t *ctx, uint8_t reg,
+                            uint8_t *data,
+                            uint16_t len);
 
 /**
   * @brief  Write generic device register
@@ -2099,9 +2120,9 @@ int32_t lis2dux12_read_reg(const stmdev_ctx_t *ctx, uint8_t reg,
   * @retval       interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_write_reg(const stmdev_ctx_t *ctx, uint8_t reg,
-                            uint8_t *data,
-                            uint16_t len);
+int32_t lis2duxs12_write_reg(const stmdev_ctx_t *ctx, uint8_t reg,
+                             uint8_t *data,
+                             uint16_t len);
 
 /**
   * @}
@@ -2109,17 +2130,18 @@ int32_t lis2dux12_write_reg(const stmdev_ctx_t *ctx, uint8_t reg,
   */
 
 /**
-  * @defgroup    LIS2DUX12_Sensitivity Sensitivity
+  * @defgroup    LIS2DUXS12_Sensitivity Sensitivity
   * @brief       These functions convert raw-data into engineering units.
   * @{
   *
   */
 
-float_t lis2dux12_from_fs2g_to_mg(int16_t lsb);
-float_t lis2dux12_from_fs4g_to_mg(int16_t lsb);
-float_t lis2dux12_from_fs8g_to_mg(int16_t lsb);
-float_t lis2dux12_from_fs16g_to_mg(int16_t lsb);
-float_t lis2dux12_from_lsb_to_celsius(int16_t lsb);
+float_t lis2duxs12_from_fs2g_to_mg(int16_t lsb);
+float_t lis2duxs12_from_fs4g_to_mg(int16_t lsb);
+float_t lis2duxs12_from_fs8g_to_mg(int16_t lsb);
+float_t lis2duxs12_from_fs16g_to_mg(int16_t lsb);
+float_t lis2duxs12_from_lsb_to_celsius(int16_t lsb);
+float_t lis2duxs12_from_lsb_to_mv(int16_t lsb);
 
 /**
   * @}
@@ -2128,7 +2150,7 @@ float_t lis2dux12_from_lsb_to_celsius(int16_t lsb);
 
 
 /**
-  * @defgroup   LIS2DUX12_Common Common
+  * @defgroup   LIS2DUXS12_Common Common
   * @brief      Common
   * @{
   *
@@ -2142,7 +2164,7 @@ float_t lis2dux12_from_lsb_to_celsius(int16_t lsb);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_device_id_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_device_id_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  Initialize the device with optimal settings.
@@ -2151,7 +2173,7 @@ int32_t lis2dux12_device_id_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval       interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_init_set(const stmdev_ctx_t *ctx);
+int32_t lis2duxs12_init_set(const stmdev_ctx_t *ctx);
 
 /**
   * @brief Enables embedded functions
@@ -2161,7 +2183,7 @@ int32_t lis2dux12_init_set(const stmdev_ctx_t *ctx);
   * @retval          0: reboot has been performed, -1: error
   *
   */
-int32_t lis2dux12_embedded_state_set(const stmdev_ctx_t *ctx, uint8_t state);
+int32_t lis2duxs12_embedded_state_set(const stmdev_ctx_t *ctx, uint8_t state);
 
 /**
   * @brief Perform device reboot (boot time: 25 ms)
@@ -2170,7 +2192,7 @@ int32_t lis2dux12_embedded_state_set(const stmdev_ctx_t *ctx, uint8_t state);
   * @retval          0: reboot has been performed, -1: error
   *
   */
-int32_t lis2dux12_reboot(const stmdev_ctx_t *ctx);
+int32_t lis2duxs12_reboot(const stmdev_ctx_t *ctx);
 
 /**
   * @brief Global reset of the device: power-on reset.
@@ -2179,7 +2201,7 @@ int32_t lis2dux12_reboot(const stmdev_ctx_t *ctx);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_sw_por(const stmdev_ctx_t *ctx);
+int32_t lis2duxs12_sw_por(const stmdev_ctx_t *ctx);
 
 /**
   * @brief Software reset: resets configuration registers.
@@ -2188,14 +2210,14 @@ int32_t lis2dux12_sw_por(const stmdev_ctx_t *ctx);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_sw_reset(const stmdev_ctx_t *ctx);
+int32_t lis2duxs12_sw_reset(const stmdev_ctx_t *ctx);
 
 typedef struct
 {
   uint8_t sw_reset                     : 1; /* Restoring configuration registers */
   uint8_t boot                         : 1; /* Restoring calibration parameters */
   uint8_t drdy                         : 1; /* Accelerometer data ready */
-} lis2dux12_status_t;
+} lis2duxs12_status_t;
 
 /**
   * @brief  Get the status of the device.[get]
@@ -2205,14 +2227,14 @@ typedef struct
   * @retval       interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_status_get(const stmdev_ctx_t *ctx, lis2dux12_status_t *val);
+int32_t lis2duxs12_status_get(const stmdev_ctx_t *ctx, lis2duxs12_status_t *val);
 
 typedef struct
 {
   uint8_t is_step_det                  : 1; /* Step detected */
   uint8_t is_tilt                      : 1; /* Tilt detected */
   uint8_t is_sigmot                    : 1; /* Significant motion detected */
-} lis2dux12_embedded_status_t;
+} lis2duxs12_embedded_status_t;
 
 /**
   * @brief  Get the status of the embedded funcs.[get]
@@ -2222,13 +2244,13 @@ typedef struct
   * @retval       interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_embedded_status_get(const stmdev_ctx_t *ctx, lis2dux12_embedded_status_t *val);
+int32_t lis2duxs12_embedded_status_get(const stmdev_ctx_t *ctx, lis2duxs12_embedded_status_t *val);
 
 typedef enum
 {
-  LIS2DUX12_DRDY_LATCHED = 0x0,
-  LIS2DUX12_DRDY_PULSED  = 0x1,
-} lis2dux12_data_ready_mode_t;
+  LIS2DUXS12_DRDY_LATCHED = 0x0,
+  LIS2DUXS12_DRDY_PULSED  = 0x1,
+} lis2duxs12_data_ready_mode_t;
 
 /**
   * @brief  Enables pulsed data-ready mode (~75 us).[set]
@@ -2238,7 +2260,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_data_ready_mode_set(const stmdev_ctx_t *ctx, lis2dux12_data_ready_mode_t val);
+int32_t lis2duxs12_data_ready_mode_set(const stmdev_ctx_t *ctx, lis2duxs12_data_ready_mode_t val);
 
 /**
   * @brief  Enables pulsed data-ready mode (~75 us).[get]
@@ -2248,56 +2270,56 @@ int32_t lis2dux12_data_ready_mode_set(const stmdev_ctx_t *ctx, lis2dux12_data_re
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_data_ready_mode_get(const stmdev_ctx_t *ctx, lis2dux12_data_ready_mode_t *val);
+int32_t lis2duxs12_data_ready_mode_get(const stmdev_ctx_t *ctx, lis2duxs12_data_ready_mode_t *val);
 
 typedef enum
 {
-  LIS2DUX12_OFF               = 0x00, /* in power down */
-  LIS2DUX12_1Hz6_ULP          = 0x01, /* @1Hz6 (ultra low power) */
-  LIS2DUX12_3Hz_ULP           = 0x02, /* @3Hz (ultra low power) */
-  LIS2DUX12_25Hz_ULP          = 0x03, /* @25Hz (ultra low power) */
-  LIS2DUX12_6Hz_LP            = 0x04, /* @6Hz (low power) */
-  LIS2DUX12_12Hz5_LP          = 0x05, /* @12Hz5 (low power) */
-  LIS2DUX12_25Hz_LP           = 0x06, /* @25Hz  (low power ) */
-  LIS2DUX12_50Hz_LP           = 0x07, /* @50Hz  (low power) */
-  LIS2DUX12_100Hz_LP          = 0x08, /* @100Hz (low power) */
-  LIS2DUX12_200Hz_LP          = 0x09, /* @200Hz (low power) */
-  LIS2DUX12_400Hz_LP          = 0x0A, /* @400Hz (low power) */
-  LIS2DUX12_800Hz_LP          = 0x0B, /* @800Hz (low power) */
-  LIS2DUX12_6Hz_HP            = 0x14, /* @6Hz (high performance) */
-  LIS2DUX12_12Hz5_HP          = 0x15, /* @12Hz5 (high performance) */
-  LIS2DUX12_25Hz_HP           = 0x16, /* @25Hz  (high performance ) */
-  LIS2DUX12_50Hz_HP           = 0x17, /* @50Hz  (high performance) */
-  LIS2DUX12_100Hz_HP          = 0x18, /* @100Hz (high performance) */
-  LIS2DUX12_200Hz_HP          = 0x19, /* @200Hz (high performance) */
-  LIS2DUX12_400Hz_HP          = 0x1A, /* @400Hz (high performance) */
-  LIS2DUX12_800Hz_HP          = 0x1B, /* @800Hz (high performance) */
-  LIS2DUX12_TRIG_PIN          = 0x2E, /* Single-shot high latency by INT2 */
-  LIS2DUX12_TRIG_SW           = 0x2F, /* Single-shot high latency by IF */
-} lis2dux12_odr_t;
+  LIS2DUXS12_OFF               = 0x00, /* in power down */
+  LIS2DUXS12_1Hz6_ULP          = 0x01, /* @1Hz6 (ultra low power) */
+  LIS2DUXS12_3Hz_ULP           = 0x02, /* @3Hz (ultra low power) */
+  LIS2DUXS12_25Hz_ULP          = 0x03, /* @25Hz (ultra low power) */
+  LIS2DUXS12_6Hz_LP            = 0x04, /* @6Hz (low power) */
+  LIS2DUXS12_12Hz5_LP          = 0x05, /* @12Hz5 (low power) */
+  LIS2DUXS12_25Hz_LP           = 0x06, /* @25Hz  (low power ) */
+  LIS2DUXS12_50Hz_LP           = 0x07, /* @50Hz  (low power) */
+  LIS2DUXS12_100Hz_LP          = 0x08, /* @100Hz (low power) */
+  LIS2DUXS12_200Hz_LP          = 0x09, /* @200Hz (low power) */
+  LIS2DUXS12_400Hz_LP          = 0x0A, /* @400Hz (low power) */
+  LIS2DUXS12_800Hz_LP          = 0x0B, /* @800Hz (low power) */
+  LIS2DUXS12_6Hz_HP            = 0x14, /* @6Hz (high performance) */
+  LIS2DUXS12_12Hz5_HP          = 0x15, /* @12Hz5 (high performance) */
+  LIS2DUXS12_25Hz_HP           = 0x16, /* @25Hz  (high performance ) */
+  LIS2DUXS12_50Hz_HP           = 0x17, /* @50Hz  (high performance) */
+  LIS2DUXS12_100Hz_HP          = 0x18, /* @100Hz (high performance) */
+  LIS2DUXS12_200Hz_HP          = 0x19, /* @200Hz (high performance) */
+  LIS2DUXS12_400Hz_HP          = 0x1A, /* @400Hz (high performance) */
+  LIS2DUXS12_800Hz_HP          = 0x1B, /* @800Hz (high performance) */
+  LIS2DUXS12_TRIG_PIN          = 0x2E, /* Single-shot high latency by INT2 */
+  LIS2DUXS12_TRIG_SW           = 0x2F, /* Single-shot high latency by IF */
+} lis2duxs12_odr_t;
 
 typedef enum
 {
-  LIS2DUX12_2g   = 0,
-  LIS2DUX12_4g   = 1,
-  LIS2DUX12_8g   = 2,
-  LIS2DUX12_16g  = 3,
-} lis2dux12_fs_t;
+  LIS2DUXS12_2g   = 0,
+  LIS2DUXS12_4g   = 1,
+  LIS2DUXS12_8g   = 2,
+  LIS2DUXS12_16g  = 3,
+} lis2duxs12_fs_t;
 
 typedef enum
 {
-  LIS2DUX12_ODR_div_2   = 0,
-  LIS2DUX12_ODR_div_4   = 1,
-  LIS2DUX12_ODR_div_8   = 2,
-  LIS2DUX12_ODR_div_16  = 3,
-} lis2dux12_bw_t;
+  LIS2DUXS12_ODR_div_2   = 0,
+  LIS2DUXS12_ODR_div_4   = 1,
+  LIS2DUXS12_ODR_div_8   = 2,
+  LIS2DUXS12_ODR_div_16  = 3,
+} lis2duxs12_bw_t;
 
 typedef struct
 {
-  lis2dux12_odr_t odr;
-  lis2dux12_fs_t fs;
-  lis2dux12_bw_t bw;
-} lis2dux12_md_t;
+  lis2duxs12_odr_t odr;
+  lis2duxs12_fs_t fs;
+  lis2duxs12_bw_t bw;
+} lis2duxs12_md_t;
 
 /**
   * @brief  Sensor mode.[set]
@@ -2307,7 +2329,7 @@ typedef struct
   * @retval       interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_mode_set(const stmdev_ctx_t *ctx, const lis2dux12_md_t *val);
+int32_t lis2duxs12_mode_set(const stmdev_ctx_t *ctx, const lis2duxs12_md_t *val);
 
 /**
   * @brief  Sensor mode.[get]
@@ -2317,27 +2339,43 @@ int32_t lis2dux12_mode_set(const stmdev_ctx_t *ctx, const lis2dux12_md_t *val);
   * @retval       interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_mode_get(const stmdev_ctx_t *ctx, lis2dux12_md_t *val);
+int32_t lis2duxs12_mode_get(const stmdev_ctx_t *ctx, lis2duxs12_md_t *val);
 
 /**
-  * @brief  Disable/Enable temperature sensor acquisition[set]
+  * @}
+  *
+  */
+/** @addtogroup Ah_qvar
+  * @{
+  *
+  */
+/**
+  * @brief  Disable/Enable temperature (or AH_QVAR) sensor acquisition[set]
   *
   * @param  ctx      read / write interface definitions
   * @param  val      1: disable temp acquisition - 0: enable temp acquisition
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_temp_disable_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lis2duxs12_t_ah_qvar_dis_set(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
-  * @brief  Disable/Enable temperature sensor acquisition[get]
+  * @brief  Disable/Enable temperature (or AH_QVAR) sensor acquisition[get]
   *
   * @param  ctx      read / write interface definitions
   * @param  val      1: disable temp acquisition - 0: enable temp acquisition
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_temp_disable_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_t_ah_qvar_dis_get(const stmdev_ctx_t *ctx, uint8_t *val);
+/**
+  * @}
+  *
+  */
+/** @addtogroup LIS2DUXS12_Common
+  * @{
+  *
+  */
 
 /**
   * @brief  Software trigger for One-Shot.[get]
@@ -2347,7 +2385,7 @@ int32_t lis2dux12_temp_disable_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval       interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_trigger_sw(const stmdev_ctx_t *ctx, const lis2dux12_md_t *md);
+int32_t lis2duxs12_trigger_sw(const stmdev_ctx_t *ctx, const lis2duxs12_md_t *md);
 
 typedef struct
 {
@@ -2369,14 +2407,14 @@ typedef struct
   uint8_t six_d_zh                     : 1;
   uint8_t sleep_change                 : 1;
   uint8_t sleep_state                  : 1;
-} lis2dux12_all_sources_t;
-int32_t lis2dux12_all_sources_get(const stmdev_ctx_t *ctx, lis2dux12_all_sources_t *val);
+} lis2duxs12_all_sources_t;
+int32_t lis2duxs12_all_sources_get(const stmdev_ctx_t *ctx, lis2duxs12_all_sources_t *val);
 
 typedef struct
 {
   float_t mg[3];
   int16_t raw[3];
-} lis2dux12_xl_data_t;
+} lis2duxs12_xl_data_t;
 /**
   * @brief  Accelerometer data.[get]
   *
@@ -2386,8 +2424,8 @@ typedef struct
   * @retval       interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_xl_data_get(const stmdev_ctx_t *ctx, const lis2dux12_md_t *md,
-                              lis2dux12_xl_data_t *data);
+int32_t lis2duxs12_xl_data_get(const stmdev_ctx_t *ctx, const lis2duxs12_md_t *md,
+                               lis2duxs12_xl_data_t *data);
 
 typedef struct
 {
@@ -2396,7 +2434,7 @@ typedef struct
     float_t deg_c;
     int16_t raw;
   } heat;
-} lis2dux12_outt_data_t;
+} lis2duxs12_outt_data_t;
 
 /**
   * @brief  OUTT data.[get]
@@ -2407,15 +2445,49 @@ typedef struct
   * @retval       interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_outt_data_get(const stmdev_ctx_t *ctx,
-                                lis2dux12_outt_data_t *data);
+int32_t lis2duxs12_outt_data_get(const stmdev_ctx_t *ctx,
+                                 lis2duxs12_outt_data_t *data);
+
+/**
+  * @}
+  *
+  */
+/** @addtogroup Ah_qvar
+  * @{
+  *
+  */
+typedef struct
+{
+  float_t mv;
+  int16_t raw;
+} lis2duxs12_ah_qvar_data_t;
+
+/**
+  * @brief  AH_QVAR data.[get]
+  *
+  * @param  ctx   communication interface handler.(ptr)
+  * @param  md    the sensor conversion parameters.(ptr)
+  * @param  data  data retrived from the sensor.(ptr)
+  * @retval       interface status (MANDATORY: return 0 -> no Error)
+  *
+  */
+int32_t lis2duxs12_ah_qvar_data_get(const stmdev_ctx_t *ctx,
+                                    lis2duxs12_ah_qvar_data_t *data);
+/**
+  * @}
+  *
+  */
+/** @addtogroup LIS2DUXS12_Common
+  * @{
+  *
+  */
 
 typedef enum
 {
-  LIS2DUX12_XL_ST_DISABLE  = 0x0,
-  LIS2DUX12_XL_ST_POSITIVE = 0x1,
-  LIS2DUX12_XL_ST_NEGATIVE = 0x2,
-} lis2dux12_xl_self_test_t;
+  LIS2DUXS12_XL_ST_DISABLE  = 0x0,
+  LIS2DUXS12_XL_ST_POSITIVE = 0x1,
+  LIS2DUXS12_XL_ST_NEGATIVE = 0x2,
+} lis2duxs12_xl_self_test_t;
 
 /**
   * @brief  Configures the self test.[set]
@@ -2425,7 +2497,7 @@ typedef enum
   * @retval       interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_self_test_sign_set(const stmdev_ctx_t *ctx, lis2dux12_xl_self_test_t val);
+int32_t lis2duxs12_self_test_sign_set(const stmdev_ctx_t *ctx, lis2duxs12_xl_self_test_t val);
 
 /**
   * @brief  Configures the self test.[start]
@@ -2435,7 +2507,7 @@ int32_t lis2dux12_self_test_sign_set(const stmdev_ctx_t *ctx, lis2dux12_xl_self_
   * @retval       interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_self_test_start(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lis2duxs12_self_test_start(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Configures the self test.[stop]
@@ -2444,7 +2516,7 @@ int32_t lis2dux12_self_test_start(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval       interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_self_test_stop(const stmdev_ctx_t *ctx);
+int32_t lis2duxs12_self_test_stop(const stmdev_ctx_t *ctx);
 
 /**
   * @brief  Enter deep power down[set]
@@ -2454,7 +2526,7 @@ int32_t lis2dux12_self_test_stop(const stmdev_ctx_t *ctx);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_enter_deep_power_down(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lis2duxs12_enter_deep_power_down(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Enter soft power down in SPI case[set]
@@ -2464,7 +2536,7 @@ int32_t lis2dux12_enter_deep_power_down(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_exit_deep_power_down(const stmdev_ctx_t *ctx);
+int32_t lis2duxs12_exit_deep_power_down(const stmdev_ctx_t *ctx);
 
 /**
   * @brief  Disable hard-reset from CS.[set]
@@ -2473,7 +2545,7 @@ int32_t lis2dux12_exit_deep_power_down(const stmdev_ctx_t *ctx);
   * @param  md    0: enable hard-reset from CS, 1: disable hard-reset from CS
   * @retval       interface status (MANDATORY: return 0 -> no Error)
   */
-int32_t lis2dux12_disable_hard_reset_from_cs_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lis2duxs12_disable_hard_reset_from_cs_set(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Disable hard-reset from CS.[get]
@@ -2482,22 +2554,22 @@ int32_t lis2dux12_disable_hard_reset_from_cs_set(const stmdev_ctx_t *ctx, uint8_
   * @param  md    0: enable hard-reset from CS, 1: disable hard-reset from CS
   * @retval       interface status (MANDATORY: return 0 -> no Error)
   */
-int32_t lis2dux12_disable_hard_reset_from_cs_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_disable_hard_reset_from_cs_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef enum
 {
-  LIS2DUX12_I3C_BUS_AVAIL_TIME_20US = 0x0,
-  LIS2DUX12_I3C_BUS_AVAIL_TIME_50US = 0x1,
-  LIS2DUX12_I3C_BUS_AVAIL_TIME_1MS  = 0x2,
-  LIS2DUX12_I3C_BUS_AVAIL_TIME_25MS = 0x3,
-} lis2dux12_bus_act_sel_t;
+  LIS2DUXS12_I3C_BUS_AVAIL_TIME_20US = 0x0,
+  LIS2DUXS12_I3C_BUS_AVAIL_TIME_50US = 0x1,
+  LIS2DUXS12_I3C_BUS_AVAIL_TIME_1MS  = 0x2,
+  LIS2DUXS12_I3C_BUS_AVAIL_TIME_25MS = 0x3,
+} lis2duxs12_bus_act_sel_t;
 
 typedef struct
 {
-  lis2dux12_bus_act_sel_t bus_act_sel;
+  lis2duxs12_bus_act_sel_t bus_act_sel;
   uint8_t asf_on                       : 1;
   uint8_t drstdaa_en                   : 1;
-} lis2dux12_i3c_cfg_t;
+} lis2duxs12_i3c_cfg_t;
 
 /**
   * @brief  Configures I3C bus.[set]
@@ -2507,7 +2579,7 @@ typedef struct
   * @retval       interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_i3c_configure_set(const stmdev_ctx_t *ctx, const lis2dux12_i3c_cfg_t *val);
+int32_t lis2duxs12_i3c_configure_set(const stmdev_ctx_t *ctx, const lis2duxs12_i3c_cfg_t *val);
 
 /**
   * @brief  Configures I3C bus.[get]
@@ -2517,18 +2589,18 @@ int32_t lis2dux12_i3c_configure_set(const stmdev_ctx_t *ctx, const lis2dux12_i3c
   * @retval       interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_i3c_configure_get(const stmdev_ctx_t *ctx, lis2dux12_i3c_cfg_t *val);
+int32_t lis2duxs12_i3c_configure_get(const stmdev_ctx_t *ctx, lis2duxs12_i3c_cfg_t *val);
 
 typedef struct
 {
-  lis2dux12_func_cfg_access_t func_cfg_access_main;
-} lis2dux12_priv_t;
+  lis2duxs12_func_cfg_access_t func_cfg_access_main;
+} lis2duxs12_priv_t;
 
 typedef enum
 {
-  LIS2DUX12_MAIN_MEM_BANK       = 0x0,
-  LIS2DUX12_EMBED_FUNC_MEM_BANK = 0x1,
-} lis2dux12_mem_bank_t;
+  LIS2DUXS12_MAIN_MEM_BANK       = 0x0,
+  LIS2DUXS12_EMBED_FUNC_MEM_BANK = 0x1,
+} lis2duxs12_mem_bank_t;
 
 /**
   * @brief  Change memory bank.[set]
@@ -2538,7 +2610,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_mem_bank_set(const stmdev_ctx_t *ctx, lis2dux12_mem_bank_t val);
+int32_t lis2duxs12_mem_bank_set(const stmdev_ctx_t *ctx, lis2duxs12_mem_bank_t val);
 
 /**
   * @brief  Change memory bank.[get]
@@ -2548,7 +2620,7 @@ int32_t lis2dux12_mem_bank_set(const stmdev_ctx_t *ctx, lis2dux12_mem_bank_t val
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_mem_bank_get(const stmdev_ctx_t *ctx, lis2dux12_mem_bank_t *val);
+int32_t lis2duxs12_mem_bank_get(const stmdev_ctx_t *ctx, lis2duxs12_mem_bank_t *val);
 
 /**
   * @brief  FSM capability to write CTRl regs.[set]
@@ -2558,7 +2630,7 @@ int32_t lis2dux12_mem_bank_get(const stmdev_ctx_t *ctx, lis2dux12_mem_bank_t *va
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_fsm_wr_ctrl_en_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lis2duxs12_fsm_wr_ctrl_en_set(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  FSM capability to write CTRl regs.[get]
@@ -2568,7 +2640,7 @@ int32_t lis2dux12_fsm_wr_ctrl_en_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_fsm_wr_ctrl_en_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_fsm_wr_ctrl_en_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  Write buffer in a page.
@@ -2581,7 +2653,8 @@ int32_t lis2dux12_fsm_wr_ctrl_en_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_ln_pg_write(const stmdev_ctx_t *ctx, uint16_t address, uint8_t *buf, uint8_t len);
+int32_t lis2duxs12_ln_pg_write(const stmdev_ctx_t *ctx, uint16_t address, uint8_t *buf,
+                               uint8_t len);
 
 /**
   * @brief  Read buffer in a page.
@@ -2594,7 +2667,7 @@ int32_t lis2dux12_ln_pg_write(const stmdev_ctx_t *ctx, uint16_t address, uint8_t
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_ln_pg_read(const stmdev_ctx_t *ctx, uint16_t address, uint8_t *buf, uint8_t len);
+int32_t lis2duxs12_ln_pg_read(const stmdev_ctx_t *ctx, uint16_t address, uint8_t *buf, uint8_t len);
 
 /**
   * @}
@@ -2602,7 +2675,7 @@ int32_t lis2dux12_ln_pg_read(const stmdev_ctx_t *ctx, uint16_t address, uint8_t 
   */
 
 /**
-  * @defgroup   LIS2DUX12_Interrupt_PINs Interrupt PINs
+  * @defgroup   LIS2DUXS12_Interrupt_PINs Interrupt PINs
   * @brief      Interrupt PINs
   * @{
   *
@@ -2616,7 +2689,7 @@ int32_t lis2dux12_ln_pg_read(const stmdev_ctx_t *ctx, uint16_t address, uint8_t 
   * @retval      interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_ext_clk_en_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lis2duxs12_ext_clk_en_set(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief       External Clock Enable/Disable on INT pin.[get]
@@ -2626,7 +2699,7 @@ int32_t lis2dux12_ext_clk_en_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval      interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_ext_clk_en_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_ext_clk_en_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef struct
 {
@@ -2636,7 +2709,7 @@ typedef struct
   uint8_t int1_int2_push_pull          : 1; /* 1 = push-pull / 0 = open-drain*/
   uint8_t int1_pull_down               : 1; /* 1 = pull-down always disabled (0=auto) */
   uint8_t int2_pull_down               : 1; /* 1 = pull-down always disabled (0=auto) */
-} lis2dux12_pin_conf_t;
+} lis2duxs12_pin_conf_t;
 
 /**
   * @brief       Electrical pin configuration.[set]
@@ -2646,7 +2719,7 @@ typedef struct
   * @retval      interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_pin_conf_set(const stmdev_ctx_t *ctx, const lis2dux12_pin_conf_t *val);
+int32_t lis2duxs12_pin_conf_set(const stmdev_ctx_t *ctx, const lis2duxs12_pin_conf_t *val);
 /**
   * @brief       Electrical pin configuration.[get]
   *
@@ -2655,13 +2728,13 @@ int32_t lis2dux12_pin_conf_set(const stmdev_ctx_t *ctx, const lis2dux12_pin_conf
   * @retval      interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_pin_conf_get(const stmdev_ctx_t *ctx, lis2dux12_pin_conf_t *val);
+int32_t lis2duxs12_pin_conf_get(const stmdev_ctx_t *ctx, lis2duxs12_pin_conf_t *val);
 
 typedef enum
 {
-  LIS2DUX12_ACTIVE_HIGH = 0x0,
-  LIS2DUX12_ACTIVE_LOW  = 0x1,
-} lis2dux12_int_pin_polarity_t;
+  LIS2DUXS12_ACTIVE_HIGH = 0x0,
+  LIS2DUXS12_ACTIVE_LOW  = 0x1,
+} lis2duxs12_int_pin_polarity_t;
 
 /**
   * @brief  Interrupt activation level.[set]
@@ -2671,7 +2744,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_int_pin_polarity_set(const stmdev_ctx_t *ctx, lis2dux12_int_pin_polarity_t val);
+int32_t lis2duxs12_int_pin_polarity_set(const stmdev_ctx_t *ctx, lis2duxs12_int_pin_polarity_t val);
 
 /**
   * @brief  Interrupt activation level.[get]
@@ -2681,13 +2754,14 @@ int32_t lis2dux12_int_pin_polarity_set(const stmdev_ctx_t *ctx, lis2dux12_int_pi
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_int_pin_polarity_get(const stmdev_ctx_t *ctx, lis2dux12_int_pin_polarity_t *val);
+int32_t lis2duxs12_int_pin_polarity_get(const stmdev_ctx_t *ctx,
+                                        lis2duxs12_int_pin_polarity_t *val);
 
 typedef enum
 {
-  LIS2DUX12_SPI_4_WIRE  = 0x0, /* SPI 4 wires */
-  LIS2DUX12_SPI_3_WIRE  = 0x1, /* SPI 3 wires */
-} lis2dux12_spi_mode;
+  LIS2DUXS12_SPI_4_WIRE  = 0x0, /* SPI 4 wires */
+  LIS2DUXS12_SPI_3_WIRE  = 0x1, /* SPI 3 wires */
+} lis2duxs12_spi_mode;
 
 /**
   * @brief  SPI mode.[set]
@@ -2697,7 +2771,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_spi_mode_set(const stmdev_ctx_t *ctx, lis2dux12_spi_mode val);
+int32_t lis2duxs12_spi_mode_set(const stmdev_ctx_t *ctx, lis2duxs12_spi_mode val);
 
 /**
   * @brief  SPI mode.[get]
@@ -2707,7 +2781,7 @@ int32_t lis2dux12_spi_mode_set(const stmdev_ctx_t *ctx, lis2dux12_spi_mode val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_spi_mode_get(const stmdev_ctx_t *ctx, lis2dux12_spi_mode *val);
+int32_t lis2duxs12_spi_mode_get(const stmdev_ctx_t *ctx, lis2duxs12_spi_mode *val);
 
 typedef struct
 {
@@ -2724,7 +2798,7 @@ typedef struct
   uint8_t sleep_change                 : 1; /* Act/Inact (or Vice-versa) status changed */
   uint8_t emb_function                 : 1; /* Embedded Function */
   uint8_t timestamp                    : 1; /* Timestamp */
-} lis2dux12_pin_int_route_t;
+} lis2duxs12_pin_int_route_t;
 
 /**
   * @brief  routes interrupt signals on INT 1 pin.[set]
@@ -2734,8 +2808,8 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_pin_int1_route_set(const stmdev_ctx_t *ctx,
-                                     const lis2dux12_pin_int_route_t *val);
+int32_t lis2duxs12_pin_int1_route_set(const stmdev_ctx_t *ctx,
+                                      const lis2duxs12_pin_int_route_t *val);
 
 /**
   * @brief  routes interrupt signals on INT 1 pin.[get]
@@ -2745,8 +2819,8 @@ int32_t lis2dux12_pin_int1_route_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_pin_int1_route_get(const stmdev_ctx_t *ctx,
-                                     lis2dux12_pin_int_route_t *val);
+int32_t lis2duxs12_pin_int1_route_get(const stmdev_ctx_t *ctx,
+                                      lis2duxs12_pin_int_route_t *val);
 /**
   * @brief  routes interrupt signals on INT 2 pin.[set]
   *
@@ -2755,8 +2829,8 @@ int32_t lis2dux12_pin_int1_route_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_pin_int2_route_set(const stmdev_ctx_t *ctx,
-                                     const lis2dux12_pin_int_route_t *val);
+int32_t lis2duxs12_pin_int2_route_set(const stmdev_ctx_t *ctx,
+                                      const lis2duxs12_pin_int_route_t *val);
 /**
   * @brief  routes interrupt signals on INT 2 pin.[get]
   *
@@ -2765,8 +2839,8 @@ int32_t lis2dux12_pin_int2_route_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_pin_int2_route_get(const stmdev_ctx_t *ctx,
-                                     lis2dux12_pin_int_route_t *val);
+int32_t lis2duxs12_pin_int2_route_get(const stmdev_ctx_t *ctx,
+                                      lis2duxs12_pin_int_route_t *val);
 
 typedef struct
 {
@@ -2774,7 +2848,7 @@ typedef struct
   uint8_t tilt                         : 1; /* route tilt event on INT pad */
   uint8_t sig_mot                      : 1; /* route significant motion event on INT pad */
   uint8_t fsm_lc                       : 1; /* route FSM long counter event on INT pad */
-} lis2dux12_emb_pin_int_route_t;
+} lis2duxs12_emb_pin_int_route_t;
 
 /**
   * @brief  routes embedded func interrupt signals on INT 1 pin.[set]
@@ -2784,8 +2858,8 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_emb_pin_int1_route_set(const stmdev_ctx_t *ctx,
-                                         const lis2dux12_emb_pin_int_route_t *val);
+int32_t lis2duxs12_emb_pin_int1_route_set(const stmdev_ctx_t *ctx,
+                                          const lis2duxs12_emb_pin_int_route_t *val);
 /**
   * @brief  routes embedded func interrupt signals on INT 1 pin.[get]
   *
@@ -2794,8 +2868,8 @@ int32_t lis2dux12_emb_pin_int1_route_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_emb_pin_int1_route_get(const stmdev_ctx_t *ctx,
-                                         lis2dux12_emb_pin_int_route_t *val);
+int32_t lis2duxs12_emb_pin_int1_route_get(const stmdev_ctx_t *ctx,
+                                          lis2duxs12_emb_pin_int_route_t *val);
 /**
   * @brief  routes embedded func interrupt signals on INT 2 pin.[set]
   *
@@ -2804,8 +2878,8 @@ int32_t lis2dux12_emb_pin_int1_route_get(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_emb_pin_int2_route_set(const stmdev_ctx_t *ctx,
-                                         const lis2dux12_emb_pin_int_route_t *val);
+int32_t lis2duxs12_emb_pin_int2_route_set(const stmdev_ctx_t *ctx,
+                                          const lis2duxs12_emb_pin_int_route_t *val);
 /**
   * @brief  routes embedded func interrupt signals on INT 2 pin.[get]
   *
@@ -2814,22 +2888,22 @@ int32_t lis2dux12_emb_pin_int2_route_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_emb_pin_int2_route_get(const stmdev_ctx_t *ctx,
-                                         lis2dux12_emb_pin_int_route_t *val);
+int32_t lis2duxs12_emb_pin_int2_route_get(const stmdev_ctx_t *ctx,
+                                          lis2duxs12_emb_pin_int_route_t *val);
 
 typedef enum
 {
-  LIS2DUX12_INT_DISABLED             = 0x0,
-  LIS2DUX12_INT_LEVEL                = 0x1,
-  LIS2DUX12_INT_LATCHED              = 0x2,
-} lis2dux12_int_cfg_t;
+  LIS2DUXS12_INT_DISABLED             = 0x0,
+  LIS2DUXS12_INT_LEVEL                = 0x1,
+  LIS2DUXS12_INT_LATCHED              = 0x2,
+} lis2duxs12_int_cfg_t;
 
 typedef struct
 {
-  lis2dux12_int_cfg_t int_cfg;
+  lis2duxs12_int_cfg_t int_cfg;
   uint8_t sleep_status_on_int          : 1;  /* route sleep_status on interrupt */
   uint8_t dis_rst_lir_all_int          : 1;  /* disable LIR reset when reading ALL_INT_SRC */
-} lis2dux12_int_config_t;
+} lis2duxs12_int_config_t;
 
 /**
   * @brief  Interrupt configuration mode.[set]
@@ -2839,7 +2913,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_int_config_set(const stmdev_ctx_t *ctx, const lis2dux12_int_config_t *val);
+int32_t lis2duxs12_int_config_set(const stmdev_ctx_t *ctx, const lis2duxs12_int_config_t *val);
 
 /**
   * @brief  Interrupt configuration mode.[get]
@@ -2849,13 +2923,13 @@ int32_t lis2dux12_int_config_set(const stmdev_ctx_t *ctx, const lis2dux12_int_co
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_int_config_get(const stmdev_ctx_t *ctx, lis2dux12_int_config_t *val);
+int32_t lis2duxs12_int_config_get(const stmdev_ctx_t *ctx, lis2duxs12_int_config_t *val);
 
 typedef enum
 {
-  LIS2DUX12_EMBEDDED_INT_LEVEL         = 0x0,
-  LIS2DUX12_EMBEDDED_INT_LATCHED       = 0x1,
-} lis2dux12_embedded_int_config_t;
+  LIS2DUXS12_EMBEDDED_INT_LEVEL         = 0x0,
+  LIS2DUXS12_EMBEDDED_INT_LATCHED       = 0x1,
+} lis2duxs12_embedded_int_config_t;
 
 /**
   * @brief  Embedded Interrupt configuration mode.[set]
@@ -2865,8 +2939,8 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_embedded_int_cfg_set(const stmdev_ctx_t *ctx,
-                                       lis2dux12_embedded_int_config_t val);
+int32_t lis2duxs12_embedded_int_cfg_set(const stmdev_ctx_t *ctx,
+                                        lis2duxs12_embedded_int_config_t val);
 
 /**
   * @brief  Interrupt configuration mode.[get]
@@ -2876,59 +2950,59 @@ int32_t lis2dux12_embedded_int_cfg_set(const stmdev_ctx_t *ctx,
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_embedded_int_cfg_get(const stmdev_ctx_t *ctx,
-                                       lis2dux12_embedded_int_config_t *val);
+int32_t lis2duxs12_embedded_int_cfg_get(const stmdev_ctx_t *ctx,
+                                        lis2duxs12_embedded_int_config_t *val);
 
 typedef enum
 {
-  LIS2DUX12_BYPASS_MODE              = 0x0,
-  LIS2DUX12_FIFO_MODE                = 0x1,
-  LIS2DUX12_STREAM_TO_FIFO_MODE      = 0x3,
-  LIS2DUX12_BYPASS_TO_STREAM_MODE    = 0x4,
-  LIS2DUX12_STREAM_MODE              = 0x6,
-  LIS2DUX12_BYPASS_TO_FIFO_MODE      = 0x7,
-  LIS2DUX12_FIFO_OFF                 = 0x8,
-} lis2dux12_operation_t;
+  LIS2DUXS12_BYPASS_MODE              = 0x0,
+  LIS2DUXS12_FIFO_MODE                = 0x1,
+  LIS2DUXS12_STREAM_TO_FIFO_MODE      = 0x3,
+  LIS2DUXS12_BYPASS_TO_STREAM_MODE    = 0x4,
+  LIS2DUXS12_STREAM_MODE              = 0x6,
+  LIS2DUXS12_BYPASS_TO_FIFO_MODE      = 0x7,
+  LIS2DUXS12_FIFO_OFF                 = 0x8,
+} lis2duxs12_operation_t;
 
 typedef enum
 {
-  LIS2DUX12_FIFO_1X                  = 0,
-  LIS2DUX12_FIFO_2X                  = 1,
-} lis2dux12_store_t;
+  LIS2DUXS12_FIFO_1X                  = 0,
+  LIS2DUXS12_FIFO_2X                  = 1,
+} lis2duxs12_store_t;
 
 typedef enum
 {
-  LIS2DUX12_DEC_TS_OFF             = 0x0,
-  LIS2DUX12_DEC_TS_1               = 0x1,
-  LIS2DUX12_DEC_TS_8               = 0x2,
-  LIS2DUX12_DEC_TS_32              = 0x3,
-} lis2dux12_dec_ts_t;
+  LIS2DUXS12_DEC_TS_OFF             = 0x0,
+  LIS2DUXS12_DEC_TS_1               = 0x1,
+  LIS2DUXS12_DEC_TS_8               = 0x2,
+  LIS2DUXS12_DEC_TS_32              = 0x3,
+} lis2duxs12_dec_ts_t;
 
 typedef enum
 {
-  LIS2DUX12_BDR_XL_ODR             = 0x0,
-  LIS2DUX12_BDR_XL_ODR_DIV_2       = 0x1,
-  LIS2DUX12_BDR_XL_ODR_DIV_4       = 0x2,
-  LIS2DUX12_BDR_XL_ODR_DIV_8       = 0x3,
-  LIS2DUX12_BDR_XL_ODR_DIV_16      = 0x4,
-  LIS2DUX12_BDR_XL_ODR_DIV_32      = 0x5,
-  LIS2DUX12_BDR_XL_ODR_DIV_64      = 0x6,
-  LIS2DUX12_BDR_XL_ODR_OFF         = 0x7,
-} lis2dux12_bdr_xl_t;
+  LIS2DUXS12_BDR_XL_ODR             = 0x0,
+  LIS2DUXS12_BDR_XL_ODR_DIV_2       = 0x1,
+  LIS2DUXS12_BDR_XL_ODR_DIV_4       = 0x2,
+  LIS2DUXS12_BDR_XL_ODR_DIV_8       = 0x3,
+  LIS2DUXS12_BDR_XL_ODR_DIV_16      = 0x4,
+  LIS2DUXS12_BDR_XL_ODR_DIV_32      = 0x5,
+  LIS2DUXS12_BDR_XL_ODR_DIV_64      = 0x6,
+  LIS2DUXS12_BDR_XL_ODR_OFF         = 0x7,
+} lis2duxs12_bdr_xl_t;
 
 typedef enum
 {
-  LIS2DUX12_FIFO_EV_WTM           = 0x0,
-  LIS2DUX12_FIFO_EV_FULL          = 0x1,
-} lis2dux12_fifo_event_t;
+  LIS2DUXS12_FIFO_EV_WTM           = 0x0,
+  LIS2DUXS12_FIFO_EV_FULL          = 0x1,
+} lis2duxs12_fifo_event_t;
 
 typedef struct
 {
-  lis2dux12_operation_t operation;
-  lis2dux12_store_t store;
+  lis2duxs12_operation_t operation;
+  lis2duxs12_store_t store;
   uint8_t xl_only                      : 1; /* only XL samples (16-bit) are stored in FIFO */
   uint8_t cfg_change_in_fifo           : 1;
-} lis2dux12_fifo_mode_t;
+} lis2duxs12_fifo_mode_t;
 
 /**
   * @}
@@ -2950,7 +3024,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_fifo_mode_set(const stmdev_ctx_t *ctx, lis2dux12_fifo_mode_t val);
+int32_t lis2duxs12_fifo_mode_set(const stmdev_ctx_t *ctx, lis2duxs12_fifo_mode_t val);
 
 /**
   * @brief  FIFO mode selection.[get]
@@ -2960,7 +3034,7 @@ int32_t lis2dux12_fifo_mode_set(const stmdev_ctx_t *ctx, lis2dux12_fifo_mode_t v
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_fifo_mode_get(const stmdev_ctx_t *ctx, lis2dux12_fifo_mode_t *val);
+int32_t lis2duxs12_fifo_mode_get(const stmdev_ctx_t *ctx, lis2duxs12_fifo_mode_t *val);
 
 /**
   * @brief  FIFO watermark threshold.[set]
@@ -2970,7 +3044,7 @@ int32_t lis2dux12_fifo_mode_get(const stmdev_ctx_t *ctx, lis2dux12_fifo_mode_t *
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_fifo_watermark_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lis2duxs12_fifo_watermark_set(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  FIFO watermark threshold.[get]
@@ -2980,13 +3054,13 @@ int32_t lis2dux12_fifo_watermark_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_fifo_watermark_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_fifo_watermark_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef struct
 {
-  lis2dux12_dec_ts_t dec_ts; /* decimation for timestamp batching*/
-  lis2dux12_bdr_xl_t bdr_xl; /* accelerometer batch data rate*/
-} lis2dux12_fifo_batch_t;
+  lis2duxs12_dec_ts_t dec_ts; /* decimation for timestamp batching*/
+  lis2duxs12_bdr_xl_t bdr_xl; /* accelerometer batch data rate*/
+} lis2duxs12_fifo_batch_t;
 
 /**
   * @brief  FIFO batch.[set]
@@ -2998,7 +3072,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_fifo_batch_set(const stmdev_ctx_t *ctx, lis2dux12_fifo_batch_t val);
+int32_t lis2duxs12_fifo_batch_set(const stmdev_ctx_t *ctx, lis2duxs12_fifo_batch_t val);
 
 /**
   * @brief  FIFO batch.[get]
@@ -3010,7 +3084,7 @@ int32_t lis2dux12_fifo_batch_set(const stmdev_ctx_t *ctx, lis2dux12_fifo_batch_t
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_fifo_batch_get(const stmdev_ctx_t *ctx, lis2dux12_fifo_batch_t *val);
+int32_t lis2duxs12_fifo_batch_get(const stmdev_ctx_t *ctx, lis2duxs12_fifo_batch_t *val);
 
 /**
   * @brief  FIFO stop on wtm.[set]
@@ -3020,7 +3094,7 @@ int32_t lis2dux12_fifo_batch_get(const stmdev_ctx_t *ctx, lis2dux12_fifo_batch_t
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_fifo_stop_on_wtm_set(const stmdev_ctx_t *ctx, lis2dux12_fifo_event_t val);
+int32_t lis2duxs12_fifo_stop_on_wtm_set(const stmdev_ctx_t *ctx, lis2duxs12_fifo_event_t val);
 
 /**
   * @brief  FIFO stop on wtm.[get]
@@ -3030,7 +3104,7 @@ int32_t lis2dux12_fifo_stop_on_wtm_set(const stmdev_ctx_t *ctx, lis2dux12_fifo_e
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_fifo_stop_on_wtm_get(const stmdev_ctx_t *ctx, lis2dux12_fifo_event_t *val);
+int32_t lis2duxs12_fifo_stop_on_wtm_get(const stmdev_ctx_t *ctx, lis2duxs12_fifo_event_t *val);
 
 /**
   * @brief  Number of unread sensor data (TAG + 6 bytes) stored in FIFO.[get]
@@ -3040,25 +3114,27 @@ int32_t lis2dux12_fifo_stop_on_wtm_get(const stmdev_ctx_t *ctx, lis2dux12_fifo_e
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_fifo_data_level_get(const stmdev_ctx_t *ctx, uint16_t *val);
-int32_t lis2dux12_fifo_wtm_flag_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_fifo_data_level_get(const stmdev_ctx_t *ctx, uint16_t *val);
+int32_t lis2duxs12_fifo_wtm_flag_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef enum
 {
-  LIS2DUX12_FIFO_EMPTY                 = 0x0,
-  LIS2DUX12_XL_TEMP_TAG                = 0x2,
-  LIS2DUX12_XL_ONLY_2X_TAG             = 0x3,
-  LIS2DUX12_TIMESTAMP_TAG              = 0x4,
-  LIS2DUX12_STEP_COUNTER_TAG           = 0x12,
-  LIS2DUX12_MLC_RESULT_TAG             = 0x1A,
-  LIS2DUX12_MLC_FILTER_TAG             = 0x1B,
-  LIS2DUX12_MLC_FEATURE                = 0x1C,
-  LIS2DUX12_FSM_RESULT_TAG             = 0x1D,
-} lis2dux12_fifo_sensor_tag_t;
-int32_t lis2dux12_fifo_sensor_tag_get(const stmdev_ctx_t *ctx,
-                                      lis2dux12_fifo_sensor_tag_t *val);
+  LIS2DUXS12_FIFO_EMPTY                 = 0x0,
+  LIS2DUXS12_XL_TEMP_TAG                = 0x2,
+  LIS2DUXS12_XL_ONLY_2X_TAG             = 0x3,
+  LIS2DUXS12_TIMESTAMP_TAG              = 0x4,
+  LIS2DUXS12_STEP_COUNTER_TAG           = 0x12,
+  LIS2DUXS12_MLC_RESULT_TAG             = 0x1A,
+  LIS2DUXS12_MLC_FILTER_TAG             = 0x1B,
+  LIS2DUXS12_MLC_FEATURE                = 0x1C,
+  LIS2DUXS12_FSM_RESULT_TAG             = 0x1D,
+  LIS2DUXS12_XL_ONLY_2X_TAG_2ND         = 0x1E,
+  LIS2DUXS12_XL_AND_QVAR                = 0x1F,
+} lis2duxs12_fifo_sensor_tag_t;
+int32_t lis2duxs12_fifo_sensor_tag_get(const stmdev_ctx_t *ctx,
+                                       lis2duxs12_fifo_sensor_tag_t *val);
 
-int32_t lis2dux12_fifo_out_raw_get(const stmdev_ctx_t *ctx, uint8_t *buff);
+int32_t lis2duxs12_fifo_out_raw_get(const stmdev_ctx_t *ctx, uint8_t *buff);
 
 typedef struct
 {
@@ -3068,6 +3144,11 @@ typedef struct
     float_t mg[3];
     int16_t raw[3];
   } xl[2];
+  struct
+  {
+    float_t mv;
+    int16_t raw;
+  } ah_qvar;
   struct
   {
     float_t deg_c;
@@ -3084,15 +3165,76 @@ typedef struct
     uint8_t odr                        : 4; /* ODR */
     uint8_t bw                         : 2; /* BW */
     uint8_t lp_hp                      : 1; /* Power: 0 for LP, 1 for HP */
+    uint8_t qvar_en                    : 1; /* QVAR is enabled */
     uint8_t fs                         : 2; /* FS */
     uint8_t dec_ts                     : 2; /* Timestamp decimator value */
     uint8_t odr_xl_batch               : 1; /* Accelerometer ODR is batched */
     uint32_t timestamp;
   } cfg_chg;
-} lis2dux12_fifo_data_t;
-int32_t lis2dux12_fifo_data_get(const stmdev_ctx_t *ctx, const lis2dux12_md_t *md,
-                                const lis2dux12_fifo_mode_t *fmd,
-                                lis2dux12_fifo_data_t *data);
+} lis2duxs12_fifo_data_t;
+int32_t lis2duxs12_fifo_data_get(const stmdev_ctx_t *ctx, const lis2duxs12_md_t *md,
+                                 const lis2duxs12_fifo_mode_t *fmd,
+                                 lis2duxs12_fifo_data_t *data);
+/**
+  * @}
+  *
+  */
+
+/** @defgroup Ah_qvar Ah/QVAR
+  * @{
+  *
+  */
+typedef enum
+{
+  LIS2DUXS12_NOTCH_50HZ       = 0x0,
+  LIS2DUXS12_NOTCH_60HZ       = 0x1,
+} lis2duxs12_ah_qvar_notch_t;
+
+typedef enum
+{
+  LIS2DUXS12_520MOhm          = 0x0,
+  LIS2DUXS12_175MOhm          = 0x1,
+  LIS2DUXS12_310MOhm          = 0x2,
+  LIS2DUXS12_75MOhm           = 0x3,
+} lis2duxs12_ah_qvar_zin_t;
+
+typedef enum
+{
+  LIS2DUXS12_GAIN_0_5         = 0x0,
+  LIS2DUXS12_GAIN_1           = 0x1,
+  LIS2DUXS12_GAIN_2           = 0x2,
+  LIS2DUXS12_GAIN_4           = 0x3,
+} lis2duxs12_ah_qvar_gain_t;
+
+typedef struct
+{
+  uint8_t ah_qvar_en                   : 1;
+  uint8_t ah_qvar_notch_en             : 1;
+  lis2duxs12_ah_qvar_notch_t ah_qvar_notch;
+  lis2duxs12_ah_qvar_zin_t ah_qvar_zin;
+  lis2duxs12_ah_qvar_gain_t ah_qvar_gain;
+} lis2duxs12_ah_qvar_mode_t;
+
+/**
+  * @brief  Enables AH_QVAR chain.[set]
+  *
+  * @param  ctx      read / write interface definitions
+  * @param  val      Enables and configures AH_QVAR chain.
+  * @retval          interface status (MANDATORY: return 0 -> no Error)
+  *
+  */
+int32_t lis2duxs12_ah_qvar_mode_set(const stmdev_ctx_t *ctx,
+                                    lis2duxs12_ah_qvar_mode_t val);
+/**
+  * @brief  Enables AH_QVAR chain.[get]
+  *
+  * @param  ctx      read / write interface definitions
+  * @param  val      Enables and configures AH_QVAR chain.
+  * @retval          interface status (MANDATORY: return 0 -> no Error)
+  *
+  */
+int32_t lis2duxs12_ah_qvar_mode_get(const stmdev_ctx_t *ctx,
+                                    lis2duxs12_ah_qvar_mode_t *val);
 /**
   * @}
   *
@@ -3110,7 +3252,7 @@ typedef struct
   uint8_t false_step_rej               : 1;
   uint8_t step_counter_enable          : 1;
   uint8_t step_counter_in_fifo         : 1;
-} lis2dux12_stpcnt_mode_t;
+} lis2duxs12_stpcnt_mode_t;
 
 /**
   * @brief  Step counter mode[set]
@@ -3120,7 +3262,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_stpcnt_mode_set(const stmdev_ctx_t *ctx, lis2dux12_stpcnt_mode_t val);
+int32_t lis2duxs12_stpcnt_mode_set(const stmdev_ctx_t *ctx, lis2duxs12_stpcnt_mode_t val);
 
 /**
   * @brief  Step counter mode[get]
@@ -3130,7 +3272,7 @@ int32_t lis2dux12_stpcnt_mode_set(const stmdev_ctx_t *ctx, lis2dux12_stpcnt_mode
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_stpcnt_mode_get(const stmdev_ctx_t *ctx, lis2dux12_stpcnt_mode_t *val);
+int32_t lis2duxs12_stpcnt_mode_get(const stmdev_ctx_t *ctx, lis2duxs12_stpcnt_mode_t *val);
 
 /**
   * @brief  Step counter output, number of detected steps.[get]
@@ -3140,7 +3282,7 @@ int32_t lis2dux12_stpcnt_mode_get(const stmdev_ctx_t *ctx, lis2dux12_stpcnt_mode
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_stpcnt_steps_get(const stmdev_ctx_t *ctx, uint16_t *val);
+int32_t lis2duxs12_stpcnt_steps_get(const stmdev_ctx_t *ctx, uint16_t *val);
 
 /**
   * @brief  Reset step counter.[set]
@@ -3150,7 +3292,7 @@ int32_t lis2dux12_stpcnt_steps_get(const stmdev_ctx_t *ctx, uint16_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_stpcnt_rst_step_set(const stmdev_ctx_t *ctx);
+int32_t lis2duxs12_stpcnt_rst_step_set(const stmdev_ctx_t *ctx);
 
 /**
   * @brief  Pedometer debounce configuration.[set]
@@ -3160,7 +3302,7 @@ int32_t lis2dux12_stpcnt_rst_step_set(const stmdev_ctx_t *ctx);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_stpcnt_debounce_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lis2duxs12_stpcnt_debounce_set(const stmdev_ctx_t *ctx, uint8_t val);
 /**
   * @brief  Pedometer debounce configuration.[get]
   *
@@ -3169,7 +3311,7 @@ int32_t lis2dux12_stpcnt_debounce_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_stpcnt_debounce_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_stpcnt_debounce_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  Time period register for step detection on delta time.[set]
@@ -3179,7 +3321,7 @@ int32_t lis2dux12_stpcnt_debounce_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_stpcnt_period_set(const stmdev_ctx_t *ctx, uint16_t val);
+int32_t lis2duxs12_stpcnt_period_set(const stmdev_ctx_t *ctx, uint16_t val);
 
 /**
   * @brief  Time period register for step detection on delta time.[get]
@@ -3189,32 +3331,32 @@ int32_t lis2dux12_stpcnt_period_set(const stmdev_ctx_t *ctx, uint16_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_stpcnt_period_get(const stmdev_ctx_t *ctx, uint16_t *val);
+int32_t lis2duxs12_stpcnt_period_get(const stmdev_ctx_t *ctx, uint16_t *val);
 
 typedef struct
 {
   uint8_t enable                       : 1;
   uint8_t window                       : 4;
   uint8_t duration                     : 4;
-} lis2dux12_smart_power_cfg_t;
+} lis2duxs12_smart_power_cfg_t;
 
 /**
   * @brief  smart_power functionality configuration.[set]
   *
   * @param  ctx      read / write interface definitions
-  * @param  val      lis2dux12_smart_power_cfg_t structure.
+  * @param  val      lis2duxs12_smart_power_cfg_t structure.
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   */
-int32_t lis2dux12_smart_power_set(const stmdev_ctx_t *ctx, lis2dux12_smart_power_cfg_t val);
+int32_t lis2duxs12_smart_power_set(const stmdev_ctx_t *ctx, lis2duxs12_smart_power_cfg_t val);
 
 /**
   * @brief  smart_power functionality configuration.[get]
   *
   * @param  ctx      read / write interface definitions
-  * @param  val      lis2dux12_smart_power_cfg_t structure.
+  * @param  val      lis2duxs12_smart_power_cfg_t structure.
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   */
-int32_t lis2dux12_smart_power_get(const stmdev_ctx_t *ctx, lis2dux12_smart_power_cfg_t *val);
+int32_t lis2duxs12_smart_power_get(const stmdev_ctx_t *ctx, lis2duxs12_smart_power_cfg_t *val);
 
 /**
   * @}
@@ -3235,7 +3377,7 @@ int32_t lis2dux12_smart_power_get(const stmdev_ctx_t *ctx, lis2dux12_smart_power
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_tilt_mode_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lis2duxs12_tilt_mode_set(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Tilt calculation.[get]
@@ -3245,7 +3387,7 @@ int32_t lis2dux12_tilt_mode_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_tilt_mode_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_tilt_mode_get(const stmdev_ctx_t *ctx, uint8_t *val);
 /**
   * @}
   *
@@ -3265,7 +3407,7 @@ int32_t lis2dux12_tilt_mode_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_sigmot_mode_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lis2duxs12_sigmot_mode_set(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Enables significant motion detection function.[get]
@@ -3275,7 +3417,7 @@ int32_t lis2dux12_sigmot_mode_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_sigmot_mode_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_sigmot_mode_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @}
@@ -3296,7 +3438,7 @@ int32_t lis2dux12_sigmot_mode_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_ff_duration_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lis2duxs12_ff_duration_set(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Time windows configuration for Free Fall detection 1 LSB = 1/ODR_XL time[get]
@@ -3306,19 +3448,19 @@ int32_t lis2dux12_ff_duration_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_ff_duration_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_ff_duration_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef enum
 {
-  LIS2DUX12_156_mg = 0x0,
-  LIS2DUX12_219_mg = 0x1,
-  LIS2DUX12_250_mg = 0x2,
-  LIS2DUX12_312_mg = 0x3,
-  LIS2DUX12_344_mg = 0x4,
-  LIS2DUX12_406_mg = 0x5,
-  LIS2DUX12_469_mg = 0x6,
-  LIS2DUX12_500_mg = 0x7,
-} lis2dux12_ff_thresholds_t;
+  LIS2DUXS12_156_mg = 0x0,
+  LIS2DUXS12_219_mg = 0x1,
+  LIS2DUXS12_250_mg = 0x2,
+  LIS2DUXS12_312_mg = 0x3,
+  LIS2DUXS12_344_mg = 0x4,
+  LIS2DUXS12_406_mg = 0x5,
+  LIS2DUXS12_469_mg = 0x6,
+  LIS2DUXS12_500_mg = 0x7,
+} lis2duxs12_ff_thresholds_t;
 
 /**
   * @brief  Free fall threshold setting.[set]
@@ -3328,7 +3470,7 @@ typedef enum
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_ff_thresholds_set(const stmdev_ctx_t *ctx, lis2dux12_ff_thresholds_t val);
+int32_t lis2duxs12_ff_thresholds_set(const stmdev_ctx_t *ctx, lis2duxs12_ff_thresholds_t val);
 
 /**
   * @brief  Free fall threshold setting.[get]
@@ -3338,27 +3480,27 @@ int32_t lis2dux12_ff_thresholds_set(const stmdev_ctx_t *ctx, lis2dux12_ff_thresh
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_ff_thresholds_get(const stmdev_ctx_t *ctx, lis2dux12_ff_thresholds_t *val);
+int32_t lis2duxs12_ff_thresholds_get(const stmdev_ctx_t *ctx, lis2duxs12_ff_thresholds_t *val);
 
 typedef enum
 {
-  LIS2DUX12_DEG_80 = 0x0,
-  LIS2DUX12_DEG_70 = 0x1,
-  LIS2DUX12_DEG_60 = 0x2,
-  LIS2DUX12_DEG_50 = 0x3,
-} lis2dux12_threshold_t;
+  LIS2DUXS12_DEG_80 = 0x0,
+  LIS2DUXS12_DEG_70 = 0x1,
+  LIS2DUXS12_DEG_60 = 0x2,
+  LIS2DUXS12_DEG_50 = 0x3,
+} lis2duxs12_threshold_t;
 
 typedef enum
 {
-  LIS2DUX12_6D = 0x0,
-  LIS2DUX12_4D = 0x1,
-} lis2dux12_mode_t;
+  LIS2DUXS12_6D = 0x0,
+  LIS2DUXS12_4D = 0x1,
+} lis2duxs12_mode_t;
 
 typedef struct
 {
-  lis2dux12_threshold_t threshold;
-  lis2dux12_mode_t mode;
-} lis2dux12_sixd_config_t;
+  lis2duxs12_threshold_t threshold;
+  lis2duxs12_mode_t mode;
+} lis2duxs12_sixd_config_t;
 
 /**
   * @}
@@ -3379,7 +3521,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_sixd_config_set(const stmdev_ctx_t *ctx, lis2dux12_sixd_config_t val);
+int32_t lis2duxs12_sixd_config_set(const stmdev_ctx_t *ctx, lis2duxs12_sixd_config_t val);
 
 /**
   * @brief  configuration for 4D/6D function.[get]
@@ -3389,42 +3531,42 @@ int32_t lis2dux12_sixd_config_set(const stmdev_ctx_t *ctx, lis2dux12_sixd_config
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_sixd_config_get(const stmdev_ctx_t *ctx, lis2dux12_sixd_config_t *val);
+int32_t lis2duxs12_sixd_config_get(const stmdev_ctx_t *ctx, lis2duxs12_sixd_config_t *val);
 
 typedef enum
 {
-  LIS2DUX12_0_ODR  = 0x00, /* 0 ODR time */
-  LIS2DUX12_1_ODR  = 0x01, /* 1 ODR time */
-  LIS2DUX12_2_ODR  = 0x02, /* 2 ODR time */
-  LIS2DUX12_3_ODR  = 0x10, /* 3 ODR time */
-  LIS2DUX12_7_ODR  = 0x11, /* 7 ODR time */
-  LIS2DUX12_11_ODR = 0x12, /* 11 ODR time */
-  LIS2DUX12_15_ODR = 0x13, /* 15 ODR time */
-} lis2dux12_wake_dur_t;
+  LIS2DUXS12_0_ODR  = 0x00, /* 0 ODR time */
+  LIS2DUXS12_1_ODR  = 0x01, /* 1 ODR time */
+  LIS2DUXS12_2_ODR  = 0x02, /* 2 ODR time */
+  LIS2DUXS12_3_ODR  = 0x10, /* 3 ODR time */
+  LIS2DUXS12_7_ODR  = 0x11, /* 7 ODR time */
+  LIS2DUXS12_11_ODR = 0x12, /* 11 ODR time */
+  LIS2DUXS12_15_ODR = 0x13, /* 15 ODR time */
+} lis2duxs12_wake_dur_t;
 
 typedef enum
 {
-  LIS2DUX12_SLEEP_OFF = 0,
-  LIS2DUX12_SLEEP_ON  = 1,
-} lis2dux12_wake_enable_t;
+  LIS2DUXS12_SLEEP_OFF = 0,
+  LIS2DUXS12_SLEEP_ON  = 1,
+} lis2duxs12_wake_enable_t;
 
 typedef enum
 {
-  LIS2DUX12_ODR_NO_CHANGE       = 0x0,  /* no odr change during inactivity state */
-  LIS2DUX12_ODR_1_6_HZ          = 0x1,  /* set odr to 1.6Hz during inactivity state */
-  LIS2DUX12_ODR_3_HZ            = 0x2,  /* set odr to 3Hz during inactivity state */
-  LIS2DUX12_ODR_25_HZ           = 0x3,  /* set odr to 25Hz during inactivity state */
-} lis2dux12_inact_odr_t;
+  LIS2DUXS12_ODR_NO_CHANGE       = 0x0,  /* no odr change during inactivity state */
+  LIS2DUXS12_ODR_1_6_HZ          = 0x1,  /* set odr to 1.6Hz during inactivity state */
+  LIS2DUXS12_ODR_3_HZ            = 0x2,  /* set odr to 3Hz during inactivity state */
+  LIS2DUXS12_ODR_25_HZ           = 0x3,  /* set odr to 25Hz during inactivity state */
+} lis2duxs12_inact_odr_t;
 
 typedef struct
 {
-  lis2dux12_wake_dur_t wake_dur;
+  lis2duxs12_wake_dur_t wake_dur;
   uint8_t sleep_dur                    : 4;       /* 1 LSB == 512 ODR time */
   uint8_t wake_ths                     : 7;       /* wakeup threshold */
   uint8_t wake_ths_weight              : 1;       /* 0: 1LSB = FS_XL/2^6, 1: 1LSB = FS_XL/2^8 */
-  lis2dux12_wake_enable_t wake_enable;
-  lis2dux12_inact_odr_t inact_odr;
-} lis2dux12_wakeup_config_t;
+  lis2duxs12_wake_enable_t wake_enable;
+  lis2duxs12_inact_odr_t inact_odr;
+} lis2duxs12_wakeup_config_t;
 /**
   * @}
   *
@@ -3445,7 +3587,7 @@ typedef struct
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_wakeup_config_set(const stmdev_ctx_t *ctx, lis2dux12_wakeup_config_t val);
+int32_t lis2duxs12_wakeup_config_set(const stmdev_ctx_t *ctx, lis2duxs12_wakeup_config_t val);
 
 /**
   * @brief  configuration for wakeup function.[get]
@@ -3455,7 +3597,7 @@ int32_t lis2dux12_wakeup_config_set(const stmdev_ctx_t *ctx, lis2dux12_wakeup_co
   * @retval          interface status (MANDATORY: return 0 -> no Error)
   *
   */
-int32_t lis2dux12_wakeup_config_get(const stmdev_ctx_t *ctx, lis2dux12_wakeup_config_t *val);
+int32_t lis2duxs12_wakeup_config_get(const stmdev_ctx_t *ctx, lis2duxs12_wakeup_config_t *val);
 
 /**
   * @}
@@ -3463,7 +3605,7 @@ int32_t lis2dux12_wakeup_config_get(const stmdev_ctx_t *ctx, lis2dux12_wakeup_co
   */
 
 /**
-  * @defgroup   lis2dux12_Tap Tap
+  * @defgroup   lis2duxs12_Tap Tap
   * @brief      This section groups all the functions that manage the
   *             tap configuration.
   * @{
@@ -3472,15 +3614,15 @@ int32_t lis2dux12_wakeup_config_get(const stmdev_ctx_t *ctx, lis2dux12_wakeup_co
 
 typedef enum
 {
-  LIS2DUX12_TAP_NONE  = 0x0, /* No axis */
-  LIS2DUX12_TAP_ON_X  = 0x1, /* Detect tap on X axis */
-  LIS2DUX12_TAP_ON_Y  = 0x2, /* Detect tap on Y axis */
-  LIS2DUX12_TAP_ON_Z  = 0x3, /* Detect tap on Z axis */
-} lis2dux12_axis_t;
+  LIS2DUXS12_TAP_NONE  = 0x0, /* No axis */
+  LIS2DUXS12_TAP_ON_X  = 0x1, /* Detect tap on X axis */
+  LIS2DUXS12_TAP_ON_Y  = 0x2, /* Detect tap on Y axis */
+  LIS2DUXS12_TAP_ON_Z  = 0x3, /* Detect tap on Z axis */
+} lis2duxs12_axis_t;
 
 typedef struct
 {
-  lis2dux12_axis_t axis;
+  lis2duxs12_axis_t axis;
   uint8_t inverted_peak_time           : 5; /* 1 LSB == 1 sample */
   uint8_t pre_still_ths                : 4; /* 1 LSB == 62.5 mg */
   uint8_t post_still_ths               : 4; /* 1 LSB == 62.5 mg */
@@ -3495,18 +3637,18 @@ typedef struct
   uint8_t single_tap_on                : 1; /* enable single tap */
   uint8_t double_tap_on                : 1; /* enable double tap */
   uint8_t triple_tap_on                : 1; /* enable triple tap */
-} lis2dux12_tap_config_t;
+} lis2duxs12_tap_config_t;
 
 
-int32_t lis2dux12_tap_config_set(const stmdev_ctx_t *ctx, lis2dux12_tap_config_t val);
-int32_t lis2dux12_tap_config_get(const stmdev_ctx_t *ctx, lis2dux12_tap_config_t *val);
+int32_t lis2duxs12_tap_config_set(const stmdev_ctx_t *ctx, lis2duxs12_tap_config_t val);
+int32_t lis2duxs12_tap_config_get(const stmdev_ctx_t *ctx, lis2duxs12_tap_config_t *val);
 /**
   * @}
   *
   */
 
 /**
-  * @defgroup   lis2dux12_Timestamp Timestamp
+  * @defgroup   lis2duxs12_Timestamp Timestamp
   * @brief      This section groups all the functions that manage the
   *             timestamp generation.
   * @{
@@ -3521,7 +3663,7 @@ int32_t lis2dux12_tap_config_get(const stmdev_ctx_t *ctx, lis2dux12_tap_config_t
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_timestamp_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lis2duxs12_timestamp_set(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Enables timestamp counter.[get]
@@ -3531,7 +3673,7 @@ int32_t lis2dux12_timestamp_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_timestamp_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_timestamp_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  Timestamp first data output register (r).
@@ -3543,7 +3685,7 @@ int32_t lis2dux12_timestamp_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_timestamp_raw_get(const stmdev_ctx_t *ctx, uint32_t *val);
+int32_t lis2duxs12_timestamp_raw_get(const stmdev_ctx_t *ctx, uint32_t *val);
 
 /**
   * @}
@@ -3551,7 +3693,7 @@ int32_t lis2dux12_timestamp_raw_get(const stmdev_ctx_t *ctx, uint32_t *val);
   */
 
 /**
-  * @defgroup   LIS2DUX12_finite_state_machine Finite State Machine
+  * @defgroup   LIS2DUXS12_finite_state_machine Finite State Machine
   * @brief      This section groups all the functions that manage the
   *             state_machine.
   * @{
@@ -3566,8 +3708,8 @@ int32_t lis2dux12_timestamp_raw_get(const stmdev_ctx_t *ctx, uint32_t *val);
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_long_cnt_flag_data_ready_get(const stmdev_ctx_t *ctx,
-                                               uint8_t *val);
+int32_t lis2duxs12_long_cnt_flag_data_ready_get(const stmdev_ctx_t *ctx,
+                                                uint8_t *val);
 
 /**
   * @brief  Embedded final state machine functions mode.[set]
@@ -3577,7 +3719,7 @@ int32_t lis2dux12_long_cnt_flag_data_ready_get(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_emb_fsm_en_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lis2duxs12_emb_fsm_en_set(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  Embedded final state machine functions mode.[get]
@@ -3587,12 +3729,12 @@ int32_t lis2dux12_emb_fsm_en_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_emb_fsm_en_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_emb_fsm_en_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef struct
 {
-  lis2dux12_fsm_enable_t          fsm_enable;
-} lis2dux12_emb_fsm_enable_t;
+  lis2duxs12_fsm_enable_t          fsm_enable;
+} lis2duxs12_emb_fsm_enable_t;
 
 /**
   * @brief  Embedded final state machine functions mode.[set]
@@ -3602,8 +3744,8 @@ typedef struct
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_fsm_enable_set(const stmdev_ctx_t *ctx,
-                                 lis2dux12_emb_fsm_enable_t *val);
+int32_t lis2duxs12_fsm_enable_set(const stmdev_ctx_t *ctx,
+                                  lis2duxs12_emb_fsm_enable_t *val);
 
 /**
   * @brief  Embedded final state machine functions mode.[get]
@@ -3613,8 +3755,8 @@ int32_t lis2dux12_fsm_enable_set(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_fsm_enable_get(const stmdev_ctx_t *ctx,
-                                 lis2dux12_emb_fsm_enable_t *val);
+int32_t lis2duxs12_fsm_enable_get(const stmdev_ctx_t *ctx,
+                                  lis2duxs12_emb_fsm_enable_t *val);
 
 /**
   * @brief  FSM long counter status register. Long counter value is an
@@ -3625,7 +3767,7 @@ int32_t lis2dux12_fsm_enable_get(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_long_cnt_set(const stmdev_ctx_t *ctx, uint16_t val);
+int32_t lis2duxs12_long_cnt_set(const stmdev_ctx_t *ctx, uint16_t val);
 
 /**
   * @brief  FSM long counter status register. Long counter value is an
@@ -3636,7 +3778,7 @@ int32_t lis2dux12_long_cnt_set(const stmdev_ctx_t *ctx, uint16_t val);
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_long_cnt_get(const stmdev_ctx_t *ctx, uint16_t *val);
+int32_t lis2duxs12_long_cnt_get(const stmdev_ctx_t *ctx, uint16_t *val);
 
 /**
   * @brief  FSM status.[get]
@@ -3645,8 +3787,8 @@ int32_t lis2dux12_long_cnt_get(const stmdev_ctx_t *ctx, uint16_t *val);
   * @param  val      register FSM_STATUS_MAINPAGE
   *
   */
-int32_t lis2dux12_fsm_status_get(const stmdev_ctx_t *ctx,
-                                 lis2dux12_fsm_status_mainpage_t *val);
+int32_t lis2duxs12_fsm_status_get(const stmdev_ctx_t *ctx,
+                                  lis2duxs12_fsm_status_mainpage_t *val);
 
 /**
   * @brief  FSM output registers.[get]
@@ -3656,18 +3798,18 @@ int32_t lis2dux12_fsm_status_get(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_fsm_out_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_fsm_out_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 typedef enum
 {
-  LIS2DUX12_ODR_FSM_12Hz5 = 0,
-  LIS2DUX12_ODR_FSM_25Hz  = 1,
-  LIS2DUX12_ODR_FSM_50Hz  = 2,
-  LIS2DUX12_ODR_FSM_100Hz = 3,
-  LIS2DUX12_ODR_FSM_200Hz = 4,
-  LIS2DUX12_ODR_FSM_400Hz = 5,
-  LIS2DUX12_ODR_FSM_800Hz = 6,
-} lis2dux12_fsm_val_odr_t;
+  LIS2DUXS12_ODR_FSM_12Hz5 = 0,
+  LIS2DUXS12_ODR_FSM_25Hz  = 1,
+  LIS2DUXS12_ODR_FSM_50Hz  = 2,
+  LIS2DUXS12_ODR_FSM_100Hz = 3,
+  LIS2DUXS12_ODR_FSM_200Hz = 4,
+  LIS2DUXS12_ODR_FSM_400Hz = 5,
+  LIS2DUXS12_ODR_FSM_800Hz = 6,
+} lis2duxs12_fsm_val_odr_t;
 
 /**
   * @brief  Finite State Machine ODR configuration.[set]
@@ -3677,8 +3819,8 @@ typedef enum
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_fsm_data_rate_set(const stmdev_ctx_t *ctx,
-                                    lis2dux12_fsm_val_odr_t val);
+int32_t lis2duxs12_fsm_data_rate_set(const stmdev_ctx_t *ctx,
+                                     lis2duxs12_fsm_val_odr_t val);
 
 /**
   * @brief  Finite State Machine ODR configuration.[get]
@@ -3688,8 +3830,8 @@ int32_t lis2dux12_fsm_data_rate_set(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_fsm_data_rate_get(const stmdev_ctx_t *ctx,
-                                    lis2dux12_fsm_val_odr_t *val);
+int32_t lis2duxs12_fsm_data_rate_get(const stmdev_ctx_t *ctx,
+                                     lis2duxs12_fsm_val_odr_t *val);
 
 /**
   * @brief  FSM initialization request.[set]
@@ -3699,7 +3841,7 @@ int32_t lis2dux12_fsm_data_rate_get(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_fsm_init_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lis2duxs12_fsm_init_set(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  FSM initialization request.[get]
@@ -3709,27 +3851,27 @@ int32_t lis2dux12_fsm_init_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_fsm_init_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_fsm_init_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  FSM FIFO en bit.[set]
   *
   * @param  ctx    Read / write interface definitions.(ptr)
-  * @param  val    Change the value of fsm_fifo_en in reg LIS2DUX12_EMB_FUNC_FIFO_EN
+  * @param  val    Change the value of fsm_fifo_en in reg LIS2DUXS12_EMB_FUNC_FIFO_EN
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_fsm_fifo_en_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lis2duxs12_fsm_fifo_en_set(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  FSM FIFO en bit.[get]
   *
   * @param  ctx    Read / write interface definitions.(ptr)
-  * @param  val    Get the value of fsm_fifo_en in reg LIS2DUX12_EMB_FUNC_FIFO_EN
+  * @param  val    Get the value of fsm_fifo_en in reg LIS2DUXS12_EMB_FUNC_FIFO_EN
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_fsm_fifo_en_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_fsm_fifo_en_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  FSM long counter timeout register (r/w). The long counter
@@ -3742,8 +3884,8 @@ int32_t lis2dux12_fsm_fifo_en_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_long_cnt_int_value_set(const stmdev_ctx_t *ctx,
-                                         uint16_t val);
+int32_t lis2duxs12_long_cnt_int_value_set(const stmdev_ctx_t *ctx,
+                                          uint16_t val);
 
 /**
   * @brief  FSM long counter timeout register (r/w). The long counter
@@ -3756,8 +3898,8 @@ int32_t lis2dux12_long_cnt_int_value_set(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_long_cnt_int_value_get(const stmdev_ctx_t *ctx,
-                                         uint16_t *val);
+int32_t lis2duxs12_long_cnt_int_value_get(const stmdev_ctx_t *ctx,
+                                          uint16_t *val);
 
 /**
   * @brief  FSM number of programs register.[set]
@@ -3767,7 +3909,7 @@ int32_t lis2dux12_long_cnt_int_value_get(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_fsm_programs_num_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lis2duxs12_fsm_programs_num_set(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  FSM number of programs register.[get]
@@ -3777,7 +3919,7 @@ int32_t lis2dux12_fsm_programs_num_set(const stmdev_ctx_t *ctx, uint8_t val);
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_fsm_programs_num_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_fsm_programs_num_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @brief  FSM start address register (r/w). First available address is
@@ -3788,8 +3930,8 @@ int32_t lis2dux12_fsm_programs_num_get(const stmdev_ctx_t *ctx, uint8_t *val);
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_fsm_start_address_set(const stmdev_ctx_t *ctx,
-                                        uint16_t val);
+int32_t lis2duxs12_fsm_start_address_set(const stmdev_ctx_t *ctx,
+                                         uint16_t val);
 
 /**
   * @brief  FSM start address register (r/w). First available address
@@ -3800,8 +3942,8 @@ int32_t lis2dux12_fsm_start_address_set(const stmdev_ctx_t *ctx,
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_fsm_start_address_get(const stmdev_ctx_t *ctx,
-                                        uint16_t *val);
+int32_t lis2duxs12_fsm_start_address_get(const stmdev_ctx_t *ctx,
+                                         uint16_t *val);
 
 /**
   * @}
@@ -3818,10 +3960,10 @@ int32_t lis2dux12_fsm_start_address_get(const stmdev_ctx_t *ctx,
 
 typedef enum
 {
-  LIS2DUX12_MLC_OFF                    = 0,
-  LIS2DUX12_MLC_ON                     = 1,
-  LIS2DUX12_MLC_ON_BEFORE_FSM          = 2,
-} lis2dux12_mlc_mode_t;
+  LIS2DUXS12_MLC_OFF                    = 0,
+  LIS2DUXS12_MLC_ON                     = 1,
+  LIS2DUXS12_MLC_ON_BEFORE_FSM          = 2,
+} lis2duxs12_mlc_mode_t;
 
 /**
   * @brief  Enable Machine Learning Core.[set]
@@ -3832,7 +3974,7 @@ typedef enum
   *                  in EMB_FUNC_INIT_A
   *
   */
-int32_t lis2dux12_mlc_set(const stmdev_ctx_t *ctx, lis2dux12_mlc_mode_t val);
+int32_t lis2duxs12_mlc_set(const stmdev_ctx_t *ctx, lis2duxs12_mlc_mode_t val);
 
 /**
   * @brief  Enable Machine Learning Core.[get]
@@ -3843,7 +3985,7 @@ int32_t lis2dux12_mlc_set(const stmdev_ctx_t *ctx, lis2dux12_mlc_mode_t val);
   *                  in EMB_FUNC_INIT_A
   *
   */
-int32_t lis2dux12_mlc_get(const stmdev_ctx_t *ctx, lis2dux12_mlc_mode_t *val);
+int32_t lis2duxs12_mlc_get(const stmdev_ctx_t *ctx, lis2duxs12_mlc_mode_t *val);
 
 /**
   * @brief  Machine Learning Core status register[get]
@@ -3852,8 +3994,8 @@ int32_t lis2dux12_mlc_get(const stmdev_ctx_t *ctx, lis2dux12_mlc_mode_t *val);
   * @param  val      register MLC_STATUS_MAINPAGE
   *
   */
-int32_t lis2dux12_mlc_status_get(const stmdev_ctx_t *ctx,
-                                 lis2dux12_mlc_status_mainpage_t *val);
+int32_t lis2duxs12_mlc_status_get(const stmdev_ctx_t *ctx,
+                                  lis2duxs12_mlc_status_mainpage_t *val);
 
 /**
   * @brief  prgsens_out: [get] Output value of all MLCx decision trees.
@@ -3862,16 +4004,16 @@ int32_t lis2dux12_mlc_status_get(const stmdev_ctx_t *ctx,
   * @param  uint8_t * : buffer that stores data read
   *
   */
-int32_t lis2dux12_mlc_out_get(const stmdev_ctx_t *ctx, uint8_t *buff);
+int32_t lis2duxs12_mlc_out_get(const stmdev_ctx_t *ctx, uint8_t *buff);
 
 typedef enum
 {
-  LIS2DUX12_ODR_PRGS_12Hz5 = 0,
-  LIS2DUX12_ODR_PRGS_25Hz  = 1,
-  LIS2DUX12_ODR_PRGS_50Hz  = 2,
-  LIS2DUX12_ODR_PRGS_100Hz = 3,
-  LIS2DUX12_ODR_PRGS_200Hz = 4,
-} lis2dux12_mlc_odr_val_t;
+  LIS2DUXS12_ODR_PRGS_12Hz5 = 0,
+  LIS2DUXS12_ODR_PRGS_25Hz  = 1,
+  LIS2DUXS12_ODR_PRGS_50Hz  = 2,
+  LIS2DUXS12_ODR_PRGS_100Hz = 3,
+  LIS2DUXS12_ODR_PRGS_200Hz = 4,
+} lis2duxs12_mlc_odr_val_t;
 
 /**
   * @brief  Machine Learning Core data rate selection.[set]
@@ -3881,8 +4023,8 @@ typedef enum
   *                  reg EMB_FUNC_ODR_CFG_C
   *
   */
-int32_t lis2dux12_mlc_data_rate_set(const stmdev_ctx_t *ctx,
-                                    lis2dux12_mlc_odr_val_t val);
+int32_t lis2duxs12_mlc_data_rate_set(const stmdev_ctx_t *ctx,
+                                     lis2duxs12_mlc_odr_val_t val);
 
 /**
   * @brief  Machine Learning Core data rate selection.[get]
@@ -3892,28 +4034,28 @@ int32_t lis2dux12_mlc_data_rate_set(const stmdev_ctx_t *ctx,
   *                  reg EMB_FUNC_ODR_CFG_C
   *
   */
-int32_t lis2dux12_mlc_data_rate_get(const stmdev_ctx_t *ctx,
-                                    lis2dux12_mlc_odr_val_t *val);
+int32_t lis2duxs12_mlc_data_rate_get(const stmdev_ctx_t *ctx,
+                                     lis2duxs12_mlc_odr_val_t *val);
 
 /**
   * @brief  MLC FIFO en bit.[set]
   *
   * @param  ctx    Read / write interface definitions.(ptr)
-  * @param  val    Change the value of mlc_fifo_en in reg LIS2DUX12_EMB_FUNC_FIFO_EN
+  * @param  val    Change the value of mlc_fifo_en in reg LIS2DUXS12_EMB_FUNC_FIFO_EN
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_mlc_fifo_en_set(const stmdev_ctx_t *ctx, uint8_t val);
+int32_t lis2duxs12_mlc_fifo_en_set(const stmdev_ctx_t *ctx, uint8_t val);
 
 /**
   * @brief  MLC FIFO en bit.[get]
   *
   * @param  ctx    Read / write interface definitions.(ptr)
-  * @param  val    Get the value of mlc_fifo_en in reg LIS2DUX12_EMB_FUNC_FIFO_EN
+  * @param  val    Get the value of mlc_fifo_en in reg LIS2DUXS12_EMB_FUNC_FIFO_EN
   * @retval        Interface status (MANDATORY: return 0 -> no Error).
   *
   */
-int32_t lis2dux12_mlc_fifo_en_get(const stmdev_ctx_t *ctx, uint8_t *val);
+int32_t lis2duxs12_mlc_fifo_en_get(const stmdev_ctx_t *ctx, uint8_t *val);
 
 /**
   * @}
@@ -3928,4 +4070,4 @@ int32_t lis2dux12_mlc_fifo_en_get(const stmdev_ctx_t *ctx, uint8_t *val);
 }
 #endif
 
-#endif /* LIS2DUX12_REGS_H */
+#endif /* LIS2DUXS12_REGS_H */

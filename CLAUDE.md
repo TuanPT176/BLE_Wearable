@@ -52,9 +52,9 @@ Drivers/                   Vendor/hardware drivers
   ST25DV/                     Official ST BSP driver for the NFC tag (st25dv.c, st25dv_reg.c)
   Sensors/MAX86150            PPG/ECG sensor (currently optical/PPG-only; ECG acquisition not yet wired up)
   Sensors/MAX30208            Temperature sensor; STM32 HAL port used at runtime is Drivers/max30208.c
-  Sensors/LIS2DUXS12TR         Accelerometer + on-chip Machine Learning Core (register driver kept
-                                platform-independent; lis2dux12_platform.* is the HAL I2C bridge,
-                                lis2dux12_motion.* is the app-facing accel/MLC API)
+  Sensors/LIS2DUXS12TR         Accelerometer + QVar + on-chip Machine Learning Core (official ST
+                                lis2duxs12_reg.* kept platform-independent; lis2duxs12_platform.* is
+                                the HAL I2C bridge, lis2duxs12_motion.* is the app-facing accel/QVar/MLC API)
   supercap_monitor.*           Supercapacitor voltage read (ADC)
 Middlewares/ST/STM32_BLE/  ST BLE stack + libraries (vendor code, not application logic)
 Projects/Common/BLE/       Shared BLE interface/module code (vendor)

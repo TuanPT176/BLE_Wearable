@@ -23,6 +23,7 @@ typedef struct
   int16_t accel_x;
   int16_t accel_y;
   int16_t accel_z;
+  int16_t qvar_raw;
 } wearable_sensor_data_t;
 
 typedef struct
