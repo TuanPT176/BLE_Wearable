@@ -479,7 +479,11 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : SX_RESET_Pin */
   GPIO_InitStruct.Pin = SX_RESET_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  /* Open-drain output needs a pull-up to actually reach a high level when
+   * released; without it NRESET just floats and the SX1262 can stay stuck
+   * in reset (BUSY never goes low). No confirmed external pull-up on this
+   * net, so use the MCU's internal one. */
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(SX_RESET_GPIO_Port, &GPIO_InitStruct);
 
