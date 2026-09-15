@@ -22,7 +22,7 @@
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_coreid.511718424" name="Core" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_coreid" useByScannerDiscovery="false" value="0" valueType="string"/>
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_board.1950918990" name="Board" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_board" useByScannerDiscovery="false" value="NUCLEO-WB09KE" valueType="string"/>
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.converthex.1465446407" name="Convert to Intel Hex file (-O ihex)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.converthex" useByScannerDiscovery="false" value="true" valueType="boolean"/>
-							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.defaults.372928053" name="Defaults" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.defaults" useByScannerDiscovery="false" value="com.st.stm32cube.ide.common.services.build.inputs.revA.1.0.6 || Debug || true || Executable || com.st.stm32cube.ide.mcu.gnu.managedbuild.option.toolchain.value.workspace || NUCLEO-WB09KE || 0 || 0 || arm-none-eabi- || ${gnu_tools_for_stm32_compiler_path} || ../../Core/Inc | ../../STM32_BLE/App | ../../STM32_BLE/Target | ../../System/Config/Debug_GPIO | ../../System/Interfaces | ../../Utilities/trace/adv_trace | ../../Drivers/STM32WB0x_HAL_Driver/Inc | ../../Drivers/STM32WB0x_HAL_Driver/Inc/Legacy | ../../Projects/Common/BLE/Interfaces | ../../Projects/Common/BLE/Modules | ../../Projects/Common/BLE/Modules/RTDebug | ../../Projects/Common/BLE/Modules/RADIO_utils/Inc | ../../Projects/Common/BLE/Modules/Profiles/Inc | ../../Projects/Common/BLE/Modules/PKAMGR/Inc | ../../Projects/Common/BLE/Modules/NVMDB/Inc | ../../Projects/Common/BLE/Modules/Flash | ../../Projects/Common/BLE/Startup | ../../Utilities/misc | ../../Utilities/sequencer | ../../Utilities/lpm/tiny_lpm | ../../Middlewares/ST/STM32_BLE | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/Common | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/CBC | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/CMAC | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/Common | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/ECB | ../../Drivers/CMSIS/Device/ST/STM32WB0X/Include | ../../Middlewares/ST/STM32_BLE/evt_handler/inc | ../../Middlewares/ST/STM32_BLE/queued_writes/inc | ../../Middlewares/ST/STM32_BLE/stack/include | ../../Drivers/CMSIS/Include ||  ||  || USE_FULL_LL_DRIVER | USE_HAL_DRIVER | STM32WB09 ||  ||  ||  || ../../Middlewares/ST/STM32_BLE/cryptolib/libcrypto.a | ../../Middlewares/ST/STM32_BLE/stack/lib/stm32wb0x_ble_stack.a || ${workspace_loc:/${ProjName}/STM32WB09KEVX_FLASH.ld} || true || NonSecure ||  || secure_nsclib.o ||  || None || true ||  || .hex" valueType="string"/>
+							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.defaults.372928053" name="Defaults" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.defaults" useByScannerDiscovery="false" value="com.st.stm32cube.ide.common.services.build.inputs.revA.1.0.6 || Debug || true || Executable || com.st.stm32cube.ide.mcu.gnu.managedbuild.option.toolchain.value.workspace || NUCLEO-WB09KE || 0 || 0 || arm-none-eabi- || ${gnu_tools_for_stm32_compiler_path} || ../../Core/Inc | ../../STM32_BLE/App | ../../STM32_BLE/Target | ../../System/Config/Debug_GPIO | ../../System/Interfaces | ../../Utilities/trace/adv_trace | ../../Drivers/STM32WB0x_HAL_Driver/Inc | ../../Drivers/STM32WB0x_HAL_Driver/Inc/Legacy | ../../Projects/Common/BLE/Interfaces | ../../Projects/Common/BLE/Modules | ../../Projects/Common/BLE/Modules/RTDebug | ../../Projects/Common/BLE/Modules/RADIO_utils/Inc | ../../Projects/Common/BLE/Modules/Profiles/Inc | ../../Projects/Common/BLE/Modules/PKAMGR/Inc | ../../Projects/Common/BLE/Modules/NVMDB/Inc | ../../Projects/Common/BLE/Modules/Flash | ../../Projects/Common/BLE/Startup | ../../Utilities/misc | ../../Utilities/sequencer | ../../Utilities/lpm/tiny_lpm | ../../Middlewares/ST/STM32_BLE | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/Common | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/CBC | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/CMAC | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/Common | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/ECB | ../../Drivers/CMSIS/Device/ST/STM32WB0X/Include | ../../Middlewares/ST/STM32_BLE/evt_handler/inc | ../../Middlewares/ST/STM32_BLE/queued_writes/inc | ../../Middlewares/ST/STM32_BLE/stack/include | ../../Drivers/CMSIS/Include ||  ||  || USE_FULL_LL_DRIVER | USE_HAL_DRIVER | STM32WB09 ||  ||  ||  || ../../Middlewares/ST/STM32_BLE/cryptolib/libcrypto.a | ../../Middlewares/ST/STM32_BLE/stack/lib/stm32wb0x_ble_stack.a || ${workspace_loc:/${ProjName}/STM32WB09KEVX_FLASH.ld} || true || NonSecure ||  || secure_nsclib.o ||  || None || true ||  || .hex || ::" valueType="string"/>
 							<option id="com.st.stm32cube.ide.mcu.debug.option.cpuclock.1267584871" superClass="com.st.stm32cube.ide.mcu.debug.option.cpuclock" useByScannerDiscovery="false" value="-0" valueType="string"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.targetplatform.111691974" isAbstract="false" osList="all" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.targetplatform"/>
 							<builder buildPath="${workspace_loc:/BLE_p2pServer_GATT}/Debug" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.builder.180522592" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.builder"/>
@@ -95,6 +95,35 @@
 									<listOptionValue builtIn="false" value="../../Drivers/STM32WB0x_HAL_Driver/Inc"/>
 									<listOptionValue builtIn="false" value="../../Drivers/CMSIS/Device/ST/STM32WB0X/Include"/>
 									<listOptionValue builtIn="false" value="../../Drivers/CMSIS/Include"/>
+									<listOptionValue builtIn="false" value="../../STM32_BLE/App"/>
+									<listOptionValue builtIn="false" value="../../STM32_BLE/Target"/>
+									<listOptionValue builtIn="false" value="../../System/Config/Debug_GPIO"/>
+									<listOptionValue builtIn="false" value="../../System/Interfaces"/>
+									<listOptionValue builtIn="false" value="../../Utilities/trace/adv_trace"/>
+									<listOptionValue builtIn="false" value="../../Drivers/STM32WB0x_HAL_Driver/Inc/Legacy"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Interfaces"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Modules"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Modules/RTDebug"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Modules/RADIO_utils/Inc"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Modules/Profiles/Inc"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Modules/PKAMGR/Inc"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Modules/NVMDB/Inc"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Modules/Flash"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Startup"/>
+									<listOptionValue builtIn="false" value="../../Utilities/misc"/>
+									<listOptionValue builtIn="false" value="../../Utilities/sequencer"/>
+									<listOptionValue builtIn="false" value="../../Utilities/lpm/tiny_lpm"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/cryptolib/Inc"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/cryptolib/Inc/Common"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/CBC"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/CMAC"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/Common"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/ECB"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/evt_handler/inc"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/queued_writes/inc"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/stack/include"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.966743655" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -118,6 +147,15 @@
 							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.1024835406" name="MCU/MPU G++ Linker" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker">
 								<option id="codex.cpp.linker.script.debug" name="Linker Script (-T)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.option.script" value="${workspace_loc:/${ProjName}/STM32WB09KEVX_FLASH.ld}" valueType="string"/>
 								<option id="codex.cpp.linker.other.debug" name="Other flags" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.option.otherflags" value="-L../../Middlewares/ST/STM32_BLE/cryptolib -L../../Middlewares/ST/STM32_BLE/stack/lib -Wl,--start-group -l:libcrypto.a -l:stm32wb0x_ble_stack.a -Wl,--end-group -Wl,--no-warn-execstack" valueType="string"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.option.directories.1387766092" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.option.directories" valueType="libPaths">
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/cryptolib"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/stack/lib"/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.option.libraries.946274250" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.option.libraries" valueType="libs">
+									<listOptionValue builtIn="false" value=":libcrypto.a"/>
+									<listOptionValue builtIn="false" value=":stm32wb0x_ble_stack.a"/>
+								</option>
+								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.option.uselinkergroup.264076991" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.option.uselinkergroup" value="true" valueType="boolean"/>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.input.303798995" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -158,7 +196,7 @@
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_coreid.739636179" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_coreid" useByScannerDiscovery="false" value="0" valueType="string"/>
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_board.638236674" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_board" useByScannerDiscovery="false" value="NUCLEO-WB09KE" valueType="string"/>
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.converthex.2110064094" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.converthex" useByScannerDiscovery="false" value="true" valueType="boolean"/>
-							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.defaults.1267222861" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.defaults" useByScannerDiscovery="false" value="com.st.stm32cube.ide.common.services.build.inputs.revA.1.0.6 || Release || false || Executable || com.st.stm32cube.ide.mcu.gnu.managedbuild.option.toolchain.value.workspace || NUCLEO-WB09KE || 0 || 0 || arm-none-eabi- || ${gnu_tools_for_stm32_compiler_path} || ../../Core/Inc | ../../STM32_BLE/App | ../../STM32_BLE/Target | ../../System/Config/Debug_GPIO | ../../System/Interfaces | ../../Utilities/trace/adv_trace | ../../Drivers/STM32WB0x_HAL_Driver/Inc | ../../Drivers/STM32WB0x_HAL_Driver/Inc/Legacy | ../../Projects/Common/BLE/Interfaces | ../../Projects/Common/BLE/Modules | ../../Projects/Common/BLE/Modules/RTDebug | ../../Projects/Common/BLE/Modules/RADIO_utils/Inc | ../../Projects/Common/BLE/Modules/Profiles/Inc | ../../Projects/Common/BLE/Modules/PKAMGR/Inc | ../../Projects/Common/BLE/Modules/NVMDB/Inc | ../../Projects/Common/BLE/Modules/Flash | ../../Projects/Common/BLE/Startup | ../../Utilities/misc | ../../Utilities/sequencer | ../../Utilities/lpm/tiny_lpm | ../../Middlewares/ST/STM32_BLE | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/Common | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/CBC | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/CMAC | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/Common | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/ECB | ../../Drivers/CMSIS/Device/ST/STM32WB0X/Include | ../../Middlewares/ST/STM32_BLE/evt_handler/inc | ../../Middlewares/ST/STM32_BLE/queued_writes/inc | ../../Middlewares/ST/STM32_BLE/stack/include | ../../Drivers/CMSIS/Include ||  ||  || USE_FULL_LL_DRIVER | USE_HAL_DRIVER | STM32WB09 ||  ||  ||  || ../../Middlewares/ST/STM32_BLE/cryptolib/libcrypto.a | ../../Middlewares/ST/STM32_BLE/stack/lib/stm32wb0x_ble_stack.a || ${workspace_loc:/${ProjName}/STM32WB09KEVX_FLASH.ld} || true || NonSecure ||  || secure_nsclib.o ||  || None || true ||  || .hex" valueType="string"/>
+							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.defaults.1267222861" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.defaults" useByScannerDiscovery="false" value="com.st.stm32cube.ide.common.services.build.inputs.revA.1.0.6 || Release || false || Executable || com.st.stm32cube.ide.mcu.gnu.managedbuild.option.toolchain.value.workspace || NUCLEO-WB09KE || 0 || 0 || arm-none-eabi- || ${gnu_tools_for_stm32_compiler_path} || ../../Core/Inc | ../../STM32_BLE/App | ../../STM32_BLE/Target | ../../System/Config/Debug_GPIO | ../../System/Interfaces | ../../Utilities/trace/adv_trace | ../../Drivers/STM32WB0x_HAL_Driver/Inc | ../../Drivers/STM32WB0x_HAL_Driver/Inc/Legacy | ../../Projects/Common/BLE/Interfaces | ../../Projects/Common/BLE/Modules | ../../Projects/Common/BLE/Modules/RTDebug | ../../Projects/Common/BLE/Modules/RADIO_utils/Inc | ../../Projects/Common/BLE/Modules/Profiles/Inc | ../../Projects/Common/BLE/Modules/PKAMGR/Inc | ../../Projects/Common/BLE/Modules/NVMDB/Inc | ../../Projects/Common/BLE/Modules/Flash | ../../Projects/Common/BLE/Startup | ../../Utilities/misc | ../../Utilities/sequencer | ../../Utilities/lpm/tiny_lpm | ../../Middlewares/ST/STM32_BLE | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/Common | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/CBC | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/CMAC | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/Common | ../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/ECB | ../../Drivers/CMSIS/Device/ST/STM32WB0X/Include | ../../Middlewares/ST/STM32_BLE/evt_handler/inc | ../../Middlewares/ST/STM32_BLE/queued_writes/inc | ../../Middlewares/ST/STM32_BLE/stack/include | ../../Drivers/CMSIS/Include ||  ||  || USE_FULL_LL_DRIVER | USE_HAL_DRIVER | STM32WB09 ||  ||  ||  || ../../Middlewares/ST/STM32_BLE/cryptolib/libcrypto.a | ../../Middlewares/ST/STM32_BLE/stack/lib/stm32wb0x_ble_stack.a || ${workspace_loc:/${ProjName}/STM32WB09KEVX_FLASH.ld} || true || NonSecure ||  || secure_nsclib.o ||  || None || true ||  || .hex || ::" valueType="string"/>
 							<option id="com.st.stm32cube.ide.mcu.debug.option.cpuclock.143216377" superClass="com.st.stm32cube.ide.mcu.debug.option.cpuclock" useByScannerDiscovery="false" value="-0" valueType="string"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.targetplatform.1529916399" isAbstract="false" osList="all" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.targetplatform"/>
 							<builder buildPath="${workspace_loc:/BLE_p2pServer_GATT}/Release" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.builder.1283287880" managedBuildOn="true" name="Gnu Make Builder.Release" parallelBuildOn="true" parallelizationNumber="optimal" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.builder"/>
@@ -226,6 +264,35 @@
 									<listOptionValue builtIn="false" value="../../Drivers/STM32WB0x_HAL_Driver/Inc"/>
 									<listOptionValue builtIn="false" value="../../Drivers/CMSIS/Device/ST/STM32WB0X/Include"/>
 									<listOptionValue builtIn="false" value="../../Drivers/CMSIS/Include"/>
+									<listOptionValue builtIn="false" value="../../STM32_BLE/App"/>
+									<listOptionValue builtIn="false" value="../../STM32_BLE/Target"/>
+									<listOptionValue builtIn="false" value="../../System/Config/Debug_GPIO"/>
+									<listOptionValue builtIn="false" value="../../System/Interfaces"/>
+									<listOptionValue builtIn="false" value="../../Utilities/trace/adv_trace"/>
+									<listOptionValue builtIn="false" value="../../Drivers/STM32WB0x_HAL_Driver/Inc/Legacy"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Interfaces"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Modules"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Modules/RTDebug"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Modules/RADIO_utils/Inc"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Modules/Profiles/Inc"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Modules/PKAMGR/Inc"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Modules/NVMDB/Inc"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Modules/Flash"/>
+									<listOptionValue builtIn="false" value="../../Projects/Common/BLE/Startup"/>
+									<listOptionValue builtIn="false" value="../../Utilities/misc"/>
+									<listOptionValue builtIn="false" value="../../Utilities/sequencer"/>
+									<listOptionValue builtIn="false" value="../../Utilities/lpm/tiny_lpm"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/cryptolib/Inc"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/cryptolib/Inc/Common"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/CBC"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/CMAC"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/Common"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/cryptolib/Inc/AES/ECB"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/evt_handler/inc"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/queued_writes/inc"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/stack/include"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.1187979618" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -249,6 +316,15 @@
 							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.134777720" name="MCU/MPU G++ Linker" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker">
 								<option id="codex.cpp.linker.script.release" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.option.script" value="${workspace_loc:/${ProjName}/STM32WB09KEVX_FLASH.ld}" valueType="string"/>
 								<option id="codex.cpp.linker.other.release" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.option.otherflags" value="-L../../Middlewares/ST/STM32_BLE/cryptolib -L../../Middlewares/ST/STM32_BLE/stack/lib -Wl,--start-group -l:libcrypto.a -l:stm32wb0x_ble_stack.a -Wl,--end-group -Wl,--no-warn-execstack" valueType="string"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.option.directories.1052767026" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.option.directories" valueType="libPaths">
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/cryptolib"/>
+									<listOptionValue builtIn="false" value="../../Middlewares/ST/STM32_BLE/stack/lib"/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.option.libraries.712322993" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.option.libraries" valueType="libs">
+									<listOptionValue builtIn="false" value=":libcrypto.a"/>
+									<listOptionValue builtIn="false" value=":stm32wb0x_ble_stack.a"/>
+								</option>
+								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.option.uselinkergroup.569216781" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.option.uselinkergroup" value="true" valueType="boolean"/>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.input.1173530011" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

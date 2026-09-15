@@ -61,7 +61,6 @@
 
 /* External variables --------------------------------------------------------*/
 extern PKA_HandleTypeDef hpka;
-extern UART_HandleTypeDef huart1;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -147,19 +146,6 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
-  * @brief This function handles USART1 Interrupt.
-  */
-void USART1_IRQHandler(void)
-{
-  /* USER CODE BEGIN USART1_IRQn 0 */
-
-  /* USER CODE END USART1_IRQn 0 */
-  /* USER CODE BEGIN USART1_IRQn 1 */
-
-  /* USER CODE END USART1_IRQn 1 */
-}
-
-/**
   * @brief This function handles PKA global interrupt.
   */
 void PKA_IRQHandler(void)
@@ -174,6 +160,20 @@ void PKA_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles GPIOA interrupt.
+  */
+void GPIOA_IRQHandler(void)
+{
+  /* USER CODE BEGIN GPIOA_IRQn 0 */
+
+  /* USER CODE END GPIOA_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIOA,DIO1_Pin);
+  /* USER CODE BEGIN GPIOA_IRQn 1 */
+
+  /* USER CODE END GPIOA_IRQn 1 */
+}
+
+/**
   * @brief This function handles GPIOB interrupt.
   */
 void GPIOB_IRQHandler(void)
@@ -182,6 +182,8 @@ void GPIOB_IRQHandler(void)
 
   /* USER CODE END GPIOB_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIOB,GPIO_PIN_2);
+  HAL_GPIO_EXTI_IRQHandler(GPIOB,GPIO_PIN_5);
+  HAL_GPIO_EXTI_IRQHandler(GPIOB,GPIO_PIN_4);
   /* USER CODE BEGIN GPIOB_IRQn 1 */
 
   /* USER CODE END GPIOB_IRQn 1 */

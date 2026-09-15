@@ -66,6 +66,22 @@ extern I2C_HandleTypeDef hi2c1;
 /* Private defines -----------------------------------------------------------*/
 #define LIS2DUXS12_INT_Pin GPIO_PIN_2
 #define LIS2DUXS12_INT_GPIO_Port GPIOB
+#define LIS2DUXS12_INT_EXTI_IRQn GPIOA_IRQn
+#define DIO1_Pin GPIO_PIN_1
+#define DIO1_GPIO_Port GPIOA
+#define DIO1_EXTI_IRQn GPIOA_IRQn
+#define SX_NSS_Pin GPIO_PIN_9
+#define SX_NSS_GPIO_Port GPIOA
+#define SX_RESET_Pin GPIO_PIN_15
+#define SX_RESET_GPIO_Port GPIOB
+#define BUSY_Pin GPIO_PIN_14
+#define BUSY_GPIO_Port GPIOB
+#define SOS_Button_Pin GPIO_PIN_5
+#define SOS_Button_GPIO_Port GPIOB
+#define SOS_Button_EXTI_IRQn GPIOA_IRQn
+#define INTB_Pin GPIO_PIN_4
+#define INTB_GPIO_Port GPIOB
+#define INTB_EXTI_IRQn GPIOA_IRQn
 
 /* USER CODE BEGIN Private defines */
 
