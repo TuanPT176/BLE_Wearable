@@ -1,8 +1,8 @@
 #include "data_recovery_manager.h"
-#include "nfc_log.h"
-#include "wearable_data.h"
-#include "../STM32_BLE/App/wearable.h"
-#include "../STM32_BLE/App/wearable_app.h"
+#include "../NFC/nfc_log.h"
+#include "../wearable_data.h"
+#include "../../STM32_BLE/App/wearable.h"
+#include "../../STM32_BLE/App/wearable_app.h"
 #include "ble.h"
 
 static RecoveryState_t current_state = RECOVERY_STATE_IDLE;

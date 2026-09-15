@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "wearable_data.h"
+#include "../wearable_data.h"
 
 typedef enum
 {

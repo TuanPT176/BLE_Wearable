@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "wearable_data.h"
+#include "../wearable_data.h"
 
 #define NFC_LOG_HEADER_ADDR 0x0020
 #define NFC_LOG_RECORD_ADDR 0x0040

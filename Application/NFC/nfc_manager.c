@@ -2,7 +2,7 @@
 #include "nfc_io.h"
 #include "nfc_config.h"
 #include "nfc_log.h"
-#include "../Drivers/ST25DV/st25dv.h"
+#include "../../Drivers/ST25DV/st25dv.h"
 #include <string.h>
 
 static uint8_t mb_rx_buf[ST25DV_MAX_MAILBOX_LENGTH];

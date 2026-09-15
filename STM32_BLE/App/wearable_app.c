@@ -30,11 +30,11 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stm32wb0x_hal_radio_timer.h"
-#include "../../Application/sensor_manager.h"
+#include "../../Application/SensorManager/sensor_manager.h"
 #include "../../Application/wearable_data.h"
-#include "../../Application/wearable_state_manager.h"
-#include "../../Application/device_time.h"
-#include "../../Application/data_recovery_manager.h"
+#include "../../Application/StateManager/wearable_state_manager.h"
+#include "../../Application/DeviceTime/device_time.h"
+#include "../../Application/DataRecovery/data_recovery_manager.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

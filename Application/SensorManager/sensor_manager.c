@@ -4,14 +4,14 @@
 #include <math.h>
 
 #include "main.h"
-#include "NEH7100/neh7100.h"
-#include "../Drivers/max30208.h"
-#include "../Drivers/supercap_monitor.h"
-#include "../Drivers/Sensors/LIS2DUXS12TR/lis2duxs12_motion.h"
-#include "../Drivers/Sensors/MAX86150/max86150_optical.h"
-#include "nfc_log.h"
+#include "../NEH7100/neh7100.h"
+#include "../../Drivers/max30208.h"
+#include "../../Drivers/supercap_monitor.h"
+#include "../../Drivers/Sensors/LIS2DUXS12TR/lis2duxs12_motion.h"
+#include "../../Drivers/Sensors/MAX86150/max86150_optical.h"
+#include "../NFC/nfc_log.h"
 #include "../../STM32_BLE/App/app_ble.h"
-#include "device_time.h"
+#include "../DeviceTime/device_time.h"
 #include <string.h>
 
 /*

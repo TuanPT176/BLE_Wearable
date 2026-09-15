@@ -38,15 +38,15 @@ STM32_BLE/App/            GATT service definition + BLE event/command glue (ST-g
   wearable.c/h                GATT service/characteristic declarations, UUIDs, read/write/notify plumbing
   wearable_app.c/h            Maps GATT events <-> Application layer calls; owns latest-payload buffers
 STM32_BLE/Target/         BLE stack platform adaptation (bleplat*, blenvm) — links ST's BLE stack to this MCU/HAL
-Application/               Hardware-independent app logic, BLE-agnostic
+Application/               Hardware-independent app logic, BLE-agnostic — one subfolder per component
   wearable_data.*             Wire payload structs + Encode* functions (single source of truth for byte layout)
-  sensor_manager.*            Sensor init/start/stop/read, owns latest wearable_sensor_data_t
-  wearable_state_manager.*    Device state machine (IDLE/MEASURING/ECG_ACTIVE/LOW_POWER/EMERGENCY/ERROR)
-  power_policy.*               Vcap-driven profile (HIGH/NORMAL/LOW/CRITICAL) -> sensor/BLE/logger intervals
-  device_time.*                Unix time sync (SYNC_TIME control command) and timestamping
-  nfc_io / nfc_config / nfc_log / nfc_manager   ST25DV I2C access, EEPROM config storage, circular-buffer
+  SensorManager/sensor_manager.*        Sensor init/start/stop/read, owns latest wearable_sensor_data_t
+  StateManager/wearable_state_manager.* Device state machine (IDLE/MEASURING/ECG_ACTIVE/LOW_POWER/EMERGENCY/ERROR)
+  PowerPolicy/power_policy.*            Vcap-driven profile (HIGH/NORMAL/LOW/CRITICAL) -> sensor/BLE/logger intervals
+  DeviceTime/device_time.*              Unix time sync (SYNC_TIME control command) and timestamping
+  NFC/nfc_io, nfc_config, nfc_log, nfc_manager   ST25DV I2C access, EEPROM config storage, circular-buffer
                                                   history logger, NFC mailbox command protocol
-  data_recovery_manager.*      Sequenced BLE/NFC recovery of historical log records (ACK/resume)
+  DataRecovery/data_recovery_manager.*  Sequenced BLE/NFC recovery of historical log records (ACK/resume)
   NEH7100/neh7100.cpp/h        Energy-harvesting PMIC driver (I2C) — only C++ file in the app layer
 Drivers/                   Vendor/hardware drivers
   ST25DV/                     Official ST BSP driver for the NFC tag (st25dv.c, st25dv_reg.c)
