@@ -23,10 +23,10 @@
 #include "hw_pka.h"
 #include "ble_stack.h"
 #include "miscutil.h"
-#include "stm32wb0x_ll_usart.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "wearable_app.h"
+#include "../../Application/LoRaWAN/lora_radio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -267,6 +267,10 @@ void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin)
       (GPIO_Pin == LIS2DUXS12_INT_Pin))
   {
     WEARABLE_APP_NotifyMotionInterruptFromISR();
+  }
+  else if ((GPIOx == DIO1_GPIO_Port) && (GPIO_Pin == DIO1_Pin))
+  {
+    LoRaRadio_NotifyIrqFromISR();
   }
 }
 

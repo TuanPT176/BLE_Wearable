@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "../../Application/NFC/nfc_manager.h"
+#include "../../Application/LoRaWAN/lora_radio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -116,6 +117,7 @@ int main(void)
   MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
   NFC_Manager_Init();
+  LoRaRadio_Init();
   /* USER CODE END 2 */
 
   /* Init code for STM32_BLE */
