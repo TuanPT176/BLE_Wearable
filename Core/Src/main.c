@@ -530,10 +530,10 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-/* Retarget printf()/APP_DBG_MSG() to USART1 so debug traces are visible. */
+/* USART1 was removed (PA1 is fixed to SX1262 DIO1 by the board schematic),
+ * so printf()/APP_DBG_MSG() have no trace sink anymore; discard silently. */
 int __io_putchar(int ch)
 {
-  (void)HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1U, HAL_MAX_DELAY);
   return ch;
 }
 

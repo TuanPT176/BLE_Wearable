@@ -24,22 +24,28 @@
  * compiled in this translation unit. Do not also add these driver .c files as
  * standalone build resources.
  */
-#include "../Drivers/max30208.c"
-#include "../Drivers/Sensors/LIS2DUXS12TR/lis2duxs12_reg.c"
-#include "power_policy.c"
-#include "data_recovery_manager.c"
-#include "../Drivers/Sensors/LIS2DUXS12TR/lis2duxs12_platform.c"
-#include "../Drivers/Sensors/LIS2DUXS12TR/lis2duxs12_motion.c"
+#include "../../Drivers/max30208.c"
+#include "../../Drivers/Sensors/LIS2DUXS12TR/lis2duxs12_reg.c"
+#include "../PowerPolicy/power_policy.c"
+#include "../DataRecovery/data_recovery_manager.c"
+#include "../../Drivers/Sensors/LIS2DUXS12TR/lis2duxs12_platform.c"
+#include "../../Drivers/Sensors/LIS2DUXS12TR/lis2duxs12_motion.c"
 /* max86150_optical.c is already a standalone CubeIDE build resource
  * (unlike the LIS2DUXS12TR files above) - it must NOT be bundled here too,
  * or it gets compiled twice and the linker reports duplicate symbols. */
 
-#include "nfc_config.c"
-#include "nfc_io.c"
-#include "nfc_log.c"
-#include "nfc_manager.c"
-#include "../Drivers/ST25DV/st25dv.c"
-#include "../Drivers/ST25DV/st25dv_reg.c"
+#include "../NFC/nfc_config.c"
+#include "../NFC/nfc_io.c"
+#include "../NFC/nfc_log.c"
+#include "../NFC/nfc_manager.c"
+#include "../../Drivers/ST25DV/st25dv.c"
+#include "../../Drivers/ST25DV/st25dv_reg.c"
+
+/* Same reasoning as above: SX1262/LoRaWAN bring-up code, bundled here
+ * rather than added as standalone build resources. */
+#include "../../Drivers/SX1262/sx126x_hal.c"
+#include "../../Drivers/SX1262/sx126x.c"
+#include "../LoRaWAN/lora_radio.c"
 
 #define TEMPERATURE_FIRST_POLL_DELAY_MS   20U
 #define TEMPERATURE_RETRY_DELAY_MS         5U
