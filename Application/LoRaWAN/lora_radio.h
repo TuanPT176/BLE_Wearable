@@ -2,6 +2,19 @@
 #define LORA_RADIO_H
 
 #include <stdbool.h>
+#include <stdint.h>
+
+/**
+ * Live Expressions targets (CubeIDE: Window -> Show View -> Live Expressions)
+ * for reading the SPI/GPIO bring-up result without stopping the CPU.
+ * g_lora_chip_mode/g_lora_cmd_status are 0xFF until the first successful
+ * sx126x_get_status() read; afterwards they hold the raw
+ * sx126x_chip_modes_t / sx126x_cmd_status_t values (STBY_RC = 2).
+ */
+extern volatile bool    g_lora_reset_ok;
+extern volatile bool    g_lora_radio_ok;
+extern volatile uint8_t g_lora_chip_mode;
+extern volatile uint8_t g_lora_cmd_status;
 
 /**
  * Register the radio IRQ sequencer task and run a SPI bring-up self-test
