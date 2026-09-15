@@ -41,6 +41,13 @@
 #include "../../Drivers/ST25DV/st25dv.c"
 #include "../../Drivers/ST25DV/st25dv_reg.c"
 
+/* Same reasoning as above: stm32wb0x_hal_spi.c is a brand-new file added by
+ * the CubeMX regenerate that wired up SPI3 for the SX1262, and this Eclipse
+ * workspace's stale linked-resource cache dropped it from objects.list too
+ * (undefined reference to HAL_SPI_Init/Transmit/TransmitReceive at link
+ * time) even though its .project entry is correct. */
+#include "../../Drivers/STM32WB0x_HAL_Driver/Src/stm32wb0x_hal_spi.c"
+
 /* Same reasoning as above: SX1262/LoRaWAN bring-up code, bundled here
  * rather than added as standalone build resources. */
 #include "../../Drivers/SX1262/sx126x_hal.c"
