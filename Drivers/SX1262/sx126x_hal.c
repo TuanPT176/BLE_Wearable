@@ -13,7 +13,13 @@
 extern SPI_HandleTypeDef hspi3;
 
 #define SX1262_SPI_TIMEOUT_MS   100U
-#define SX1262_BUSY_TIMEOUT_MS  10U
+/* Datasheet: chip reaches STBY_RC (BUSY low) using only internal RC + digital
+ * supply, normally well under 10ms; 100ms just adds comfortable margin for
+ * bring-up. Note: this timeout is HAL_GetTick()-based (SysTick), so it will
+ * NOT elapse while the core is halted between single-steps in a debugger -
+ * let the CPU run free (or use the g_lora_* Live Expressions) to see it
+ * actually expire. */
+#define SX1262_BUSY_TIMEOUT_MS  100U
 
 static sx126x_hal_status_t sx1262_wait_on_busy(void)
 {
