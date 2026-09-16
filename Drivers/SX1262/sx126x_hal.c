@@ -92,8 +92,11 @@ sx126x_hal_status_t sx126x_hal_wakeup(const void* context)
 {
     (void)context;
 
-    /* Toggling NSS pulls the radio out of sleep mode (datasheet 13.1.3). */
+    /* A falling edge on NSS pulls the radio out of Sleep mode (datasheet
+     * 8.2.2 "SPI Timing When the Transceiver Leaves Sleep Mode"). Hold NSS
+     * low briefly so the edge is unambiguous before releasing it. */
     HAL_GPIO_WritePin(SX_NSS_GPIO_Port, SX_NSS_Pin, GPIO_PIN_RESET);
+    HAL_Delay(1);
     HAL_GPIO_WritePin(SX_NSS_GPIO_Port, SX_NSS_Pin, GPIO_PIN_SET);
 
     return sx1262_wait_on_busy();
