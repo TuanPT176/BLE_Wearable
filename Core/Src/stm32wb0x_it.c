@@ -26,7 +26,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "wearable_app.h"
-#include "../../Application/LoRaWAN/lora_radio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -268,10 +267,8 @@ void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin)
   {
     WEARABLE_APP_NotifyMotionInterruptFromISR();
   }
-  else if ((GPIOx == DIO1_GPIO_Port) && (GPIO_Pin == DIO1_Pin))
-  {
-    LoRaRadio_NotifyIrqFromISR();
-  }
+  /* DIO1_Pin (PA1) EXTI stays enabled in hardware for future LoRaWAN driver
+   * code, but nothing handles it right now - see removed Application/LoRaWAN. */
 }
 
 /* USER CODE END 1 */

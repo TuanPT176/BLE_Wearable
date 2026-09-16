@@ -41,12 +41,6 @@
 #include "../../Drivers/ST25DV/st25dv.c"
 #include "../../Drivers/ST25DV/st25dv_reg.c"
 
-
-/* stm32wb0x_hal_spi.c and the SX1262/LoRaWAN bring-up code (sx126x_hal.c,
- * sx126x.c, lora_radio.c) are standalone linked resources in .project/
- * .cproject (see Drivers/SX1262 and Application/LoRaWAN) - do not bundle
- * them here too, or the linker reports duplicate HAL_SPI_ and sx126x_ symbols. */
-
 #define TEMPERATURE_FIRST_POLL_DELAY_MS   20U
 #define TEMPERATURE_RETRY_DELAY_MS         5U
 #define TEMPERATURE_CONVERSION_TIMEOUT_MS 60U
