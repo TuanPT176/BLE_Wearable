@@ -364,7 +364,7 @@
 
 #define CFG_LPM_SUPPORTED        (1)
 
-#define CFG_LPM_EMULATED         (0)
+#define CFG_LPM_EMULATED         (1) /* TEMP: keep SWD alive for LoRa bring-up debug; flip back to 0 before power measurement */
 
 /**
  * Low Power configuration
