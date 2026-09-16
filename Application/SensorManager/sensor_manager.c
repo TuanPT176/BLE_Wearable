@@ -41,18 +41,11 @@
 #include "../../Drivers/ST25DV/st25dv.c"
 #include "../../Drivers/ST25DV/st25dv_reg.c"
 
-/* Same reasoning as above: stm32wb0x_hal_spi.c is a brand-new file added by
- * the CubeMX regenerate that wired up SPI3 for the SX1262, and this Eclipse
- * workspace's stale linked-resource cache dropped it from objects.list too
- * (undefined reference to HAL_SPI_Init/Transmit/TransmitReceive at link
- * time) even though its .project entry is correct. */
-#include "../../Drivers/STM32WB0x_HAL_Driver/Src/stm32wb0x_hal_spi.c"
 
-/* Same reasoning as above: SX1262/LoRaWAN bring-up code, bundled here
- * rather than added as standalone build resources. */
-#include "../../Drivers/SX1262/sx126x_hal.c"
-#include "../../Drivers/SX1262/sx126x.c"
-#include "../LoRaWAN/lora_radio.c"
+/* stm32wb0x_hal_spi.c and the SX1262/LoRaWAN bring-up code (sx126x_hal.c,
+ * sx126x.c, lora_radio.c) are standalone linked resources in .project/
+ * .cproject (see Drivers/SX1262 and Application/LoRaWAN) - do not bundle
+ * them here too, or the linker reports duplicate HAL_SPI_ and sx126x_ symbols. */
 
 #define TEMPERATURE_FIRST_POLL_DELAY_MS   20U
 #define TEMPERATURE_RETRY_DELAY_MS         5U

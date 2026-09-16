@@ -397,5 +397,45 @@
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/System/Config/Debug_GPIO/app_debug.c</locationURI>
 		</link>
+		<link>
+			<name>Drivers/SX1262/sx126x.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Drivers/SX1262/sx126x.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/SX1262/sx126x.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Drivers/SX1262/sx126x.h</locationURI>
+		</link>
+		<link>
+			<name>Drivers/SX1262/sx126x_hal.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Drivers/SX1262/sx126x_hal.c</locationURI>
+		</link>
+		<link>
+			<name>Drivers/SX1262/sx126x_hal.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Drivers/SX1262/sx126x_hal.h</locationURI>
+		</link>
+		<link>
+			<name>Drivers/SX1262/sx126x_regs.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Drivers/SX1262/sx126x_regs.h</locationURI>
+		</link>
+		<link>
+			<name>Drivers/SX1262/sx126x_status.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Drivers/SX1262/sx126x_status.h</locationURI>
+		</link>
+		<link>
+			<name>Application/User/Wearable/lora_radio.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Application/LoRaWAN/lora_radio.c</locationURI>
+		</link>
+		<link>
+			<name>Application/User/Wearable/lora_radio.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Application/LoRaWAN/lora_radio.h</locationURI>
+		</link>
 	</linkedResources>
 </projectDescription>
