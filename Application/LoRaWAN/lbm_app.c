@@ -168,12 +168,22 @@ static void LBM_Task(void)
 
 void LBM_App_Init(void)
 {
+  if (g_lbmDiag.magic != LBM_DIAG_MAGIC)
+  {
+    memset((void *)&g_lbmDiag, 0, sizeof(g_lbmDiag)); /* first boot after power-up */
+    g_lbmDiag.magic = LBM_DIAG_MAGIC;
+  }
+  g_lbmDiag.boot_count++;
+  g_lbmDiag.first_read_valid = 0;
+
   /* The modem timers and its clock run from SysTick, which stops in Stop/Off
    * mode. One requester disallowing both is enough to force plain Sleep. */
   UTIL_LPM_SetStopMode(1U << CFG_LPM_LBM, UTIL_LPM_DISABLE);
   UTIL_LPM_SetOffMode(1U << CFG_LPM_LBM, UTIL_LPM_DISABLE);
 
   UTIL_SEQ_RegTask(1U << CFG_TASK_LBM_ID, UTIL_SEQ_RFU, LBM_Task);
+  g_lbmDiag.init_stage = 1;
   smtc_modem_init(&s_onModemEvent);
+  g_lbmDiag.init_stage = 2;
   UTIL_SEQ_SetTask(1U << CFG_TASK_LBM_ID, CFG_SEQ_PRIO_0);
 }

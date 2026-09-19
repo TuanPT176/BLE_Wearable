@@ -130,7 +130,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   /* LoRa Basics Modem: needs the sequencer, so it starts after MX_APPE_Init().
    * LoRaTest (LORA_TEST_ENABLE) and LBM both drive the SX1262 - never enable both. */
+#if !LORA_TEST_ENABLE
   LBM_App_Init();
+#endif
   while (1)
   {
     /* USER CODE END WHILE */

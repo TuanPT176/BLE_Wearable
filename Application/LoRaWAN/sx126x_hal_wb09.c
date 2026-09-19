@@ -45,6 +45,7 @@
 
 #include "sx126x_hal.h"
 #include "main.h"
+#include "lbm_app.h"
 
 #define RADIO_BUSY_TIMEOUT_MS 1000u
 #define RADIO_SPI_TIMEOUT_MS  1000u
@@ -91,6 +92,10 @@ static sx126x_hal_status_t sx126x_hal_check_device_ready( void )
         HAL_GPIO_WritePin( SX_NSS_GPIO_Port, SX_NSS_Pin, GPIO_PIN_SET );
         radio_mode = RADIO_AWAKE;
     }
+    if( !ok )
+    {
+        g_lbmDiag.busy_timeouts++;
+    }
     return ok ? SX126X_HAL_STATUS_OK : SX126X_HAL_STATUS_ERROR;
 }
 
@@ -104,6 +109,7 @@ static bool sx126x_hal_spi_write( const uint8_t* data, uint16_t length )
         uint16_t n = ( length > RADIO_SPI_CHUNK ) ? RADIO_SPI_CHUNK : length;
         if( HAL_SPI_TransmitReceive( &hspi3, ( uint8_t* ) data, rx, n, RADIO_SPI_TIMEOUT_MS ) != HAL_OK )
         {
+            g_lbmDiag.spi_errors++;
             return false;
         }
         data += n;
@@ -120,6 +126,7 @@ static bool sx126x_hal_spi_read( uint8_t* data, uint16_t length )
         uint16_t n = ( length > RADIO_SPI_CHUNK ) ? RADIO_SPI_CHUNK : length;
         if( HAL_SPI_TransmitReceive( &hspi3, ( uint8_t* ) s_zeros, data, n, RADIO_SPI_TIMEOUT_MS ) != HAL_OK )
         {
+            g_lbmDiag.spi_errors++;
             return false;
         }
         data += n;
@@ -174,11 +181,25 @@ sx126x_hal_status_t sx126x_hal_read( const void* context, const uint8_t* command
     }
     HAL_GPIO_WritePin( SX_NSS_GPIO_Port, SX_NSS_Pin, GPIO_PIN_SET );
 
+    if( ok && ( g_lbmDiag.first_read_valid == 0u ) )
+    {
+        for( uint16_t i = 0; ( i < 4u ) && ( i < command_length ); i++ )
+        {
+            g_lbmDiag.first_read_cmd[i] = command[i];
+        }
+        for( uint16_t i = 0; ( i < 9u ) && ( i < data_length ); i++ )
+        {
+            g_lbmDiag.first_read_data[i] = data[i];
+        }
+        g_lbmDiag.first_read_valid = 1u;
+    }
+
     return ok ? SX126X_HAL_STATUS_OK : SX126X_HAL_STATUS_ERROR;
 }
 
 sx126x_hal_status_t sx126x_hal_reset( const void* context )
 {
+    g_lbmDiag.radio_resets++;
     HAL_GPIO_WritePin( SX_RESET_GPIO_Port, SX_RESET_Pin, GPIO_PIN_RESET );
     HAL_Delay( 5 );
     HAL_GPIO_WritePin( SX_RESET_GPIO_Port, SX_RESET_Pin, GPIO_PIN_SET );

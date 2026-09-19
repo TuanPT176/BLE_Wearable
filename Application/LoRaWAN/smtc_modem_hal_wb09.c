@@ -63,6 +63,7 @@
 #include "hw_rng.h"
 #include "lbm_config.h"
 #include "lbm_hal_wb09.h"
+#include "lbm_app.h"
 
 #ifndef MIN
 #define MIN( a, b ) ( ( ( a ) < ( b ) ) ? ( a ) : ( b ) )
@@ -139,7 +140,7 @@ static uint32_t          s_time_offset_ms;
 static void ( *s_radio_callback )( void* context );
 static void* s_radio_context;
 
-volatile uint32_t g_lbmPanicLine;
+__attribute__( ( section( ".noinit" ) ) ) volatile LBM_Diag_t g_lbmDiag;
 volatile uint32_t g_lbmRadioIrqCount;  /* DIO1 events delivered by the EXTI interrupt */
 volatile uint32_t g_lbmDio1PollEdges;  /* DIO1 rising edges seen by the 1 ms SysTick poll */
 volatile uint8_t  g_lbmDio1Level;      /* DIO1 (PA1) level sampled by the poll */
@@ -361,7 +362,19 @@ void smtc_modem_hal_on_panic( uint8_t* func, uint32_t line, const char* fmt, ...
         out_len = ( int ) sizeof( out_buff );
     }
 
-    g_lbmPanicLine = line;
+    if( g_lbmDiag.magic == LBM_DIAG_MAGIC )
+    {
+        g_lbmDiag.panic_count++;
+        g_lbmDiag.panic_line = line;
+        size_t n             = ( out_len < ( int ) sizeof( g_lbmDiag.panic_text ) - 1 )
+                                   ? ( size_t ) out_len
+                                   : sizeof( g_lbmDiag.panic_text ) - 1u;
+        for( size_t i = 0; i < n; i++ )
+        {
+            g_lbmDiag.panic_text[i] = ( char ) out_buff[i];
+        }
+        g_lbmDiag.panic_text[n] = '\0';
+    }
     smtc_modem_hal_crashlog_store( out_buff, ( uint8_t ) out_len );
     smtc_modem_hal_reset_mcu( );
 }

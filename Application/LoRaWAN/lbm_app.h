@@ -43,7 +43,31 @@ extern volatile uint8_t     g_lbmDownlinkLen;
 extern volatile uint32_t    g_lbmRadioIrqCount; /* defined in smtc_modem_hal_wb09.c: DIO1 events via EXTI */
 extern volatile uint32_t    g_lbmDio1PollEdges; /* DIO1 rising edges seen by the 1 ms poll */
 extern volatile uint8_t     g_lbmDio1Level;     /* DIO1 (PA1) level sampled by the poll */
-extern volatile uint32_t    g_lbmPanicLine;     /* defined in smtc_modem_hal_wb09.c */
+
+/*
+ * Lives in .noinit RAM, so it SURVIVES a software/debugger reset (unlike the
+ * plain globals above, which restart from 0 on every boot). Use it to tell
+ * "slow init" from "reset loop": boot_count climbing with init_stage stuck at 1
+ * means the MCU keeps restarting inside smtc_modem_init(); panic_text then says
+ * which LBM assertion fired. Cleared automatically after a power cycle.
+ */
+#define LBM_DIAG_MAGIC 0x4C424D44u /* "LBMD" */
+typedef struct
+{
+  uint32_t magic;
+  uint32_t boot_count;    /* LBM_App_Init() calls since power-up */
+  uint32_t init_stage;    /* 1 = inside smtc_modem_init(), 2 = it returned */
+  uint32_t panic_count;
+  uint32_t panic_line;
+  uint32_t radio_resets;  /* sx126x_hal_reset() calls since power-up */
+  uint32_t busy_timeouts; /* radio BUSY stuck high past the 1 s timeout */
+  uint32_t spi_errors;    /* HAL_SPI_TransmitReceive() failures */
+  uint8_t  first_read_valid;   /* set once the first radio read of THIS boot is captured */
+  uint8_t  first_read_cmd[4];  /* its command bytes: 1D 02 9F 00 = ReadRegister(0x029F) */
+  uint8_t  first_read_data[9]; /* what the chip answered: a healthy chip after reset gives 00 xx xx... */
+  char     panic_text[96];
+} LBM_Diag_t;
+extern volatile LBM_Diag_t g_lbmDiag; /* defined in smtc_modem_hal_wb09.c */
 
 /**
  * @brief Register the LBM sequencer task and initialise the modem. Call once,
