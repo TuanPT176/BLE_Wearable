@@ -41,11 +41,40 @@
 									<listOptionValue builtIn="false" value="USE_FULL_LL_DRIVER"/>
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
 									<listOptionValue builtIn="false" value="STM32WB09"/>
+									<listOptionValue builtIn="false" value="SX126X"/>
+									<listOptionValue builtIn="false" value="SX1262"/>
+									<listOptionValue builtIn="false" value="NUMBER_OF_STACKS=1"/>
+									<listOptionValue builtIn="false" value="MODEM_HAL_DBG_TRACE=0"/>
+									<listOptionValue builtIn="false" value="REGION_AS_923"/>
+									<listOptionValue builtIn="false" value="RP2_103"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths.1004709466" name="Include paths (-I)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../../Core/Inc"/>
 									<listOptionValue builtIn="false" value="../../STM32_BLE/App"/>
 									<listOptionValue builtIn="false" value="../../Application"/>
+									<listOptionValue builtIn="false" value="../../Application/LoRaWAN"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/radio_drivers/sx126x_driver/src"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/smtc_modem_crypto/soft_secure_element"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_api"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/logging"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/modem_supervisor"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/modem_utilities"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/lorawan_packages"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/lorawan_packages/lorawan_certification"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/lorawan_manager"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/lorawan_api"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/smtc_ral/src"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/smtc_ralf/src"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/lr1mac"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/lr1mac/src"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/lr1mac/src/services"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/radio_planner/src"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/smtc_modem_crypto"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/smtc_modem_crypto/smtc_secure_element"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/lr1mac/src/smtc_real/src"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_hal"/>
 									<listOptionValue builtIn="false" value="../../STM32_BLE/Target"/>
 									<listOptionValue builtIn="false" value="../../System/Config/Debug_GPIO"/>
 									<listOptionValue builtIn="false" value="../../System/Interfaces"/>
@@ -211,11 +240,40 @@
 									<listOptionValue builtIn="false" value="USE_FULL_LL_DRIVER"/>
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
 									<listOptionValue builtIn="false" value="STM32WB09"/>
+									<listOptionValue builtIn="false" value="SX126X"/>
+									<listOptionValue builtIn="false" value="SX1262"/>
+									<listOptionValue builtIn="false" value="NUMBER_OF_STACKS=1"/>
+									<listOptionValue builtIn="false" value="MODEM_HAL_DBG_TRACE=0"/>
+									<listOptionValue builtIn="false" value="REGION_AS_923"/>
+									<listOptionValue builtIn="false" value="RP2_103"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths.212604890" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.includepaths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../../Core/Inc"/>
 									<listOptionValue builtIn="false" value="../../STM32_BLE/App"/>
 									<listOptionValue builtIn="false" value="../../Application"/>
+									<listOptionValue builtIn="false" value="../../Application/LoRaWAN"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/radio_drivers/sx126x_driver/src"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/smtc_modem_crypto/soft_secure_element"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_api"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/logging"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/modem_supervisor"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/modem_utilities"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/lorawan_packages"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/lorawan_packages/lorawan_certification"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/lorawan_manager"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/lorawan_api"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/smtc_ral/src"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/smtc_ralf/src"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/lr1mac"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/lr1mac/src"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/lr1mac/src/services"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/radio_planner/src"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/smtc_modem_crypto"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/smtc_modem_crypto/smtc_secure_element"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_core/lr1mac/src/smtc_real/src"/>
+									<listOptionValue builtIn="false" value="../../ThirdParty/LBM/lbm_lib/smtc_modem_hal"/>
 									<listOptionValue builtIn="false" value="../../STM32_BLE/Target"/>
 									<listOptionValue builtIn="false" value="../../System/Config/Debug_GPIO"/>
 									<listOptionValue builtIn="false" value="../../System/Interfaces"/>

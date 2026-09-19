@@ -22,6 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "../../Application/NFC/nfc_manager.h"
+#include "../../Application/LoRaTest/lora_test.h"
+#include "../../Application/LoRaWAN/lbm_app.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -116,6 +118,9 @@ int main(void)
   MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
   NFC_Manager_Init();
+#if LORA_TEST_ENABLE
+  LoRaTest_Run();
+#endif
   /* USER CODE END 2 */
 
   /* Init code for STM32_BLE */
@@ -123,6 +128,9 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  /* LoRa Basics Modem: needs the sequencer, so it starts after MX_APPE_Init().
+   * LoRaTest (LORA_TEST_ENABLE) and LBM both drive the SX1262 - never enable both. */
+  LBM_App_Init();
   while (1)
   {
     /* USER CODE END WHILE */
@@ -408,6 +416,12 @@ static void MX_SPI3_Init(void)
   hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi3.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi3.Init.NSS = SPI_NSS_SOFT;
+  /* Tried /64 (500kHz) to rule out a signal-integrity issue behind the
+   * custom board's GetStatus=0xFF (MISO stuck high) - made no difference,
+   * so back to /4 (8MHz; the closest power-of-2 divider to 9MHz - this
+   * clock only supports /2/4/8/16/32/64/128/256, no exact 9MHz option).
+   * Root cause traced to PA8/MISO sitting at ~1.2V (a suspected marginal
+   * solder joint), not a clock-speed issue. */
   hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
   hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
@@ -479,12 +493,11 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : SX_RESET_Pin */
   GPIO_InitStruct.Pin = SX_RESET_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-  /* Open-drain output needs a pull-up to actually reach a high level when
-   * released; without it NRESET just floats and the SX1262 can stay stuck
-   * in reset (BUSY never goes low). No confirmed external pull-up on this
-   * net, so use the MCU's internal one. */
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  /* Push-pull, not open-drain: actively drives NRESET both ways instead of
+   * relying on the MCU's weak internal pull-up to reach a solid HIGH on
+   * release (that was the earlier open-drain config's known weak point). */
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(SX_RESET_GPIO_Port, &GPIO_InitStruct);
 

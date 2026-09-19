@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "wearable_app.h"
+#include "../../Application/LoRaWAN/lbm_hal_wb09.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -133,7 +134,7 @@ void SysTick_Handler(void)
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
-
+  LBM_HAL_TimerTick();
   /* USER CODE END SysTick_IRQn 1 */
 }
 
@@ -267,8 +268,12 @@ void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin)
   {
     WEARABLE_APP_NotifyMotionInterruptFromISR();
   }
-  /* DIO1_Pin (PA1) EXTI stays enabled in hardware for future LoRaWAN driver
-   * code, but nothing handles it right now - see removed Application/LoRaWAN. */
+  if ((GPIOx == DIO1_GPIO_Port) && (GPIO_Pin == DIO1_Pin))
+  {
+    /* SX1262 DIO1 -> LoRa Basics Modem radio IRQ (flags only, SPI work is done
+     * later by the LBM sequencer task). lora_test.c never used this path. */
+    LBM_HAL_RadioIrq();
+  }
 }
 
 /* USER CODE END 1 */
