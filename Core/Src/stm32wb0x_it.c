@@ -27,6 +27,7 @@
 /* USER CODE BEGIN Includes */
 #include "wearable_app.h"
 #include "../../Application/LoRaWAN/lbm_hal_wb09.h"
+#include "../../Application/LoRaWAN/lbm_app.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -267,6 +268,11 @@ void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin)
       (GPIO_Pin == LIS2DUXS12_INT_Pin))
   {
     WEARABLE_APP_NotifyMotionInterruptFromISR();
+  }
+  if ((GPIOx == SOS_Button_GPIO_Port) && (GPIO_Pin == SOS_Button_Pin))
+  {
+    /* PB5 SOS button (falling edge) -> LoRaWAN emergency uplink */
+    LBM_App_SosButtonIrq();
   }
   if ((GPIOx == DIO1_GPIO_Port) && (GPIO_Pin == DIO1_Pin))
   {

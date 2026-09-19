@@ -44,6 +44,12 @@ extern volatile uint32_t    g_lbmRadioIrqCount; /* defined in smtc_modem_hal_wb0
 extern volatile uint32_t    g_lbmDio1PollEdges; /* DIO1 rising edges seen by the 1 ms poll */
 extern volatile uint8_t     g_lbmDio1Level;     /* DIO1 (PA1) level sampled by the poll */
 
+/* SOS button (PB5) */
+extern volatile uint32_t    g_lbmSosPressCount; /* presses accepted after debouncing */
+extern volatile uint32_t    g_lbmSosSentCount;  /* SOS uplinks accepted by LBM */
+extern volatile uint8_t     g_lbmSosPending;    /* 1 = a press is waiting (radio not joined yet, or LBM busy) */
+extern volatile int32_t     g_lbmSosLastRc;     /* last smtc_modem_return_code_t of an SOS request */
+
 /*
  * Lives in .noinit RAM, so it SURVIVES a software/debugger reset (unlike the
  * plain globals above, which restart from 0 on every boot). Use it to tell
@@ -75,6 +81,14 @@ extern volatile LBM_Diag_t g_lbmDiag; /* defined in smtc_modem_hal_wb09.c */
  *        The join starts from the modem RESET event, run by the LBM task.
  */
 void LBM_App_Init(void);
+
+/**
+ * @brief SOS button handler. Call from the PB5 EXTI callback (ISR context): it
+ *        debounces the press and wakes the LBM task, which sends the SOS
+ *        uplink (right after the join if the device is not joined yet).
+ *        Does nothing until LBM_App_Init() has run.
+ */
+void LBM_App_SosButtonIrq(void);
 
 #ifdef __cplusplus
 }

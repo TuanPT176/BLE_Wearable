@@ -14,7 +14,7 @@ Thiết bị quảng bá với GAP Device Name: **`BLEWearable`**.
 - Đọc trực tiếp hoặc nhận notification từ các characteristic.
 - Chu kỳ gửi dữ liệu cảm biến mặc định: **1 giây** khi đang đo và notification đã được bật.
 - Đã tích hợp ST25DV04K để lưu trữ cấu hình, backup dữ liệu cảm biến qua circular buffer và hỗ trợ giao tiếp qua NFC Mailbox.
-- Dự kiến tích hợp SX1262 để truyền dữ liệu tầm xa qua LoRa/LoRaWAN.
+- Đã tích hợp SX1262 với LoRa Basics Modem: OTAA trên The Things Stack (AS923-2), uplink định kỳ và uplink khẩn cấp khi nhấn nút SOS (PB5). Xem mục [LoRaWAN](#lorawan-lora-basics-modem).
 
 ## Phần cứng và cảm biến
 
@@ -27,9 +27,9 @@ Thiết bị quảng bá với GAP Device Name: **`BLEWearable`**.
 | NEH7100 | Energy-harvesting PMIC; quản lý nguồn và theo dõi dòng điện qua I2C |
 | Supercapacitor monitor | Theo dõi điện áp nguồn |
 | ST25DV04K | Dynamic NFC/RFID Tag; lưu trữ cấu hình thiết bị, log cảm biến, và hỗ trợ Energy Harvesting |
-| SX1262 *(planned)* | LoRa transceiver cho kết nối LoRa/LoRaWAN; driver và stack chưa được tích hợp |
+| SX1262 | LoRa transceiver chạy LoRaWAN (LoRa Basics Modem) qua SPI3; clock từ TCXO cấp nguồn bởi DIO3 |
 
-> **Trạng thái tích hợp:** NEH7100 đã có source tại `Application/neh7100.cpp` và `Application/neh7100.h`. ST25DV04K đã được tích hợp đầy đủ driver và logic xử lý (config, logger, FTM mailbox). SX1262 hiện mới nằm trong kế hoạch phần cứng, driver SX1262 và LoRaWAN stack sẽ được bổ sung sau.
+> **Trạng thái tích hợp:** NEH7100 đã có source tại `Application/neh7100.cpp` và `Application/neh7100.h`. ST25DV04K đã được tích hợp đầy đủ driver và logic xử lý (config, logger, FTM mailbox). SX1262 đã chạy LoRaWAN OTAA bằng LoRa Basics Modem (`ThirdParty/LBM`, phần port cho WB09 ở `Application/LoRaWAN`), xem mục LoRaWAN bên dưới.
 
 > **Migration cảm biến:** Driver register, HAL I2C, đọc gia tốc và khung nạp MLC cho LIS2DUXS12TR đã được tích hợp; cần thêm file UCF sinh từ Unico và bảng ánh xạ class để kích hoạt model MLC thực tế. MAX86150 hiện vẫn ở chế độ optical-only, vì vậy phần thu nhận ECG cần được bổ sung tiếp.
 
@@ -44,6 +44,8 @@ BLE_Wearable_GATT/
 │   ├── nfc_manager.*            # Controller giao tiếp NFC Mailbox
 │   ├── sensor_manager.*         # Khởi tạo, đọc và quản lý cảm biến
 │   ├── neh7100.*                # Driver I2C cho NEH7100 PMIC
+│   ├── LoRaWAN/                 # Port LoRa Basics Modem cho WB09 và ứng dụng LoRaWAN (OTAA, SOS)
+│   ├── LoRaTest/                # Test radio SX1262 độc lập (mặc định tắt)
 │   ├── wearable_data.*          # Định dạng/encode BLE payload
 │   └── wearable_state_manager.* # Máy trạng thái của thiết bị
 ├── Core/
@@ -65,11 +67,9 @@ BLE_Wearable_GATT/
 ├── STM32CubeIDE/                # Project, linker script và startup
 ├── System/                      # Debug và USART interface
 ├── Utilities/                   # Sequencer, low-power và trace
-├── LoRaWAN/                     # Planned: SX1262 driver và LoRaWAN stack
+├── ThirdParty/LBM/              # LoRa Basics Modem v4.9.0 của Semtech (không sửa)
 └── BLE_p2pServer_GATT.ioc       # Cấu hình STM32CubeMX
 ```
-
-Thư mục `LoRaWAN/` trong sơ đồ thể hiện kiến trúc dự kiến và chưa tồn tại trong source tree hiện tại.
 
 ## BLE GATT profile
 
@@ -269,6 +269,160 @@ function decodeDeviceStatus(input) {
 }
 ```
 
+## LoRaWAN (LoRa Basics Modem)
+
+Thiết bị chạy LoRaWAN **OTAA, Class A** trên SX1262 bằng thư viện [LoRa Basics Modem](https://github.com/Lora-net/SWL2001) (LBM) v4.9.0 của Semtech, tương ứng LoRaWAN L2 1.0.4 và Regional Parameters RP002-1.0.3. Vùng tần số đang dùng: **AS923-2**.
+
+### Vị trí code
+
+| Đường dẫn | Nội dung |
+|---|---|
+| `Application/LoRaWAN/lbm_config.h` | **Toàn bộ thông số cấu hình** (xem bảng bên dưới) |
+| `Application/LoRaWAN/lbm_credentials.h` | DevEUI, JoinEUI, AppKey. Bản trong Git là mẫu toàn số 0, không commit key thật |
+| `Application/LoRaWAN/lbm_app.c` | Luồng ứng dụng: join, uplink định kỳ, nút SOS |
+| `Application/LoRaWAN/*_wb09.c` | Port cho WB09: timer, SPI3 với SX1262, cấu hình TCXO/PA |
+| `ThirdParty/LBM/lbm_lib/` | Thư viện LBM của Semtech, không sửa |
+| `Application/LoRaTest/` | Chương trình test radio độc lập, bật bằng `LORA_TEST_ENABLE` trong `lora_test.h` (mặc định tắt, không chạy cùng LBM) |
+
+Chân kết nối SX1262: SPI3 (SCK PB3, MISO PA8, MOSI PA11), NSS PA9, NRESET PB15, BUSY PB14, DIO1 PA1.
+
+### Chuẩn bị network server (The Things Stack)
+
+1. Tạo device với LoRaWAN Specification **1.0.4**, Regional Parameters **RP002 1.0.3**, frequency plan **AS923-2**, kích hoạt OTAA.
+2. **DevEUI** và **AppKey**: bấm *Generate* trên console. **JoinEUI** có thể để toàn số 0.
+3. Điền vào `lbm_credentials.h` theo đúng thứ tự byte console hiển thị (MSB trước). Nếu DevEUI hoặc AppKey còn toàn 0, firmware không join (`g_lbmState = LBM_STATE_NO_CREDENTIALS`).
+4. Khi phát triển, bật **Resets join nonces** cho device. Context của LBM đang lưu trong RAM `.noinit` nên mất khi cắt nguồn hoặc khi build lại (DevNonce về 0, server báo *DevNonce too small*). Tùy chọn này tắt cơ chế chống phát lại, **chỉ dùng khi test**.
+5. Gateway phải chạy plan AS923-2 (kênh join mặc định 921.4 và 921.6 MHz).
+
+### Cấu hình thông số
+
+Sửa trong `Application/LoRaWAN/lbm_config.h`, sau đó build lại và nạp.
+
+| Macro | Mặc định | Ý nghĩa |
+|---|---|---|
+| `LBM_REGION` | `SMTC_MODEM_REGION_AS_923_GRP2` | Nhóm tần số. AS923-1 là `..._GRP1`, AS923-3 là `..._GRP3` (đồng thời gateway phải khớp) |
+| `LBM_UPLINK_PORT` | `101` | Cổng của uplink định kỳ |
+| `LBM_UPLINK_PERIOD_S` | `60` | Chu kỳ gửi uplink định kỳ (giây) |
+| `LBM_FIRST_UPLINK_DELAY_S` | `10` | Trễ của gói định kỳ đầu tiên sau khi join (gói ngay khi join xong gửi riêng) |
+| `LBM_ADR_MODE` | `LBM_ADR_NETWORK_CONTROLLED` | Cách chọn data rate, xem bên dưới |
+| `LBM_FIXED_DR` | `2` | DR cố định, chỉ dùng khi `LBM_ADR_MODE = LBM_ADR_FIXED_DR` |
+| `LBM_NB_TRANS` | `1` | Số lần phát mỗi uplink (1 đến 15). Bị bỏ qua khi ADR do server điều khiển |
+| `LBM_JOIN_DR` | `-1` | Data rate của các gói **join**. `-1` giữ mặc định của LBM (trộn DR2 đến DR5), `0` đến `7` ép một DR |
+| `LBM_TX_POWER_OFFSET_DB` | `0` | Cộng thêm vào công suất trước khi tra bảng PA (bù suy hao antenna). Chip giới hạn -9 đến +22 dBm |
+| `LBM_RADIO_USE_TCXO`, `LBM_RADIO_TCXO_VOLTAGE_REG`, `LBM_RADIO_TCXO_STARTUP_MS` | `1`, `0x02` (1.8 V), `5` | TCXO cấp nguồn từ DIO3. Đặt `LBM_RADIO_USE_TCXO = 0` nếu dùng thạch anh thường |
+| `LBM_RADIO_USE_DCDC`, `LBM_RADIO_USE_DIO2_RF_SWITCH` | `1`, `1` | Kế thừa từ module E22, **chưa xác nhận** trên board custom: DC-DC cần cuộn cảm đã hàn, DIO2 phải thật sự điều khiển switch antenna |
+| `LBM_SOS_PORT`, `LBM_SOS_CONFIRMED`, `LBM_SOS_DEBOUNCE_MS` | `102`, `true`, `300` | Cổng, kiểu gói và thời gian chống rung của nút SOS |
+
+#### Data rate và spreading factor (AS923)
+
+| DR | Điều chế | Payload ứng dụng tối đa* |
+|---|---|---|
+| DR0 | SF12, 125 kHz | không dùng để phát (dwell time) |
+| DR1 | SF11, 125 kHz | không dùng để phát (dwell time) |
+| DR2 | SF10, 125 kHz | 11 byte |
+| DR3 | SF9, 125 kHz | 53 byte |
+| DR4 | SF8, 125 kHz | 125 byte |
+| DR5 | SF7, 125 kHz | 242 byte |
+| DR6 | SF7, 250 kHz | 242 byte |
+| DR7 | FSK 50 kbit/s | 242 byte |
+
+\* Khi dwell time uplink bật (mặc định của LBM cho AS923), lấy từ bảng MACPayload tối đa trong code LBM trừ 8 byte header (FHDR 7 và FPort 1); nếu có thêm MAC command thì còn ít hơn. Payload hiện tại chỉ 4 đến 5 byte nên đủ ở mọi DR được phép.
+
+DR thấp (SF cao) đi xa hơn nhưng chiếm kênh lâu hơn, mỗi bậc SF làm thời gian phát tăng khoảng gấp đôi.
+
+| `LBM_ADR_MODE` | Hành vi |
+|---|---|
+| `LBM_ADR_NETWORK_CONTROLLED` | Server điều khiển DR và công suất. Phù hợp thiết bị đứng yên |
+| `LBM_ADR_MOBILE_LONG_RANGE` | Profile có sẵn của LBM, ưu tiên tầm xa, cho thiết bị di chuyển |
+| `LBM_ADR_MOBILE_LOW_POWER` | Profile có sẵn của LBM, ưu tiên thời gian phát ngắn, cho thiết bị di chuyển |
+| `LBM_ADR_FIXED_DR` | Không ADR, luôn dùng `LBM_FIXED_DR` |
+
+Ví dụ:
+
+```c
+/* Luôn SF10 (DR2), phát 1 lần mỗi gói */
+#define LBM_ADR_MODE   LBM_ADR_FIXED_DR
+#define LBM_FIXED_DR   2
+#define LBM_NB_TRANS   1
+
+/* Luôn SF7 (DR5), phát lặp 2 lần mỗi gói để tăng độ tin cậy */
+#define LBM_ADR_MODE   LBM_ADR_FIXED_DR
+#define LBM_FIXED_DR   5
+#define LBM_NB_TRANS   2
+
+/* Chỉ join bằng SF10 */
+#define LBM_JOIN_DR    2
+```
+
+ADR profile và NbTrans chỉ áp dụng được sau khi join, firmware tự gọi khi nhận sự kiện JOINED. Công suất tối đa của vùng AS923 là 16 dBm EIRP. Cố định công suất bên ngoài cơ chế ADR chưa được hỗ trợ.
+
+### Nút SOS (PB5)
+
+Nối một nút nhấn giữa PB5 và GND (chân đã cấu hình pull-up nội và ngắt cạnh xuống). Nhấn nút sẽ gửi **một uplink khẩn cấp** (`smtc_modem_request_emergency_uplink`): ưu tiên cao hơn mọi dịch vụ khác và không bị giới hạn duty cycle.
+
+- Chống rung 300 ms (`LBM_SOS_DEBOUNCE_MS`), nhấn đôi trong khoảng đó chỉ tính một lần.
+- Nếu nhấn khi chưa join xong, yêu cầu được giữ lại và gửi ngay sau khi join.
+- Gói mặc định là *confirmed*: server phải trả ACK, nếu không LBM tự phát lại theo cơ chế của nó (số lần cụ thể chưa được kiểm tra).
+- Nút này **chưa** kích hoạt trạng thái EMERGENCY hay notification qua BLE, hiện chỉ gửi qua LoRa.
+
+### Định dạng payload
+
+| Cổng | Khi nào | Nội dung |
+|---|---|---|
+| 101 | Định kỳ, không xác nhận | 4 byte: bộ đếm uplink, big-endian, gói đầu tiên là 0 |
+| 102 | Nhấn nút SOS, confirmed | 5 byte: `0x01` (SOS) rồi 4 byte số lần nhấn từ khi khởi động, big-endian |
+
+Payload formatter cho The Things Stack (*Payload formatters* → *Uplink* → *Custom Javascript formatter*):
+
+```javascript
+function decodeUplink(input) {
+  var b = input.bytes;
+  var port = input.fPort;
+
+  function u32(i) {
+    return ((b[i] << 24) | (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3]) >>> 0;
+  }
+
+  if (port === 101) {
+    if (b.length !== 4) {
+      return { data: {}, warnings: [], errors: ["port 101 expects 4 bytes, got " + b.length] };
+    }
+    return { data: { counter: u32(0) }, warnings: [], errors: [] };
+  }
+
+  if (port === 102) {
+    if (b.length !== 5 || b[0] !== 0x01) {
+      return { data: {}, warnings: [], errors: ["port 102 expects 5 bytes starting with 0x01"] };
+    }
+    return { data: { sos: true, presses: u32(1) }, warnings: [], errors: [] };
+  }
+
+  return { data: {}, warnings: ["unknown fPort " + port], errors: [] };
+}
+```
+
+### Theo dõi khi debug
+
+Firmware không có kênh log (PA1 là DIO1, không phải UART), nên đọc trạng thái bằng **Live Expressions** trong STM32CubeIDE:
+
+| Biến | Ý nghĩa |
+|---|---|
+| `g_lbmState` | 0 chưa chạy, 1 thiếu credentials, 2 đang join, 3 đã join, 4 join lỗi, 5 lỗi API (xem `g_lbmLastRc`) |
+| `g_lbmLastEvent`, `g_lbmEventCount` | Sự kiện LBM gần nhất (0 RESET, 1 ALARM, 2 JOINED, 3 TXDONE, 4 DOWNDATA, 5 JOINFAIL) và tổng số |
+| `g_lbmUplinkCount`, `g_lbmTxDoneStatus` | Số uplink định kỳ đã yêu cầu, kết quả TxDone gần nhất (0 chưa gửi, 1 đã gửi, 2 có ACK) |
+| `g_lbmSosPressCount`, `g_lbmSosSentCount`, `g_lbmSosPending`, `g_lbmSosLastRc` | Số lần nhấn, số gói SOS đã gửi, còn chờ gửi, mã lỗi gần nhất |
+| `g_lbmRadioIrqCount`, `g_lbmDio1PollEdges` | Số ngắt DIO1 nhận được qua EXTI và qua poll 1 ms |
+| `g_lbmDiag` | Nằm trong RAM `.noinit` nên **sống sót qua reset**: số lần khởi động, số lần LBM panic và nội dung panic, lỗi SPI/BUSY của radio, 9 byte chip trả về ở lần đọc đầu tiên. Dùng để phát hiện vòng reset |
+
+Khi debug đừng đặt breakpoint trên đường chạy của LBM: CPU dừng thì các cửa sổ RX của LoRaWAN cũng lỡ. Nếu cần, chỉ đặt ở `case SMTC_MODEM_EVENT_JOINED` hoặc `JOINFAIL` trong `lbm_app.c`.
+
+### Giới hạn đã biết
+
+- Context LBM (trong đó có DevNonce) chưa lưu vào flash, chỉ nằm trong RAM `.noinit`. Cần bật *Resets join nonces* trên server khi test, xem mục chuẩn bị ở trên.
+- Timer của LBM chạy trên SysTick 1 ms nên CPU không vào Stop/Off mode khi LBM chạy (`CFG_LPM_LBM`, và `PWR_EnterSleepMode` không còn dừng SysTick). Đây là cấu hình bring-up, tốn điện hơn thiết kế cuối.
+- BLE và LoRaWAN chưa được kiểm chứng chạy đồng thời lâu dài; ngắt radio BLE có thể làm lệch cửa sổ RX của LoRaWAN.
+- Board custom: clock SX1262 dùng TCXO gắn thêm. Với thạch anh thiết kế ban đầu, chip không hoàn tất khởi động trên board này (nguyên nhân trong mạch XTAL chưa xác định).
+
 ## Kết nối nhanh bằng nRF Connect
 
 1. Flash firmware và reset board.
@@ -290,3 +444,5 @@ function decodeDeviceStatus(input) {
 ## Cập nhật gần đây
 - Tối ưu bộ nhớ: Tăng Stack size lên 6KB chuẩn bị cho các thuật toán xử lý dữ liệu phức tạp (PPG, ECG).
 - Khắc phục lỗi sinh code của STM32CubeMX: Xử lý triệt để các lỗi ghi đè cấu hình GATT, lỗi thiếu biến ADC, và lỗi khai báo của thư viện BLE stack (BLEPLAT_CNTR_IsEnabledTimer1).
+- Tích hợp LoRa Basics Modem v4.9.0 trên SX1262: OTAA AS923-2 với The Things Stack, uplink định kỳ, cấu hình data rate/SF/ADR trong `lbm_config.h`.
+- Thêm nút SOS ở PB5: nhấn nút gửi uplink LoRaWAN khẩn cấp (cổng 102, confirmed).
