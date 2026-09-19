@@ -23,6 +23,7 @@
 #include "main.h"
 #include "app_conf.h"
 #include "stm32_seq.h"
+#include "stm32_lpm.h"
 #include "smtc_modem_api.h"
 #include "smtc_modem_utilities.h"
 #include "lbm_config.h"
@@ -167,6 +168,11 @@ static void LBM_Task(void)
 
 void LBM_App_Init(void)
 {
+  /* The modem timers and its clock run from SysTick, which stops in Stop/Off
+   * mode. One requester disallowing both is enough to force plain Sleep. */
+  UTIL_LPM_SetStopMode(1U << CFG_LPM_LBM, UTIL_LPM_DISABLE);
+  UTIL_LPM_SetOffMode(1U << CFG_LPM_LBM, UTIL_LPM_DISABLE);
+
   UTIL_SEQ_RegTask(1U << CFG_TASK_LBM_ID, UTIL_SEQ_RFU, LBM_Task);
   smtc_modem_init(&s_onModemEvent);
   UTIL_SEQ_SetTask(1U << CFG_TASK_LBM_ID, CFG_SEQ_PRIO_0);

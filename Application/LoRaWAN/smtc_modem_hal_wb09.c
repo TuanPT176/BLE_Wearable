@@ -35,8 +35,10 @@
 /*
  * LoRa Basics Modem HAL for the STM32WB09 (bare metal + cooperative sequencer).
  *
- *  - Time base: HAL_GetTick() (SysTick, 1 ms). SysTick keeps running in the
- *    emulated low-power mode this firmware uses (CFG_LPM_EMULATED).
+ *  - Time base: HAL_GetTick() (SysTick, 1 ms). This only holds because
+ *    LBM_App_Init() forbids Stop/Off mode (CFG_LPM_LBM) and
+ *    PWR_EnterSleepMode() no longer calls HAL_SuspendTick(); with the tick
+ *    suspended during sleep, uwTick loses time and every timer below stalls.
  *  - Modem timer: one software timer dispatched from LBM_HAL_TimerTick(), called
  *    by SysTick_Handler. The callback runs in ISR context and only sets flags.
  *  - Radio IRQ: DIO1 (PA1) EXTI, forwarded by LBM_HAL_RadioIrq().
@@ -138,7 +140,11 @@ static void ( *s_radio_callback )( void* context );
 static void* s_radio_context;
 
 volatile uint32_t g_lbmPanicLine;
-volatile uint32_t g_lbmRadioIrqCount;
+volatile uint32_t g_lbmRadioIrqCount;  /* DIO1 events delivered by the EXTI interrupt */
+volatile uint32_t g_lbmDio1PollEdges;  /* DIO1 rising edges seen by the 1 ms SysTick poll */
+volatile uint8_t  g_lbmDio1Level;      /* DIO1 (PA1) level sampled by the poll */
+
+static uint8_t s_dio1_prev_level;
 
 /* ---- Reset / watchdog ---------------------------------------------------- */
 
@@ -208,6 +214,26 @@ void LBM_HAL_TimerTick( void )
     {
         s_engine_wake_armed = false;
         smtc_modem_hal_user_lbm_irq( );
+    }
+
+    /* Safety net for the DIO1 EXTI: the SX1262 keeps DIO1 high until LBM clears the IRQ, so a
+     * rising edge is still visible to a 1 ms poll. If the EXTI delivers the same edge the radio
+     * callback runs twice, which only sets a flag (idempotent). It also tells apart "DIO1 never
+     * reaches the MCU" (poll edges stay 0) from "EXTI path broken" (poll edges > 0, EXTI count 0). */
+    uint8_t level = ( HAL_GPIO_ReadPin( DIO1_GPIO_Port, DIO1_Pin ) == GPIO_PIN_SET ) ? 1u : 0u;
+    g_lbmDio1Level = level;
+    if( !s_modem_irq_masked )
+    {
+        if( ( level != 0u ) && ( s_dio1_prev_level == 0u ) )
+        {
+            g_lbmDio1PollEdges++;
+            if( s_radio_callback != NULL )
+            {
+                s_radio_callback( s_radio_context );
+            }
+            smtc_modem_hal_user_lbm_irq( );
+        }
+        s_dio1_prev_level = level;
     }
 }
 

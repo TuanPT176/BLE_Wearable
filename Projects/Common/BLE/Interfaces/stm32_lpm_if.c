@@ -339,7 +339,11 @@ void PWR_ExitStopMode( void )
 void PWR_EnterSleepMode( void )
 {
   /* USER CODE BEGIN PWR_EnterSleepMode */
-  HAL_SuspendTick();
+  /* SysTick is deliberately NOT suspended: HAL_SuspendTick() stops uwTick from
+   * counting while asleep, which loses wall-clock time and froze every
+   * SysTick-driven timer of the LoRa Basics Modem port (join RX windows are
+   * 5 s / 6 s after the uplink). The 1 ms SysTick wake-up costs some power in
+   * this bring-up (CFG_LPM_EMULATED) configuration. */
   HAL_PWR_EnterSLEEPMode();
   /* USER CODE END PWR_EnterSleepMode */
 }
@@ -347,7 +351,7 @@ void PWR_EnterSleepMode( void )
 void PWR_ExitSleepMode( void )
 {
   /* USER CODE BEGIN PWR_ExitSleepMode */
-  HAL_ResumeTick();
+
   /* USER CODE END PWR_ExitSleepMode */
 }
 

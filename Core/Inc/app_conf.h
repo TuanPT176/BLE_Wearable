@@ -386,7 +386,7 @@ typedef enum
 {
   CFG_LPM_APP,
   /* USER CODE BEGIN CFG_LPM_Id_t */
-
+  CFG_LPM_LBM, /* LoRa Basics Modem: needs SysTick alive, so no Stop/Off mode */
   /* USER CODE END CFG_LPM_Id_t */
 } CFG_LPM_Id_t;
 

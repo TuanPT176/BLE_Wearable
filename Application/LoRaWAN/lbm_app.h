@@ -40,7 +40,9 @@ extern volatile uint8_t     g_lbmTxDoneStatus;
 extern volatile uint32_t    g_lbmDownlinkCount;
 extern volatile uint8_t     g_lbmDownlinkPort;
 extern volatile uint8_t     g_lbmDownlinkLen;
-extern volatile uint32_t    g_lbmRadioIrqCount; /* defined in smtc_modem_hal_wb09.c */
+extern volatile uint32_t    g_lbmRadioIrqCount; /* defined in smtc_modem_hal_wb09.c: DIO1 events via EXTI */
+extern volatile uint32_t    g_lbmDio1PollEdges; /* DIO1 rising edges seen by the 1 ms poll */
+extern volatile uint8_t     g_lbmDio1Level;     /* DIO1 (PA1) level sampled by the poll */
 extern volatile uint32_t    g_lbmPanicLine;     /* defined in smtc_modem_hal_wb09.c */
 
 /**
