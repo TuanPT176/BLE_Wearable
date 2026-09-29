@@ -263,6 +263,16 @@
 			<locationURI>PARENT-1-PROJECT_LOC/Application/LoRaTest/lora_test.h</locationURI>
 		</link>
 		<link>
+			<name>Application/User/MAX86150Test/max86150_test.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Application/MAX86150Test/max86150_test.c</locationURI>
+		</link>
+		<link>
+			<name>Application/User/MAX86150Test/max86150_test.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Application/MAX86150Test/max86150_test.h</locationURI>
+		</link>
+		<link>
 			<name>Application/User/LoRaWAN/lbm_app.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Application/LoRaWAN/lbm_app.c</locationURI>

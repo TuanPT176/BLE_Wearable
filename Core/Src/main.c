@@ -24,6 +24,7 @@
 #include "../../Application/NFC/nfc_manager.h"
 #include "../../Application/LoRaTest/lora_test.h"
 #include "../../Application/LoRaWAN/lbm_app.h"
+#include "../../Application/MAX86150Test/max86150_test.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -117,6 +118,10 @@ int main(void)
   MX_I2C1_Init();
   MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
+  /* First user of I2C1, so a bus fault is diagnosed before NFC/sensors touch it. */
+#if MAX86150_TEST_ENABLE
+  MAX86150Test_Run();
+#endif
   NFC_Manager_Init();
 #if LORA_TEST_ENABLE
   LoRaTest_Run();
