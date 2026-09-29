@@ -69,6 +69,10 @@
 /* VDD_OOR needs VDD_ANA outside 1.65-2.05 V for ~10 ms before it latches;
  * 20 ms gives it time to fire. Reading INT_STATUS_2 clears it. */
 #define MAX86150_TEST_VDD_OOR_WAIT_MS     20U
+/* Right after VDD_OOR_EN is set the flag latches once even on a good rail
+ * (first run: 2/2 one-shot checks tripped, but only 1 of 58 stream polls -
+ * the first one after arming). Let it settle and discard that latch. */
+#define MAX86150_TEST_VDD_OOR_SETTLE_MS   50U
 #define MAX86150_TEST_VDD_POLL_MS         500U  /* VDD_OOR sampling period during STREAM */
 
 /* I2C1 pins, hard-coded like stm32wb0x_hal_msp.c (no CubeMX labels). */
@@ -429,8 +433,12 @@ static bool Test_CheckVddOor(uint8_t *out_of_range)
 {
   uint8_t status;
 
-  if (!Test_Read(REG_INT_STATUS_2, &status, 1U) ||
-      !Test_Write(REG_INT_ENABLE_2, INT2_VDD_OOR))
+  if (!Test_Write(REG_INT_ENABLE_2, INT2_VDD_OOR))
+  {
+    return false;
+  }
+  HAL_Delay(MAX86150_TEST_VDD_OOR_SETTLE_MS);
+  if (!Test_Read(REG_INT_STATUS_2, &status, 1U))
   {
     return false;
   }
@@ -516,10 +524,16 @@ static bool Test_SampleWindow(uint8_t *count, uint32_t *ir_avg,
   uint32_t ir_sum = 0U;
   uint32_t red_sum = 0U;
 
+  /* Pointers are cleared with the FIFO stopped, as the driver does: cleared
+   * while running, the first run came back WR=20 OVF=20 RD=21 after 200 ms,
+   * i.e. the chip treated the FIFO as full from the start and rolled over
+   * on every new sample (32 "samples" instead of ~20). */
   *peak = 0U;
-  if (!Test_Write(REG_FIFO_WRITE_PTR, 0U) ||
+  if (!Test_Write(REG_SYSTEM_CONTROL, 0U) ||
+      !Test_Write(REG_FIFO_WRITE_PTR, 0U) ||
       !Test_Write(REG_FIFO_OVERFLOW, 0U) ||
-      !Test_Write(REG_FIFO_READ_PTR, 0U))
+      !Test_Write(REG_FIFO_READ_PTR, 0U) ||
+      !Test_Write(REG_SYSTEM_CONTROL, SYS_FIFO_ENABLE))
   {
     return false;
   }
@@ -659,8 +673,9 @@ static void Test_Stream(max86150_optical_t *device)
    * stays armed for the whole stream (LEDs pulsing at the app's current)
    * and is sampled every MAX86150_TEST_VDD_POLL_MS: hits == checks means
    * a steady offset, occasional hits mean dips. */
-  (void)Test_Read(REG_INT_STATUS_2, &status, 1U);
   (void)Test_Write(REG_INT_ENABLE_2, INT2_VDD_OOR);
+  HAL_Delay(MAX86150_TEST_VDD_OOR_SETTLE_MS);
+  (void)Test_Read(REG_INT_STATUS_2, &status, 1U);
 
   while ((HAL_GetTick() - started_at) < MAX86150_TEST_STREAM_MS)
   {
