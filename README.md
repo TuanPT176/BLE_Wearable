@@ -231,7 +231,7 @@ Chỉ gửi trong phiên ECG (sau lệnh `0x06`, trước `0x07`, `0x01`, `0x02`
 | 2 | 18 | `int16 LE` × 9 | Samples | Mẫu ECG theo thứ tự thời gian |
 
 - Tần số lấy mẫu **200 Hz** (khoảng 22 gói/giây); gain analog IA 9.5 × PGA 8 = 76 V/V.
-- Mỗi mẫu là giá trị ADC 18-bit của MAX86150 dịch phải 2 bit (`raw18 >> 2`).
+- Mỗi mẫu là giá trị ADC 18-bit của MAX86150 dịch phải 2 bit (`raw18 >> 2`); 1 LSB tương ứng khoảng **0.645 µV** ở đầu vào (xem mục MAX86150).
 - **Sequence nhảy cóc nghĩa là mất gói thật**: firmware vẫn tăng sequence khi chưa bật notify hoặc khi hàng đợi BLE (16 gói, khoảng 0.7 s) bị đầy.
 - Trong phiên ECG, LED PPG tắt nên nhịp tim và SpO2 trong `Sensor Data` giữ giá trị cuối cùng trước khi bắt đầu ECG.
 - Read trả về gói ECG gần nhất đã gửi.
@@ -297,6 +297,121 @@ function decodeEcgData(input) {
   return { sequence: b[0], samples }; // 200 Hz
 }
 ```
+
+## MAX86150 (PPG/ECG): các `#define` cấu hình
+
+MAX86150 chạy một trong hai chế độ, mỗi lần chuyển đều soft reset chip: **PPG** Red/IR (nhịp tim, SpO2) khi đo bình thường và **ECG** một đạo trình sau lệnh `0x06`. Ý nghĩa các bit thanh ghi bên dưới lấy từ datasheet MAX86150 (19-8402 Rev 2, 12/18). Sửa `#define` xong phải build lại và nạp.
+
+### Vị trí code
+
+| File | Nội dung |
+|---|---|
+| `Drivers/Sensors/MAX86150/max86150_optical.c/.h` | Driver I2C: giá trị thanh ghi của hai chế độ, đọc FIFO |
+| `Application/SensorManager/sensor_manager.c` | Tham số PPG (dòng LED, thuật toán nhịp tim/SpO2), chuyển PPG/ECG |
+| `STM32_BLE/App/wearable_app.c` | Task đọc FIFO ECG, đóng gói và notify `ECG Data` |
+| `Application/wearable_data.h` | Định dạng gói `ECG Data` (giao thức đã đóng băng) |
+| `Application/SensorManager/ecg_diag.h` | Các switch chẩn đoán nhiễu ECG và biến `g_ecgDiag` |
+
+### Giá trị thanh ghi (`max86150_optical.c`)
+
+| Macro | Giá trị | Ý nghĩa |
+|---|---|---|
+| `MAX86150_OPTICAL_I2C_ADDRESS` | `0x5E` | Địa chỉ I2C 7-bit (write `0xBC`, read `0xBD`) |
+| `MAX86150_OPTICAL_EXPECTED_PART_ID` | `0x1E` | Giá trị thanh ghi `0xFF`, dùng để nhận diện chip |
+| `MAX86150_DEFAULT_TIMEOUT_MS` | `20` | Timeout của mỗi giao dịch I2C |
+| `MAX86150_RESET_TIMEOUT_MS` | `100` | Thời gian chờ tối đa bit RESET tự xóa sau soft reset |
+| `MAX86150_FIFO_ROLLOVER` | `0x1F` | Thanh ghi `0x08`: `FIFO_ROLLS_ON_FULL = 1` (FIFO đầy thì ghi đè mẫu cũ), `FIFO_A_FULL = 15` |
+| `MAX86150_FIFO_IR_RED_SLOTS` | `0x21` | Thanh ghi `0x09` ở chế độ PPG: FD1 = LED1 (IR), FD2 = LED2 (Red) |
+| `MAX86150_PPG_CONFIG_100HZ_400US` | `0xD3` | Thanh ghi `0x0E`: `PPG_ADC_RGE = 11` (thang 32768 nA), `PPG_SR = 0100` (100 sps), `PPG_LED_PW = 11` (xung 400 µs) |
+| `MAX86150_PPG_INTEGRATION_DELAY` | `0x18` | Thanh ghi `0x0F`. Datasheet Rev 2 chỉ mô tả `SMP_AVE[2:0]` (ở đây = 0, không lấy trung bình); bit 3 và 4 mà giá trị này bật **không có trong datasheet**, giữ theo driver tham chiếu |
+| `MAX86150_FIFO_ECG_SLOT` | `0x09` | Thanh ghi `0x09` ở chế độ ECG: FD1 = `1001` (ECG), FD2 trống. Không slot nào dùng LED nên LED tắt |
+| `MAX86150_ECG_CONFIG_200SPS` | `0x03` | Thanh ghi `0x3C`: `ECG_ADC_CLK = 0`, `ECG_ADC_OSR = 11`, xem bảng tốc độ bên dưới |
+| `MAX86150_ECG_GAIN_IA9_5_PGA8` | `0x0D` | Thanh ghi `0x3E`: `PGA_ECG_GAIN` (bit 3:2) = `11` là 8, `IA_GAIN` (bit 1:0) = `01` là 9.5, tổng 76 V/V |
+| `MAX86150_ECG_FIFO_DEPTH` | `32` | Độ sâu FIFO của chip (mẫu). Cố định theo phần cứng, không đổi được |
+
+Tốc độ lấy mẫu ECG theo `0x3C` (giá trị typical trong datasheet):
+
+| `0x3C` | Tốc độ | Băng thông lọc 70% / 90% |
+|---|---|---|
+| `0x00` | 1600 sps | 420 / 232 Hz |
+| `0x01` | 800 sps | 210 / 116 Hz |
+| `0x02` | 400 sps | 105 / 58 Hz |
+| `0x03` (đang dùng) | 200 sps | 52 / 29 Hz |
+
+Gain ECG theo `0x3E`: `IA_GAIN` `00`/`01`/`10`/`11` là 5 / 9.5 / 20 / 50 V/V; `PGA_ECG_GAIN` `00`/`01`/`10`/`11` là 1 / 2 / 4 / 8 V/V. Datasheet chỉ trim chính xác tại nhà máy cho cặp 9.5 × 8 đang dùng.
+
+Quy đổi điện áp: `V_in = raw18 × 12.247 µV / 76`, tức **0.161 µV** mỗi LSB 18-bit và **0.645 µV** mỗi LSB `int16` trong gói `ECG Data` (vì firmware gửi `raw18 >> 2`).
+
+> Đổi tốc độ hoặc gain ECG là đổi ý nghĩa dữ liệu mà app đang decode (app giả định 200 Hz). Tăng tốc độ còn làm FIFO 32 mẫu đầy nhanh hơn (160 ms ở 200 sps, 80 ms ở 400 sps), phải giảm chu kỳ đọc tương ứng.
+
+### Luồng ECG (`wearable_app.c`, `wearable_data.h`)
+
+| Macro | Mặc định | Ý nghĩa |
+|---|---|---|
+| `WEARABLE_ECG_DRAIN_PERIOD_MS` | `ECG_DIAG_DRAIN_PERIOD_MS` (45) | Chu kỳ timer của task đọc FIFO. Timer được nạp lại **sau khi** task chạy xong nên chu kỳ thật dài hơn vài ms (thời gian đọc I2C). Đổi giá trị trong `ecg_diag.h` |
+| `WEARABLE_ECG_READ_MAX_SAMPLES` | `32` | Số mẫu tối đa lấy trong một lần đọc, bằng độ sâu FIFO |
+| `WEARABLE_ECG_QUEUE_LEN` | `16` | Số gói `ECG Data` giữ lại khi bộ đệm TX của BLE đầy (khoảng 0.7 s). Đầy thì bỏ gói cũ nhất, app thấy sequence nhảy cóc |
+| `WEARABLE_ECG_SAMPLES_PER_PACKET` | `9` | Số mẫu mỗi gói. **Thuộc giao thức BLE, không đổi** |
+| `WEARABLE_ECG_PAYLOAD_LENGTH` | `20` | Độ dài gói `ECG Data`. **Thuộc giao thức BLE, không đổi** |
+
+Một lần đọc có thể trả về nhiều hơn 9 mẫu: firmware đóng một gói mỗi khi đủ 9 mẫu và giữ mẫu lẻ cho lần sau, không mất mẫu.
+
+### PPG: nhịp tim và SpO2 (`sensor_manager.c`)
+
+| Macro | Mặc định | Ý nghĩa |
+|---|---|---|
+| `OPTICAL_DEFAULT_LED_CURRENT_CODE` | `0x24` | Dòng LED Red và IR: 0.2 mA mỗi LSB ở thang 50 mA, tức 7.2 mA. Tăng nếu tín hiệu yếu, giảm nếu ADC bão hòa |
+| `OPTICAL_DRAIN_INTERVAL_MS` | `200` | Chu kỳ đọc FIFO PPG. Ở 100 sps FIFO 32 mẫu đầy sau 320 ms |
+| `OPTICAL_SAMPLE_PERIOD_MS` | `10` | Khoảng cách giữa hai mẫu, dùng để tính thời gian giữa các nhịp. Phải khớp với 100 sps của `MAX86150_PPG_CONFIG_100HZ_400US` |
+| `OPTICAL_PULSE_SIGN` | `-1.0` | Chiều của xung mạch trên kênh IR. Đổi thành `1.0` nếu không bắt được nhịp |
+| `OPTICAL_DC_ALPHA` | `0.05` | Hệ số lọc EMA của thành phần DC (đường nền) |
+| `OPTICAL_ENVELOPE_ALPHA` | `0.03` | Hệ số lọc EMA của biên độ xung |
+| `OPTICAL_THRESHOLD_HIGH_FRAC`, `OPTICAL_THRESHOLD_LOW_FRAC` | `0.5`, `0.25` | Ngưỡng phát hiện nhịp (vượt lên) và ngưỡng nhả (tụt xuống), tính theo tỉ lệ biên độ |
+| `OPTICAL_MIN_ENVELOPE` | `50` | Biên độ tối thiểu (đơn vị ADC) để coi là có mạch |
+| `OPTICAL_MIN_DC_FOR_VALID` | `2000` | Mức DC tối thiểu để coi là đang đeo. Thấp hơn thì SpO2 giữ giá trị cũ |
+| `OPTICAL_MIN_BPM`, `OPTICAL_MAX_BPM` | `30`, `220` | Khoảng nhịp tim chấp nhận; nhịp ngoài khoảng bị bỏ |
+| `OPTICAL_BEAT_HISTORY_LEN` | `4` | Số khoảng nhịp gần nhất dùng để lấy trung bình nhịp tim |
+| `OPTICAL_SPO2_WINDOW_DRAINS` | `5` | Số lần đọc FIFO giữa hai lần tính SpO2 (khoảng 1 s) |
+| `OPTICAL_REPROBE_INTERVAL_CALLS` | `2` | Khi MAX86150 không phản hồi, dò lại sau mỗi bao nhiêu lần chạy task sensor (mỗi lần 1 s) |
+
+Thuật toán nhịp tim và SpO2 là heuristic, chưa hiệu chuẩn với máy đo chuẩn.
+
+### Chẩn đoán nhiễu ECG (`ecg_diag.h`)
+
+Dùng để tìm nguồn của nhiễu tuần hoàn khoảng 20 Hz trên tín hiệu ECG. Mỗi switch chỉ đổi **một** yếu tố; mỗi lần đo chỉ đổi một switch rồi so sánh log.
+
+| Macro | Production | Ý nghĩa và cách dùng |
+|---|---|---|
+| `ECG_DIAG_PPG_OFF` | `0` | `1`: ghi 0 vào dòng LED1, LED2 và pilot (`0x11`, `0x12`, `0x15`) ngay sau khi cấu hình ECG. Chỉ để kiểm tra chéo, vì sau soft reset ba thanh ghi này đã là 0 |
+| `ECG_DIAG_DRAIN_PERIOD_MS` | `45` | Chu kỳ đọc FIFO ECG, cho phép 10 đến 120. Ví dụ `30` hoặc `90`: nếu tần số nhiễu đổi theo thì nguồn nhiễu là lần đọc FIFO. Ở `90` FIFO dùng khoảng 61%, task trễ thêm quá khoảng 63 ms là mất mẫu |
+| `ECG_DIAG_NOTIFY_EVERY_N_DRAINS` | `1` | `N` (2 đến 8): vẫn đọc FIFO theo chu kỳ cũ nhưng chỉ notify mỗi N lần đọc. Tách ảnh hưởng của notify khỏi ảnh hưởng của I2C |
+| `ECG_DIAG_CONN_INTERVAL_MS` | `0` | Khác 0 (8 đến 500): khi bắt đầu ECG, xin central đổi connection interval sang giá trị này. Central có thể từ chối; kết quả nằm trong `g_ecgDiag` |
+| `ECG_DIAG_DUMP_REGS` | `0` | `1`: đọc lại 13 thanh ghi MAX86150 sau khi cấu hình ECG, lưu vào `g_ecgDiag.regs`. Chỉ đọc, không ghi, nên có thể bật cùng bất kỳ switch nào khác |
+
+Board không có UART (`printf` bị bỏ qua), nên kết quả quan sát nằm trong biến RAM `g_ecgDiag` (kiểu `ecg_diag_info_t` trong `ecg_diag.h`), luôn được build và không đổi hành vi firmware:
+
+| Trường | Ý nghĩa |
+|---|---|
+| `conn_interval_1p25`, `conn_updates` | Connection interval hiện tại (đơn vị 1.25 ms) và số lần central đổi interval |
+| `conn_req_status` | Kết quả lệnh xin đổi interval (`0xFF` = chưa xin) |
+| `regs_valid`, `regs[13][2]` | Cặp địa chỉ và giá trị thanh ghi đọc lại (`0xEE, 0xEE` = đọc lỗi) |
+| `ecg_sessions`, `ecg_overflows`, `ecg_dropped_packets` | Số phiên ECG, số lần FIFO tràn (mất mẫu mà app **không** thấy qua sequence), số gói bị bỏ khỏi hàng đợi |
+| `drains`, `period_us_*` | Số lần đọc theo timer và chu kỳ thật giữa hai lần timer kích (min, max, tổng, số lần) |
+| `fire_to_read_done_us_*`, `read_us_*` | Thời gian từ lúc timer kích đến lúc đọc I2C xong, và riêng thời gian đọc I2C |
+| `samples_min`, `samples_max`, `samples_sum`, `queue_max` | Số mẫu mỗi lần đọc và độ sâu lớn nhất của hàng đợi gói |
+| `tx_retry_drains` | Số lần đọc ngoài lịch do sự kiện TX-pool của BLE |
+
+Thời gian đo bằng SysTick (micro giây), vì Cortex-M0+ không có DWT cycle counter. Các trường thời gian được xóa mỗi khi bắt đầu phiên ECG.
+
+Đọc `g_ecgDiag` qua ST-LINK khi firmware đang chạy, không dừng và không reset chip. Địa chỉ và kích thước lấy ở dòng `.bss.g_ecgDiag` trong `STM32CubeIDE/Debug/BLE_p2pServer_GATT.map`:
+
+```bash
+STM32_Programmer_CLI -c port=SWD mode=HOTPLUG -r8 <địa chỉ> <kích thước>
+```
+
+Script `STM32CubeIDE/diag_builds/read_ecg_diag.py` làm việc này tự động (tra địa chỉ trong map, đọc qua SWD, giải mã từng trường): `python read_ecg_diag.py [đường dẫn file .map]`, mặc định dùng map trong `Debug/`.
+
+Phải đọc **trước khi** nạp lại hoặc tắt nguồn, vì reset xóa RAM.
 
 ## LoRaWAN (LoRa Basics Modem)
 
@@ -475,3 +590,4 @@ Khi debug đừng đặt breakpoint trên đường chạy của LBM: CPU dừng
 - Khắc phục lỗi sinh code của STM32CubeMX: Xử lý triệt để các lỗi ghi đè cấu hình GATT, lỗi thiếu biến ADC, và lỗi khai báo của thư viện BLE stack (BLEPLAT_CNTR_IsEnabledTimer1).
 - Tích hợp LoRa Basics Modem v4.9.0 trên SX1262: OTAA AS923-2 với The Things Stack, uplink định kỳ, cấu hình data rate/SF/ADR trong `lbm_config.h`.
 - Thêm nút SOS ở PB5: nhấn nút gửi uplink LoRaWAN khẩn cấp (cổng 102, confirmed).
+- MAX86150: đối chiếu giá trị thanh ghi ECG với datasheet, thêm các switch chẩn đoán nhiễu ECG trong `ecg_diag.h` và biến `g_ecgDiag` đọc qua SWD (board không có UART).

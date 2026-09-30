@@ -40,7 +40,7 @@
 
 /* 1 = after the ECG configuration, read back the MAX86150 registers listed
  * in SensorManager into g_ecgDiag.regs. Reads only; no register is written. */
-#define ECG_DIAG_DUMP_REGS              1
+#define ECG_DIAG_DUMP_REGS              0
 
 #if (ECG_DIAG_DRAIN_PERIOD_MS < 10U) || (ECG_DIAG_DRAIN_PERIOD_MS > 120U)
 #error "ECG_DIAG_DRAIN_PERIOD_MS: keep 10-120 ms (the 32-sample FIFO lasts 160 ms at 200 sps)"
