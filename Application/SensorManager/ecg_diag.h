@@ -75,6 +75,27 @@ typedef struct
   uint32_t ecg_sessions;            /* successful ECG_START since boot */
   uint32_t ecg_overflows;           /* FIFO rollovers (samples lost inside a packet stream) */
   uint32_t ecg_dropped_packets;     /* packets dropped from the full BLE queue */
+
+  /* Drain timing of the current/last ECG session, reset at ECG start. Times
+   * in microseconds from SysTick (the Cortex-M0+ has no DWT cycle counter).
+   * "fire" = the drain timer callback. */
+  uint32_t drains;                  /* timer-triggered drains */
+  uint32_t period_us_min;           /* fire to next fire = real drain period */
+  uint32_t period_us_max;
+  uint32_t period_us_sum;
+  uint32_t period_count;
+  uint32_t fire_to_read_done_us_min; /* fire until the FIFO I2C read returned */
+  uint32_t fire_to_read_done_us_max;
+  uint32_t fire_to_read_done_us_sum;
+  uint32_t read_us_min;             /* the FIFO I2C read alone */
+  uint32_t read_us_max;
+  uint32_t read_us_sum;
+  uint32_t samples_sum;             /* samples returned by those drains */
+  uint8_t samples_min;              /* per drain */
+  uint8_t samples_max;
+  uint8_t queue_max;                /* deepest ECG packet queue seen */
+  uint8_t reserved;
+  uint32_t tx_retry_drains;         /* extra drains triggered by the TX-pool event */
 } ecg_diag_info_t;
 
 extern volatile ecg_diag_info_t g_ecgDiag;

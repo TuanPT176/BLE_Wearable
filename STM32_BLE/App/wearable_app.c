@@ -160,6 +160,11 @@ static uint32_t wearable_ecg_dropped_packets;
 static uint8_t wearable_ecg_drains_since_flush;
 #endif
 volatile ecg_diag_info_t g_ecgDiag;
+/* Drain timing bookkeeping for g_ecgDiag (observation only). */
+static bool wearable_ecg_diag_fired;       /* timer callback ran since the last drain */
+static uint32_t wearable_ecg_diag_fire_us;
+static bool wearable_ecg_diag_prev_fire_valid;
+static uint32_t wearable_ecg_diag_prev_fire_us;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -192,6 +197,9 @@ static void WEARABLE_StopEcgStream(void);
 static bool WEARABLE_EcgNotificationsEnabled(void);
 static void WEARABLE_EcgQueuePacket(void);
 static void WEARABLE_EcgFlushQueue(void);
+static uint32_t WEARABLE_EcgDiagMicros(void);
+static void WEARABLE_EcgDiagReset(void);
+static void WEARABLE_EcgDiagRecord(uint32_t read_start_us, uint32_t read_done_us, uint8_t count);
 /* USER CODE END PFP */
 
 /* Functions Definition ------------------------------------------------------*/
@@ -981,6 +989,7 @@ static void WEARABLE_EcgTask(void)
   int16_t samples[WEARABLE_ECG_READ_MAX_SAMPLES];
   uint8_t count;
   uint8_t i;
+  uint32_t read_start_us;
 
   /* Also reached from the TX-pool event, so the timer may still be armed. */
   HAL_RADIO_TIMER_StopVirtualTimer(&wearable_ecg_timer);
@@ -989,7 +998,9 @@ static void WEARABLE_EcgTask(void)
     return;
   }
 
+  read_start_us = WEARABLE_EcgDiagMicros();
   count = SensorManager_ReadEcgSamples(samples, WEARABLE_ECG_READ_MAX_SAMPLES);
+  WEARABLE_EcgDiagRecord(read_start_us, WEARABLE_EcgDiagMicros(), count);
   for (i = 0U; i < count; i++)
   {
     wearable_ecg_pending.samples[wearable_ecg_pending.sample_count] = samples[i];
@@ -1020,12 +1031,96 @@ static void WEARABLE_EcgTask(void)
 static void WEARABLE_EcgTimerCallback(void *arg)
 {
   UNUSED(arg);
+  wearable_ecg_diag_fire_us = WEARABLE_EcgDiagMicros();
+  wearable_ecg_diag_fired = true;
   UTIL_SEQ_SetTask(1U << CFG_TASK_WEARABLE_ECG_ID, CFG_SEQ_PRIO_0);
+}
+
+/* Free-running microseconds (wraps after ~71 min; only differences are used).
+ * Task context only: the SysTick interrupt must be able to run. */
+static uint32_t WEARABLE_EcgDiagMicros(void)
+{
+  uint32_t reload = SysTick->LOAD;
+  uint32_t ms;
+  uint32_t value;
+
+  do
+  {
+    ms = HAL_GetTick();
+    value = SysTick->VAL;
+  } while (ms != HAL_GetTick());
+
+  return (ms * 1000U) + (((reload - value) * 1000U) / (reload + 1U));
+}
+
+static void WEARABLE_EcgDiagReset(void)
+{
+  g_ecgDiag.drains = 0U;
+  g_ecgDiag.period_us_min = 0xFFFFFFFFUL;
+  g_ecgDiag.period_us_max = 0U;
+  g_ecgDiag.period_us_sum = 0U;
+  g_ecgDiag.period_count = 0U;
+  g_ecgDiag.fire_to_read_done_us_min = 0xFFFFFFFFUL;
+  g_ecgDiag.fire_to_read_done_us_max = 0U;
+  g_ecgDiag.fire_to_read_done_us_sum = 0U;
+  g_ecgDiag.read_us_min = 0xFFFFFFFFUL;
+  g_ecgDiag.read_us_max = 0U;
+  g_ecgDiag.read_us_sum = 0U;
+  g_ecgDiag.samples_sum = 0U;
+  g_ecgDiag.samples_min = 0xFFU;
+  g_ecgDiag.samples_max = 0U;
+  g_ecgDiag.queue_max = 0U;
+  g_ecgDiag.tx_retry_drains = 0U;
+  wearable_ecg_diag_fired = false;
+  wearable_ecg_diag_prev_fire_valid = false;
+}
+
+/* One drain's numbers. Only timer-triggered drains count: a drain forced by
+ * the TX-pool event restarts the timer, so it is tallied separately and the
+ * period around it is skipped. */
+static void WEARABLE_EcgDiagRecord(uint32_t read_start_us, uint32_t read_done_us, uint8_t count)
+{
+  uint32_t elapsed;
+
+  if (!wearable_ecg_diag_fired)
+  {
+    g_ecgDiag.tx_retry_drains++;
+    wearable_ecg_diag_prev_fire_valid = false;
+    return;
+  }
+  wearable_ecg_diag_fired = false;
+
+  g_ecgDiag.drains++;
+  if (wearable_ecg_diag_prev_fire_valid)
+  {
+    elapsed = wearable_ecg_diag_fire_us - wearable_ecg_diag_prev_fire_us;
+    if (elapsed < g_ecgDiag.period_us_min) { g_ecgDiag.period_us_min = elapsed; }
+    if (elapsed > g_ecgDiag.period_us_max) { g_ecgDiag.period_us_max = elapsed; }
+    g_ecgDiag.period_us_sum += elapsed;
+    g_ecgDiag.period_count++;
+  }
+  wearable_ecg_diag_prev_fire_us = wearable_ecg_diag_fire_us;
+  wearable_ecg_diag_prev_fire_valid = true;
+
+  elapsed = read_done_us - wearable_ecg_diag_fire_us;
+  if (elapsed < g_ecgDiag.fire_to_read_done_us_min) { g_ecgDiag.fire_to_read_done_us_min = elapsed; }
+  if (elapsed > g_ecgDiag.fire_to_read_done_us_max) { g_ecgDiag.fire_to_read_done_us_max = elapsed; }
+  g_ecgDiag.fire_to_read_done_us_sum += elapsed;
+
+  elapsed = read_done_us - read_start_us;
+  if (elapsed < g_ecgDiag.read_us_min) { g_ecgDiag.read_us_min = elapsed; }
+  if (elapsed > g_ecgDiag.read_us_max) { g_ecgDiag.read_us_max = elapsed; }
+  g_ecgDiag.read_us_sum += elapsed;
+
+  g_ecgDiag.samples_sum += count;
+  if (count < g_ecgDiag.samples_min) { g_ecgDiag.samples_min = count; }
+  if (count > g_ecgDiag.samples_max) { g_ecgDiag.samples_max = count; }
 }
 
 static void WEARABLE_StartEcgStream(void)
 {
   WEARABLE_StopEcgStream();
+  WEARABLE_EcgDiagReset();
   HAL_RADIO_TIMER_StartVirtualTimer(&wearable_ecg_timer, WEARABLE_ECG_DRAIN_PERIOD_MS);
 #if (ECG_DIAG_CONN_INTERVAL_MS != 0U)
   /* Diag: move the radio events. Supervision timeout 5 s (0x01F4, as in
@@ -1081,6 +1176,10 @@ static void WEARABLE_EcgQueuePacket(void)
     WearableData_EncodeECG(&wearable_ecg_pending, wearable_ecg_queue[wearable_ecg_queue_head]);
     wearable_ecg_queue_head = (uint8_t)((wearable_ecg_queue_head + 1U) % WEARABLE_ECG_QUEUE_LEN);
     wearable_ecg_queue_count++;
+    if (wearable_ecg_queue_count > g_ecgDiag.queue_max)
+    {
+      g_ecgDiag.queue_max = wearable_ecg_queue_count;
+    }
   }
   wearable_ecg_pending.sample_count = 0U;
 }
