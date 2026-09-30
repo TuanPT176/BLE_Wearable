@@ -12,6 +12,7 @@
 #include "../NFC/nfc_log.h"
 #include "../../STM32_BLE/App/app_ble.h"
 #include "../DeviceTime/device_time.h"
+#include "ecg_diag.h"
 #include <string.h>
 
 /*
@@ -142,6 +143,39 @@ static uint32_t optical_spo2_window_samples;
 static uint32_t optical_drain_calls;
 /* ECG FIFO rollovers (samples lost because the drain task ran late). */
 static uint32_t ecg_overflow_events;
+
+#if ECG_DIAG_DUMP_REGS
+/* MAX86150 registers read back after the ECG configuration (datasheet
+ * register map): FIFO config, FIFO data control 1/2, system control, PPG
+ * config 1/2, prox threshold, LED1/LED2 PA, LED range, pilot PA, ECG config
+ * 1/3. */
+static const uint8_t ecg_diag_reg_addr[ECG_DIAG_REG_COUNT] = {
+  0x08U, 0x09U, 0x0AU, 0x0DU, 0x0EU, 0x0FU, 0x10U,
+  0x11U, 0x12U, 0x14U, 0x15U, 0x3CU, 0x3EU
+};
+
+static void SensorManager_EcgDumpRegisters(void)
+{
+  uint8_t i;
+  uint8_t value;
+
+  for (i = 0U; i < ECG_DIAG_REG_COUNT; i++)
+  {
+    if (MAX86150_ReadRegister(&optical_device, ecg_diag_reg_addr[i], &value) ==
+        MAX86150_OPTICAL_OK)
+    {
+      g_ecgDiag.regs[i][0] = ecg_diag_reg_addr[i];
+      g_ecgDiag.regs[i][1] = value;
+    }
+    else
+    {
+      g_ecgDiag.regs[i][0] = 0xEEU;
+      g_ecgDiag.regs[i][1] = 0xEEU;
+    }
+  }
+  g_ecgDiag.regs_valid = 1U;
+}
+#endif
 
 static void SensorManager_StartTemperatureConversion(void)
 {
@@ -863,7 +897,22 @@ bool SensorManager_StartEcg(void)
     return false;
   }
 
+#if ECG_DIAG_PPG_OFF
+  if (MAX86150_LedsOff(&optical_device) != MAX86150_OPTICAL_OK)
+  {
+    APP_DBG_MSG("-- MAX86150 diag: LEDs-off write FAILED\n");
+  }
+  else
+  {
+    APP_DBG_MSG("-- MAX86150 diag: LED1/LED2/pilot PA = 0\n");
+  }
+#endif
+#if ECG_DIAG_DUMP_REGS
+  SensorManager_EcgDumpRegisters();
+#endif
+
   optical_status = SENSOR_OPTICAL_ECG_ACTIVE;
+  g_ecgDiag.ecg_sessions++;
   SensorManager_SetFlag(WEARABLE_FLAG_ECG_ACTIVE, true);
   APP_DBG_MSG("-- MAX86150: ECG active (200 sps)\n");
   return true;
@@ -898,6 +947,7 @@ uint8_t SensorManager_ReadEcgSamples(int16_t *samples, uint8_t max_samples)
   if (overflowed)
   {
     ecg_overflow_events++;
+    g_ecgDiag.ecg_overflows++;
   }
 
   /* 18-bit two's complement -> int16 for the ECG_DATA wire format; the

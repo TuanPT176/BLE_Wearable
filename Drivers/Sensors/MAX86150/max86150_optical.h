@@ -70,4 +70,11 @@ max86150_optical_result_t MAX86150_EcgReadSamples(
     uint8_t *count,
     bool *overflowed);
 
+/* Diagnostics (ECG noise hunt, see Application/SensorManager/ecg_diag.h). */
+/* Writes 0 to LED1_PA (0x11), LED2_PA (0x12) and LED_PILOT_PA (0x15). */
+max86150_optical_result_t MAX86150_LedsOff(max86150_optical_t *device);
+max86150_optical_result_t MAX86150_ReadRegister(max86150_optical_t *device,
+                                                uint8_t reg,
+                                                uint8_t *value);
+
 #endif /* MAX86150_OPTICAL_H */

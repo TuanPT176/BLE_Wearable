@@ -13,6 +13,7 @@
 #define MAX86150_REG_LED1_CURRENT         0x11U
 #define MAX86150_REG_LED2_CURRENT         0x12U
 #define MAX86150_REG_LED_RANGE            0x14U
+#define MAX86150_REG_LED_PILOT_PA         0x15U
 #define MAX86150_REG_ECG_CONFIG_1         0x3CU
 #define MAX86150_REG_ECG_CONFIG_3         0x3EU
 #define MAX86150_REG_PART_ID              0xFFU
@@ -28,10 +29,10 @@
 #define MAX86150_DEFAULT_TIMEOUT_MS       20U
 #define MAX86150_FIFO_SAMPLE_BYTES        6U
 #define MAX86150_SAMPLE_MASK              0x0007FFFFUL
-/* ECG settings follow Protocentral's reference MAX86150 driver. */
-#define MAX86150_FIFO_ECG_SLOT            0x09U  /* FD1 = ECG, FD2 = none */
-#define MAX86150_ECG_CONFIG_200SPS        0x03U
-#define MAX86150_ECG_GAIN_IA9_5_PGA8      0x0DU
+/* ECG settings checked against the MAX86150 datasheet (19-8402 Rev 2). */
+#define MAX86150_FIFO_ECG_SLOT            0x09U  /* FD1 = 1001 ECG, FD2 = none */
+#define MAX86150_ECG_CONFIG_200SPS        0x03U  /* ECG_ADC_CLK 0, OSR 11: 200 sps typ. */
+#define MAX86150_ECG_GAIN_IA9_5_PGA8      0x0DU  /* PGA_ECG_GAIN[3:2] 11 = 8, IA_GAIN[1:0] 01 = 9.5 */
 #define MAX86150_ECG_SAMPLE_BYTES         3U
 #define MAX86150_ECG_SAMPLE_MASK          0x0003FFFFUL
 #define MAX86150_ECG_SIGN_BIT             0x00020000UL
@@ -411,4 +412,38 @@ max86150_optical_result_t MAX86150_EcgReadSamples(
   }
   *count = available;
   return MAX86150_OPTICAL_OK;
+}
+
+max86150_optical_result_t MAX86150_LedsOff(max86150_optical_t *device)
+{
+  if ((device == NULL) || !device->present)
+  {
+    return MAX86150_OPTICAL_NOT_PRESENT;
+  }
+
+  if ((MAX86150_Write(device, MAX86150_REG_LED1_CURRENT, 0U) !=
+       MAX86150_OPTICAL_OK) ||
+      (MAX86150_Write(device, MAX86150_REG_LED2_CURRENT, 0U) !=
+       MAX86150_OPTICAL_OK) ||
+      (MAX86150_Write(device, MAX86150_REG_LED_PILOT_PA, 0U) !=
+       MAX86150_OPTICAL_OK))
+  {
+    return MAX86150_OPTICAL_BUS_ERROR;
+  }
+  return MAX86150_OPTICAL_OK;
+}
+
+max86150_optical_result_t MAX86150_ReadRegister(max86150_optical_t *device,
+                                                uint8_t reg,
+                                                uint8_t *value)
+{
+  if (value == NULL)
+  {
+    return MAX86150_OPTICAL_INVALID_ARGUMENT;
+  }
+  if ((device == NULL) || !device->present)
+  {
+    return MAX86150_OPTICAL_NOT_PRESENT;
+  }
+  return MAX86150_Read(device, reg, value, 1U);
 }

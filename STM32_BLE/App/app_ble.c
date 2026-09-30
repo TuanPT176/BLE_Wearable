@@ -37,7 +37,7 @@
 #include "wearable_app.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "../../Application/SensorManager/ecg_diag.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -628,7 +628,11 @@ void BLEEVT_App_Notification(const hci_pckt *hci_pckt)
                       p_conn_update_complete->Supervision_Timeout*10);
           UNUSED(p_conn_update_complete);
           /* USER CODE BEGIN EVT_LE_CONN_UPDATE_COMPLETE */
-
+          if (p_conn_update_complete->Status == 0U)
+          {
+            g_ecgDiag.conn_interval_1p25 = p_conn_update_complete->Connection_Interval;
+          }
+          g_ecgDiag.conn_updates++;
           /* USER CODE END EVT_LE_CONN_UPDATE_COMPLETE */
         }
         break;
@@ -881,7 +885,8 @@ static void connection_complete_event(uint8_t Status,
     return;
   }
   /* USER CODE BEGIN HCI_EVT_LE_CONN_COMPLETE_1 */
-
+  g_ecgDiag.conn_interval_1p25 = Connection_Interval;
+  g_ecgDiag.conn_updates = 0U;
   /* USER CODE END HCI_EVT_LE_CONN_COMPLETE_1 */
   APP_DBG_MSG(">>== hci_le_connection_complete_event - Connection handle: 0x%04X\n", Connection_Handle);
   APP_DBG_MSG("     - Connection established with @:%02x:%02x:%02x:%02x:%02x:%02x\n",
