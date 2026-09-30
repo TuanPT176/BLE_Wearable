@@ -29,6 +29,10 @@
  *               VLED rail / LED pads (the red LED should also visibly glow).
  *   DRIVER      Same checks through Drivers/Sensors/MAX86150/max86150_optical.c
  *               so the production code path is exercised too.
+ *   ECG         Chip switched to ECG through the production driver for
+ *               MAX86150_TEST_ECG_MS: sample rate (~200 sps), FIFO overflow,
+ *               flat/saturated signal; live `ecg`/`ecgPeakToPeak` while
+ *               both hands touch ECG_P/ECG_N.
  *   STREAM      Live IR/Red values for MAX86150_TEST_STREAM_MS; with a
  *               finger on the sensor irPeakToPeak shows the pulse. VDD_OOR
  *               stays armed and is sampled every 500 ms (vddOorHits/Checks).
@@ -74,6 +78,11 @@
  * the first one after arming). Let it settle and discard that latch. */
 #define MAX86150_TEST_VDD_OOR_SETTLE_MS   50U
 #define MAX86150_TEST_VDD_POLL_MS         500U  /* VDD_OOR sampling period during STREAM */
+#define MAX86150_TEST_ECG_MS              20000U /* 0 = skip the ECG step */
+#define MAX86150_TEST_ECG_POLL_MS         20U    /* ~4 samples per drain, FIFO lasts 160 ms */
+#define MAX86150_TEST_ECG_EXPECTED_HZ     200U
+#define MAX86150_TEST_ECG_WINDOW_SAMPLES  200U   /* ~1 s peak-to-peak window */
+#define MAX86150_TEST_ECG_FULL_SCALE      131000 /* |raw| at or above = saturated (18-bit max 131071) */
 
 /* I2C1 pins, hard-coded like stm32wb0x_hal_msp.c (no CubeMX labels). */
 #define TEST_I2C_PORT       GPIOB
@@ -734,6 +743,105 @@ static void Test_Stream(max86150_optical_t *device)
   }
 }
 
+/* ---- ECG through the production driver ---------------------------------- */
+
+static void Test_Ecg(max86150_optical_t *device)
+{
+  int32_t samples[MAX86150_ECG_FIFO_DEPTH];
+  max86150_optical_result_t status;
+  uint32_t started_at;
+  uint32_t elapsed_ms;
+  uint32_t window_count = 0U;
+  int32_t window_min = INT32_MAX;
+  int32_t window_max = INT32_MIN;
+  int32_t first = 0;
+  bool changed = false;
+  bool overflowed;
+  uint8_t count;
+  uint8_t i;
+
+  status = MAX86150_EcgConfigure(device);
+  if (status != MAX86150_OPTICAL_OK)
+  {
+    g_max86150Test.ecgDriverResult = (uint8_t)status;
+    Test_Fail(MAX86150_DIAG_ECG_CONFIG_FAILED);
+    return;
+  }
+
+  started_at = HAL_GetTick();
+  while ((HAL_GetTick() - started_at) < MAX86150_TEST_ECG_MS)
+  {
+    HAL_Delay(MAX86150_TEST_ECG_POLL_MS);
+    status = MAX86150_EcgReadSamples(device, samples,
+                                     (uint8_t)MAX86150_ECG_FIFO_DEPTH,
+                                     &count, &overflowed);
+    if (status != MAX86150_OPTICAL_OK)
+    {
+      g_max86150Test.ecgDriverResult = (uint8_t)status;
+      continue;
+    }
+    if (overflowed)
+    {
+      g_max86150Test.ecgOverflows++;
+    }
+
+    for (i = 0U; i < count; i++)
+    {
+      if (g_max86150Test.ecgSamples == 0U)
+      {
+        first = samples[i];
+      }
+      else if (samples[i] != first)
+      {
+        changed = true;
+      }
+      g_max86150Test.ecgSamples++;
+      g_max86150Test.ecg = samples[i];
+      if ((samples[i] >= MAX86150_TEST_ECG_FULL_SCALE) ||
+          (samples[i] <= -MAX86150_TEST_ECG_FULL_SCALE))
+      {
+        g_max86150Test.ecgSaturatedSamples++;
+      }
+
+      window_min = (samples[i] < window_min) ? samples[i] : window_min;
+      window_max = (samples[i] > window_max) ? samples[i] : window_max;
+      if (++window_count >= MAX86150_TEST_ECG_WINDOW_SAMPLES)
+      {
+        g_max86150Test.ecgPeakToPeak = (uint32_t)(window_max - window_min);
+        window_count = 0U;
+        window_min = INT32_MAX;
+        window_max = INT32_MIN;
+      }
+    }
+  }
+
+  elapsed_ms = HAL_GetTick() - started_at;
+  g_max86150Test.ecgRateHz = (elapsed_ms > 0U) ?
+                             ((g_max86150Test.ecgSamples * 1000U) / elapsed_ms) : 0U;
+
+  if (g_max86150Test.ecgRateHz < (MAX86150_TEST_ECG_EXPECTED_HZ / 2U))
+  {
+    Test_Fail(MAX86150_DIAG_ECG_NOT_RUNNING);
+    return;
+  }
+  if ((g_max86150Test.ecgRateHz < 180U) || (g_max86150Test.ecgRateHz > 220U))
+  {
+    Test_Warn(MAX86150_DIAG_ECG_RATE_OFF);
+  }
+  if (g_max86150Test.ecgOverflows != 0U)
+  {
+    Test_Warn(MAX86150_DIAG_ECG_OVERFLOW);
+  }
+  if (!changed)
+  {
+    Test_Warn(MAX86150_DIAG_ECG_FLAT);
+  }
+  if (g_max86150Test.ecgSaturatedSamples > (g_max86150Test.ecgSamples / 2U))
+  {
+    Test_Warn(MAX86150_DIAG_ECG_SATURATED);
+  }
+}
+
 /* ---- Multimeter wiring check (MAX86150_TEST_WIRE_CHECK) ----------------- */
 
 #if MAX86150_TEST_WIRE_CHECK
@@ -839,6 +947,21 @@ void MAX86150Test_Run(void)
 
   g_max86150Test.step = MAX86150_TEST_STEP_STREAM;
   Test_Stream(&device);
+
+  if (MAX86150_TEST_ECG_MS > 0U)
+  {
+    g_max86150Test.step = MAX86150_TEST_STEP_ECG;
+    Test_Ecg(&device);
+    if (g_max86150Test.result == MAX86150_TEST_RESULT_FAIL)
+    {
+      (void)MAX86150_OpticalShutdown(&device, true);
+      return;
+    }
+  }
+  /* Stream/ECG steps may have added warnings after the first verdict. */
+  g_max86150Test.result = (g_max86150Test.diagnosis == MAX86150_DIAG_OK)
+                              ? MAX86150_TEST_RESULT_PASS
+                              : MAX86150_TEST_RESULT_WARN;
 
   /* Hand the chip back idle; SensorManager_Start() resets and reconfigures. */
   (void)MAX86150_OpticalShutdown(&device, true);

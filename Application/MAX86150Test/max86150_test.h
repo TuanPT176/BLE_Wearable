@@ -14,10 +14,13 @@
 extern "C" {
 #endif
 
-/* Set to 0 to compile the test out without removing the call site in main.c.
- * While enabled, MAX86150Test_Run() blocks boot for roughly
- * MAX86150_TEST_STREAM_MS (see max86150_test.c) before BLE comes up. */
+/* Set to 0 to compile the test out without removing the call site in main.c. */
 #define MAX86150_TEST_ENABLE 1
+
+/* While enabled, MAX86150Test_Run() blocks boot for roughly
+ * MAX86150_TEST_STREAM_MS (PPG, finger on the sensor) followed by
+ * MAX86150_TEST_ECG_MS (ECG, both hands on ECG_P/ECG_N) - see
+ * max86150_test.c. */
 
 /* 1 = replace the whole test with a multimeter wiring check that never
  * returns: PB6/SCL is driven steadily HIGH (3.3V) and PB7/SDA toggles
@@ -52,6 +55,7 @@ typedef enum
   MAX86150_TEST_STEP_LED,          /* LEDs on vs off: optical path responds */
   MAX86150_TEST_STEP_DRIVER,       /* production max86150_optical driver path */
   MAX86150_TEST_STEP_STREAM,       /* live IR/Red samples for Live Expressions */
+  MAX86150_TEST_STEP_ECG,          /* ECG mode via the driver: rate, overflow, live signal */
   MAX86150_TEST_STEP_DONE
 } MAX86150Test_Step_t;
 
@@ -78,13 +82,19 @@ typedef enum
   MAX86150_DIAG_REG_RW_MISMATCH,      /* written value not read back */
   MAX86150_DIAG_FIFO_NOT_RUNNING,     /* FIFO does not fill: PPG ADC not converting */
   MAX86150_DIAG_DRIVER_PATH_FAILED,   /* raw test passed, max86150_optical.c failed - see driverResult */
+  MAX86150_DIAG_ECG_CONFIG_FAILED,    /* MAX86150_EcgConfigure() failed - see ecgDriverResult */
+  MAX86150_DIAG_ECG_NOT_RUNNING,      /* ECG FIFO delivers < half the expected 200 sps */
   /* WARN */
   MAX86150_DIAG_ACK_INTERMITTENT,     /* 0x5E ACKs only some of the time: marginal solder/pull-up */
   MAX86150_DIAG_NO_EXTERNAL_PULLUP,   /* bus only held up by the MCU's weak internal pull-ups */
   MAX86150_DIAG_VDD_OUT_OF_RANGE,     /* chip's own VDD_OOR flag set: check its 1.8V VDD rail */
   MAX86150_DIAG_INTB_NOT_TOGGLING,    /* PB4 does not follow the PPG_RDY interrupt */
   MAX86150_DIAG_ADC_SATURATED,        /* samples at full scale: lower LED current */
-  MAX86150_DIAG_LED_NO_RESPONSE       /* LEDs on ~= LEDs off: VLED rail/LED pads, or nothing over the sensor */
+  MAX86150_DIAG_LED_NO_RESPONSE,      /* LEDs on ~= LEDs off: VLED rail/LED pads, or nothing over the sensor */
+  MAX86150_DIAG_ECG_RATE_OFF,         /* ECG runs, but not at 180-220 sps: ECG_CONFIG1 assumption wrong */
+  MAX86150_DIAG_ECG_OVERFLOW,         /* FIFO rolled over although drained every 20 ms */
+  MAX86150_DIAG_ECG_FLAT,             /* ECG value never changes: front-end not converting */
+  MAX86150_DIAG_ECG_SATURATED         /* ECG pinned at full scale most of the time: electrodes not touched / lead off */
 } MAX86150Test_Diag_t;
 
 #define MAX86150_TEST_SCAN_MAX 16U
@@ -143,6 +153,17 @@ typedef struct
   uint32_t streamSamples;        /* expect ~100/s */
   uint32_t vddOorChecks;         /* VDD_OOR polls during the stream (every 500 ms, LEDs on) */
   uint32_t vddOorHits;           /* polls that found VDD_OOR latched: 0 = rail OK, == checks = steady offset, in between = dips */
+
+  /* ECG: MAX86150_TEST_ECG_MS through the production driver, raw 18-bit
+   * values (+/-131071). Touch ECG_P and ECG_N (one per hand) to see the
+   * heartbeat in ecgPeakToPeak. */
+  uint8_t ecgDriverResult;       /* max86150_optical_result_t of the failing ECG driver call */
+  uint32_t ecgSamples;
+  uint32_t ecgRateHz;            /* expect ~200 */
+  uint32_t ecgOverflows;         /* expect 0 */
+  int32_t ecg;                   /* latest sample */
+  uint32_t ecgPeakToPeak;        /* over the last ~1 s */
+  uint32_t ecgSaturatedSamples;  /* samples at +/- full scale */
 } MAX86150Test_Report_t;
 
 extern volatile MAX86150Test_Report_t g_max86150Test;
