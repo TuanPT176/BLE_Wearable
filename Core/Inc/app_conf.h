@@ -461,6 +461,7 @@ typedef enum
   CFG_TASK_WEARABLE_MOTION_INT_ID,
   CFG_TASK_WEARABLE_MOTION_TIMEOUT_ID,
   CFG_TASK_LBM_ID,
+  CFG_TASK_WEARABLE_ECG_ID,
   /* USER CODE END CFG_Task_Id_t */
   CFG_TASK_NBR,  /**< Shall be LAST in the list */
 } CFG_Task_Id_t;

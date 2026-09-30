@@ -114,6 +114,13 @@ typedef struct
 #define WEARABLE_ERROR_TEMP_NOT_PRESENT  0x10U
 #define WEARABLE_ERROR_TEMP_TIMEOUT      0x11U
 #define WEARABLE_ERROR_TEMP_BUS          0x12U
+/* ECG streaming: the MAX86150 FIFO holds 32 samples = 160 ms at 200 sps.
+ * Draining every 45 ms yields one 9-sample ECG_DATA packet per drain on
+ * average and leaves >100 ms of slack for a late sequencer turn. */
+#define WEARABLE_ECG_DRAIN_PERIOD_MS     45U
+#define WEARABLE_ECG_READ_MAX_SAMPLES    32U
+/* Packets held back while the BLE TX pool is full (~0.7 s of ECG). */
+#define WEARABLE_ECG_QUEUE_LEN           16U
 /* USER CODE END PD */
 
 /* External variables --------------------------------------------------------*/
@@ -137,6 +144,15 @@ static VTIMER_HandleType wearable_sensor_async_timer;
 static VTIMER_HandleType wearable_motion_timer;
 static uint8_t wearable_sensor_snapshot[WEARABLE_SENSOR_PAYLOAD_LENGTH];
 static uint8_t wearable_status_snapshot[WEARABLE_STATUS_PAYLOAD_LENGTH];
+static VTIMER_HandleType wearable_ecg_timer;
+static wearable_ecg_packet_t wearable_ecg_pending;
+static uint8_t wearable_ecg_sequence;
+static uint8_t wearable_ecg_queue[WEARABLE_ECG_QUEUE_LEN][WEARABLE_ECG_PAYLOAD_LENGTH];
+static uint8_t wearable_ecg_queue_head;
+static uint8_t wearable_ecg_queue_tail;
+static uint8_t wearable_ecg_queue_count;
+/* Packets overwritten in a full queue; the phone sees the gap in sequence. */
+static uint32_t wearable_ecg_dropped_packets;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -162,6 +178,13 @@ static void WEARABLE_FillSensorPayload(uint8_t *payload);
 static void WEARABLE_RefreshSensorSnapshot(void);
 static void WEARABLE_RefreshStatusSnapshot(void);
 static void WEARABLE_SendStatus(void);
+static void WEARABLE_EcgTask(void);
+static void WEARABLE_EcgTimerCallback(void *arg);
+static void WEARABLE_StartEcgStream(void);
+static void WEARABLE_StopEcgStream(void);
+static bool WEARABLE_EcgNotificationsEnabled(void);
+static void WEARABLE_EcgQueuePacket(void);
+static void WEARABLE_EcgFlushQueue(void);
 /* USER CODE END PFP */
 
 /* Functions Definition ------------------------------------------------------*/
@@ -189,6 +212,7 @@ void WEARABLE_Notification(WEARABLE_NotificationEvt_t *p_Notification)
       {
         case WEARABLE_CMD_START_MEASUREMENT:
           WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_NONE;
+          WEARABLE_StopEcgStream();
           if (SensorManager_Start())
           {
             WearableState_Set(WEARABLE_STATE_MEASURING);
@@ -207,6 +231,7 @@ void WEARABLE_Notification(WEARABLE_NotificationEvt_t *p_Notification)
 
         case WEARABLE_CMD_STOP_MEASUREMENT:
           WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_NONE;
+          WEARABLE_StopEcgStream();
           SensorManager_Stop();
           WearableState_Set(WEARABLE_STATE_IDLE);
           HAL_RADIO_TIMER_StopVirtualTimer(&wearable_sensor_timer);
@@ -233,6 +258,7 @@ void WEARABLE_Notification(WEARABLE_NotificationEvt_t *p_Notification)
 
         case WEARABLE_CMD_LOW_POWER_MODE:
           WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_NONE;
+          WEARABLE_StopEcgStream();
           SensorManager_Stop();
           SensorManager_SetPowerState(2U);
           WearableState_Set(WEARABLE_STATE_LOW_POWER);
@@ -243,9 +269,24 @@ void WEARABLE_Notification(WEARABLE_NotificationEvt_t *p_Notification)
 
         case WEARABLE_CMD_ECG_START:
           WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_NONE;
-          SensorManager_Start();
-          SensorManager_SetFlag(WEARABLE_FLAG_ECG_ACTIVE, true);
-          WearableState_Set(WEARABLE_STATE_ECG_ACTIVE);
+          if (!SensorManager_Start())
+          {
+            WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_INVALID_COMMAND;
+            WearableState_Set(WEARABLE_STATE_ERROR);
+            WEARABLE_SendStatus();
+            break;
+          }
+          if (SensorManager_StartEcg())
+          {
+            WearableState_Set(WEARABLE_STATE_ECG_ACTIVE);
+            WEARABLE_StartEcgStream();
+          }
+          else
+          {
+            /* MAX86150 missing/not responding: fall back to plain measuring. */
+            WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_INVALID_COMMAND;
+            WearableState_Set(WEARABLE_STATE_MEASURING);
+          }
           HAL_RADIO_TIMER_StopVirtualTimer(&wearable_sensor_timer);
           HAL_RADIO_TIMER_StartVirtualTimer(&wearable_sensor_timer, WEARABLE_SENSOR_PERIOD_MS);
           WEARABLE_ScheduleSensorAsyncTask();
@@ -254,8 +295,8 @@ void WEARABLE_Notification(WEARABLE_NotificationEvt_t *p_Notification)
 
         case WEARABLE_CMD_ECG_STOP:
           WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_NONE;
+          WEARABLE_StopEcgStream();
           SensorManager_Stop();
-          SensorManager_SetFlag(WEARABLE_FLAG_ECG_ACTIVE, false);
           WearableState_Set(WEARABLE_STATE_IDLE);
           HAL_RADIO_TIMER_StopVirtualTimer(&wearable_sensor_timer);
           WEARABLE_StopSensorAsyncTask();
@@ -509,6 +550,7 @@ void WEARABLE_APP_EvtRx(WEARABLE_APP_ConnHandleNotEvt_t *p_Notification)
       WEARABLE_APP_Context.Recovery_data_Notification_Status = Recovery_data_NOTIFICATION_OFF;
       HAL_RADIO_TIMER_StopVirtualTimer(&wearable_sensor_timer);
       WEARABLE_StopSensorAsyncTask();
+      WEARABLE_StopEcgStream();
       SensorManager_Stop();
       WearableState_Set(WEARABLE_STATE_IDLE);
       /* USER CODE END Service1_APP_DISCON_HANDLE_EVT */
@@ -548,10 +590,12 @@ void WEARABLE_APP_Init(void)
   wearable_sensor_timer.callback = WEARABLE_SensorTimerCallback;
   wearable_sensor_async_timer.callback = WEARABLE_SensorAsyncTimerCallback;
   wearable_motion_timer.callback = WEARABLE_MotionTimerCallback;
+  wearable_ecg_timer.callback = WEARABLE_EcgTimerCallback;
   UTIL_SEQ_RegTask(1U << CFG_TASK_WEARABLE_SENSOR_ID, UTIL_SEQ_RFU, WEARABLE_SensorTask);
   UTIL_SEQ_RegTask(1U << CFG_TASK_WEARABLE_SENSOR_ASYNC_ID, UTIL_SEQ_RFU, WEARABLE_SensorAsyncTask);
   UTIL_SEQ_RegTask(1U << CFG_TASK_WEARABLE_MOTION_INT_ID, UTIL_SEQ_RFU, WEARABLE_MotionInterruptTask);
   UTIL_SEQ_RegTask(1U << CFG_TASK_WEARABLE_MOTION_TIMEOUT_ID, UTIL_SEQ_RFU, WEARABLE_MotionTimeoutTask);
+  UTIL_SEQ_RegTask(1U << CFG_TASK_WEARABLE_ECG_ID, UTIL_SEQ_RFU, WEARABLE_EcgTask);
   WEARABLE_RefreshSensorSnapshot();
   WEARABLE_RefreshStatusSnapshot();
   /* USER CODE END Service1_APP_Init */
@@ -587,6 +631,16 @@ void WEARABLE_APP_NotifyMotionInterruptFromISR(void)
 uint16_t WEARABLE_APP_GetConnectionHandle(void)
 {
   return WEARABLE_APP_Context.ConnectionHandle;
+}
+
+void WEARABLE_APP_NotifyTxPoolAvailable(void)
+{
+  /* BLE stack freed TX buffers: retry queued ECG packets now rather than
+   * at the next drain. */
+  if (wearable_ecg_queue_count != 0U)
+  {
+    UTIL_SEQ_SetTask(1U << CFG_TASK_WEARABLE_ECG_ID, CFG_SEQ_PRIO_0);
+  }
 }
 /* USER CODE END FD */
 
@@ -909,5 +963,110 @@ static void WEARABLE_StopSensorAsyncTask(void)
 static void WEARABLE_SendStatus(void)
 {
   WEARABLE_Device_status_SendNotification();
+}
+
+static void WEARABLE_EcgTask(void)
+{
+  int16_t samples[WEARABLE_ECG_READ_MAX_SAMPLES];
+  uint8_t count;
+  uint8_t i;
+
+  /* Also reached from the TX-pool event, so the timer may still be armed. */
+  HAL_RADIO_TIMER_StopVirtualTimer(&wearable_ecg_timer);
+  if (!SensorManager_IsEcgActive())
+  {
+    return;
+  }
+
+  count = SensorManager_ReadEcgSamples(samples, WEARABLE_ECG_READ_MAX_SAMPLES);
+  for (i = 0U; i < count; i++)
+  {
+    wearable_ecg_pending.samples[wearable_ecg_pending.sample_count] = samples[i];
+    wearable_ecg_pending.sample_count++;
+    if (wearable_ecg_pending.sample_count == WEARABLE_ECG_SAMPLES_PER_PACKET)
+    {
+      WEARABLE_EcgQueuePacket();
+    }
+  }
+  WEARABLE_EcgFlushQueue();
+
+  HAL_RADIO_TIMER_StartVirtualTimer(&wearable_ecg_timer, WEARABLE_ECG_DRAIN_PERIOD_MS);
+}
+
+static void WEARABLE_EcgTimerCallback(void *arg)
+{
+  UNUSED(arg);
+  UTIL_SEQ_SetTask(1U << CFG_TASK_WEARABLE_ECG_ID, CFG_SEQ_PRIO_0);
+}
+
+static void WEARABLE_StartEcgStream(void)
+{
+  WEARABLE_StopEcgStream();
+  HAL_RADIO_TIMER_StartVirtualTimer(&wearable_ecg_timer, WEARABLE_ECG_DRAIN_PERIOD_MS);
+}
+
+static void WEARABLE_StopEcgStream(void)
+{
+  HAL_RADIO_TIMER_StopVirtualTimer(&wearable_ecg_timer);
+  memset(&wearable_ecg_pending, 0, sizeof(wearable_ecg_pending));
+  wearable_ecg_sequence = 0U;
+  wearable_ecg_queue_head = 0U;
+  wearable_ecg_queue_tail = 0U;
+  wearable_ecg_queue_count = 0U;
+}
+
+static bool WEARABLE_EcgNotificationsEnabled(void)
+{
+  return (WEARABLE_APP_Context.ConnectionHandle != 0xFFFFU) &&
+         (WEARABLE_APP_Context.Ecg_data_Notification_Status == Ecg_data_NOTIFICATION_ON);
+}
+
+/* Seals the pending 9-sample packet. The sequence number advances even when
+ * nobody is subscribed, so every gap the phone sees is real data loss. */
+static void WEARABLE_EcgQueuePacket(void)
+{
+  wearable_ecg_pending.sequence_number = wearable_ecg_sequence;
+  wearable_ecg_sequence++;
+
+  if (WEARABLE_EcgNotificationsEnabled())
+  {
+    if (wearable_ecg_queue_count == WEARABLE_ECG_QUEUE_LEN)
+    {
+      wearable_ecg_queue_tail = (uint8_t)((wearable_ecg_queue_tail + 1U) % WEARABLE_ECG_QUEUE_LEN);
+      wearable_ecg_queue_count--;
+      wearable_ecg_dropped_packets++;
+    }
+    WearableData_EncodeECG(&wearable_ecg_pending, wearable_ecg_queue[wearable_ecg_queue_head]);
+    wearable_ecg_queue_head = (uint8_t)((wearable_ecg_queue_head + 1U) % WEARABLE_ECG_QUEUE_LEN);
+    wearable_ecg_queue_count++;
+  }
+  wearable_ecg_pending.sample_count = 0U;
+}
+
+static void WEARABLE_EcgFlushQueue(void)
+{
+  WEARABLE_Data_t data;
+
+  if (!WEARABLE_EcgNotificationsEnabled())
+  {
+    wearable_ecg_queue_head = 0U;
+    wearable_ecg_queue_tail = 0U;
+    wearable_ecg_queue_count = 0U;
+    return;
+  }
+
+  while (wearable_ecg_queue_count != 0U)
+  {
+    data.p_Payload = wearable_ecg_queue[wearable_ecg_queue_tail];
+    data.Length = WEARABLE_ECG_PAYLOAD_LENGTH;
+    if (WEARABLE_NotifyValue(WEARABLE_ECG_DATA, &data,
+                             WEARABLE_APP_Context.ConnectionHandle) != BLE_STATUS_SUCCESS)
+    {
+      /* TX pool full: retried on ACI_GATT_TX_POOL_AVAILABLE or next drain. */
+      break;
+    }
+    wearable_ecg_queue_tail = (uint8_t)((wearable_ecg_queue_tail + 1U) % WEARABLE_ECG_QUEUE_LEN);
+    wearable_ecg_queue_count--;
+  }
 }
 /* USER CODE END FD_LOCAL_FUNCTIONS*/

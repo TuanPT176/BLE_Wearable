@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 BLE GATT firmware for a wearable health-monitoring device built on **STM32WB09KE** (Arm Cortex-M0+ with integrated BLE radio). The device measures heart rate, SpO2, ECG, temperature, acceleration and supercapacitor voltage, and exposes them to a BLE central through a custom GATT service (`WearableHealthService`, advertised as `BLEWearable`). It also backs up configuration and sensor history to an ST25DV04K NFC/RFID EEPROM tag, and is planned to add a SX1262 LoRa transport later.
 
-Full GATT profile, control-command byte layout, and sensor/status payload decoding are documented in [README.md](README.md) — read it before changing any characteristic UUID, payload layout or control command, since a BLE phone app already depends on that binary protocol. [BLE_Wearable_Firmware_Next_Plan.md](BLE_Wearable_Firmware_Next_Plan.md) records the frozen target GATT architecture (7 characteristics, ST25DV as the single history source of truth, power-policy-driven adaptive rates) — treat it as the architectural direction for characteristics/features that exist as stubs today (`NFC_DATA`, `ECG_DATA`, `DEBUG_DATA`, `RECOVERY_DATA`).
+Full GATT profile, control-command byte layout, and sensor/status payload decoding are documented in [README.md](README.md) — read it before changing any characteristic UUID, payload layout or control command, since a BLE phone app already depends on that binary protocol. [BLE_Wearable_Firmware_Next_Plan.md](BLE_Wearable_Firmware_Next_Plan.md) records the frozen target GATT architecture (7 characteristics, ST25DV as the single history source of truth, power-policy-driven adaptive rates) — treat it as the architectural direction for characteristics/features that exist as stubs today (`NFC_DATA`, `DEBUG_DATA`, `RECOVERY_DATA`; `ECG_DATA` now streams 200 Hz ECG, layout in the README).
 
 ## Build and flash
 
@@ -28,7 +28,7 @@ Most files carry `/* USER CODE BEGIN ... */` / `/* USER CODE END ... */` markers
 
 ### Execution model: bare-metal + cooperative sequencer, no RTOS
 
-There is no FreeRTOS/ThreadX. Concurrency is a cooperative task sequencer (`Utilities/sequencer/stm32_seq.*`, ST's `UTIL_SEQ_*` API) driven from the main loop in `Core/Src/main.c` / `Core/Src/app_entry.c`. ISRs (GPIO, timer, I2C) only set flags or call `UTIL_SEQ_SetTask(...)` — they must never block or do heavy work directly. Registered task IDs live in `Core/Inc/app_conf.h` (`CFG_TASK_BLE_STACK`, `CFG_TASK_VTIMER`, `CFG_TASK_NVM`, `CFG_TASK_WEARABLE_SENSOR_ID`, `CFG_TASK_WEARABLE_SENSOR_ASYNC_ID`, `CFG_TASK_WEARABLE_MOTION_INT_ID`, `CFG_TASK_WEARABLE_MOTION_TIMEOUT_ID`). Low-power management goes through `Utilities/lpm/tiny_lpm` (`CFG_LPM_SUPPORTED`).
+There is no FreeRTOS/ThreadX. Concurrency is a cooperative task sequencer (`Utilities/sequencer/stm32_seq.*`, ST's `UTIL_SEQ_*` API) driven from the main loop in `Core/Src/main.c` / `Core/Src/app_entry.c`. ISRs (GPIO, timer, I2C) only set flags or call `UTIL_SEQ_SetTask(...)` — they must never block or do heavy work directly. Registered task IDs live in `Core/Inc/app_conf.h` (`CFG_TASK_BLE_STACK`, `CFG_TASK_VTIMER`, `CFG_TASK_NVM`, `CFG_TASK_WEARABLE_SENSOR_ID`, `CFG_TASK_WEARABLE_SENSOR_ASYNC_ID`, `CFG_TASK_WEARABLE_MOTION_INT_ID`, `CFG_TASK_WEARABLE_MOTION_TIMEOUT_ID`, `CFG_TASK_LBM_ID`, `CFG_TASK_WEARABLE_ECG_ID`). Low-power management goes through `Utilities/lpm/tiny_lpm` (`CFG_LPM_SUPPORTED`).
 
 ### Layering
 
@@ -50,7 +50,7 @@ Application/               Hardware-independent app logic, BLE-agnostic — one 
   NEH7100/neh7100.cpp/h        Energy-harvesting PMIC driver (I2C) — only C++ file in the app layer
 Drivers/                   Vendor/hardware drivers
   ST25DV/                     Official ST BSP driver for the NFC tag (st25dv.c, st25dv_reg.c)
-  Sensors/MAX86150            PPG/ECG sensor (currently optical/PPG-only; ECG acquisition not yet wired up)
+  Sensors/MAX86150            PPG/ECG sensor: Red/IR PPG or 200 sps ECG, one mode at a time
   Sensors/MAX30208            Temperature sensor; STM32 HAL port used at runtime is Drivers/max30208.c
   Sensors/LIS2DUXS12TR         Accelerometer + QVar + on-chip Machine Learning Core (official ST
                                 lis2duxs12_reg.* kept platform-independent; lis2duxs12_platform.* is
@@ -67,10 +67,10 @@ Data flow for a periodic sensor report: `SensorManager` reads/holds `wearable_se
 
 ### BLE control protocol (see README for full detail)
 
-Single custom service `WearableHealthService` (`0000FE40-...`) exposes a `CONTROL` write characteristic (8-byte commands `0x01`-`0x09`, little-endian fields) and `SENSOR_DATA`/`DEVICE_STATUS` read+notify characteristics with a frozen binary layout. `wearable.h`'s `WEARABLE_CharOpcode_t`/`WEARABLE_OpcodeEvt_t` enums already reserve four more characteristics (`NFC_DATA`, `ECG_DATA`, `DEBUG_DATA`, `RECOVERY_DATA`) and `wearable_data.h` already defines their packet structs (`wearable_ecg_packet_t`, `wearable_nfc_status_t`, `wearable_recovery_packet_t`, `wearable_debug_packet_t`) even though the corresponding application logic (ECG streaming, NFC status reporting, debug config, log recovery) is only partially implemented — check `data_recovery_manager.c` / `nfc_manager.c` for current implementation state before assuming a feature is complete.
+Single custom service `WearableHealthService` (`0000FE40-...`) exposes a `CONTROL` write characteristic (8-byte commands `0x01`-`0x09`, little-endian fields) and `SENSOR_DATA`/`DEVICE_STATUS` read+notify characteristics with a frozen binary layout. `wearable.h`'s `WEARABLE_CharOpcode_t`/`WEARABLE_OpcodeEvt_t` enums already reserve four more characteristics (`NFC_DATA`, `ECG_DATA`, `DEBUG_DATA`, `RECOVERY_DATA`) and `wearable_data.h` already defines their packet structs (`wearable_ecg_packet_t`, `wearable_nfc_status_t`, `wearable_recovery_packet_t`, `wearable_debug_packet_t`) even though the corresponding application logic (NFC status reporting, debug config, log recovery) is only partially implemented; ECG streaming on `ECG_DATA` is implemented — check `data_recovery_manager.c` / `nfc_manager.c` for current implementation state before assuming a feature is complete.
 
 Do not change existing `CONTROL`/`SENSOR_DATA`/`DEVICE_STATUS` UUIDs, payload byte offsets, or command codes without a strong reason — an external phone app already decodes this exact binary format (decoders included in the README).
 
 ### Sensors share one I2C bus
 
-All sensors (MAX30208, MAX86150, LIS2DUXS12TR) and the ST25DV NFC tag sit on `I2C1` (PB6=SCL, PB7=SDA). LIS2DUXS12TR's `INT1` is on `PB2`; its ISR only schedules a sequencer task (`CFG_TASK_WEARABLE_MOTION_INT_ID`) — the actual I2C read happens later in task context, not in the ISR. See [Drivers/Sensors/README.md](Drivers/Sensors/README.md) for per-sensor bring-up status (MAX86150 is optical/PPG-only today; MLC on LIS2DUXS12TR needs a UCF table generated via ST Unico plus class-rule mapping before any fall-detection output is meaningful).
+All sensors (MAX30208, MAX86150, LIS2DUXS12TR) and the ST25DV NFC tag sit on `I2C1` (PB6=SCL, PB7=SDA). LIS2DUXS12TR's `INT1` is on `PB2`; its ISR only schedules a sequencer task (`CFG_TASK_WEARABLE_MOTION_INT_ID`) — the actual I2C read happens later in task context, not in the ISR. See [Drivers/Sensors/README.md](Drivers/Sensors/README.md) for per-sensor bring-up status (MAX86150 switches between PPG and ECG, ECG streamed on `ECG_DATA`; MLC on LIS2DUXS12TR needs a UCF table generated via ST Unico plus class-rule mapping before any fall-detection output is meaningful).

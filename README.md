@@ -31,7 +31,7 @@ Thiết bị quảng bá với GAP Device Name: **`BLEWearable`**.
 
 > **Trạng thái tích hợp:** NEH7100 đã có source tại `Application/neh7100.cpp` và `Application/neh7100.h`. ST25DV04K đã được tích hợp đầy đủ driver và logic xử lý (config, logger, FTM mailbox). SX1262 đã chạy LoRaWAN OTAA bằng LoRa Basics Modem (`ThirdParty/LBM`, phần port cho WB09 ở `Application/LoRaWAN`), xem mục LoRaWAN bên dưới.
 
-> **Migration cảm biến:** Driver register, HAL I2C, đọc gia tốc và khung nạp MLC cho LIS2DUXS12TR đã được tích hợp; cần thêm file UCF sinh từ Unico và bảng ánh xạ class để kích hoạt model MLC thực tế. MAX86150 hiện vẫn ở chế độ optical-only, vì vậy phần thu nhận ECG cần được bổ sung tiếp.
+> **Migration cảm biến:** Driver register, HAL I2C, đọc gia tốc và khung nạp MLC cho LIS2DUXS12TR đã được tích hợp; cần thêm file UCF sinh từ Unico và bảng ánh xạ class để kích hoạt model MLC thực tế. MAX86150 chạy PPG (Red/IR, nhịp tim/SpO2) khi đo bình thường và chuyển sang ECG khi nhận lệnh `0x06`; hai chế độ dùng chung một chip nên không chạy đồng thời.
 
 ## Cấu trúc project
 
@@ -89,8 +89,9 @@ Các UUID dưới đây được ghi theo định dạng chuẩn mà nRF Connect
 | Control | `0000FE41-8E22-4541-9D4C-21EDAE82ED19` | Write | 8 byte | Gửi lệnh điều khiển; firmware hiện đọc byte đầu tiên |
 | Sensor Data | `0000FE42-8E22-4541-9D4C-21EDAE82ED19` | Read, Notify | 16 byte | Dữ liệu sức khỏe và nguồn |
 | Device Status | `0000FE43-8E22-4541-9D4C-21EDAE82ED19` | Read, Notify | 8 byte | Trạng thái, lỗi và phiên bản protocol |
+| ECG Data | `0000FE45-8E22-4541-9D4C-21EDAE82ED19` | Read, Notify | 20 byte | Dạng sóng ECG, 9 mẫu mỗi gói (xem mục ECG Data) |
 
-Để nhận notification, BLE central phải ghi `0x0001` vào CCCD của `Sensor Data` hoặc `Device Status`.
+Để nhận notification, BLE central phải ghi `0x0001` vào CCCD của `Sensor Data`, `Device Status` hoặc `ECG Data`.
 
 ## Control commands
 
@@ -103,8 +104,8 @@ Ghi payload 8 byte vào characteristic `Control`. Byte `0` là command; byte `1.
 | `0x03` | Request data | Yêu cầu cập nhật/gửi dữ liệu hiện tại |
 | `0x04` | Normal mode | Đặt `power_state = 1` |
 | `0x05` | Low-power mode | Dừng đo, đặt `power_state = 2` |
-| `0x06` | ECG start | Bắt đầu ECG và bật cờ ECG |
-| `0x07` | ECG stop | Dừng ECG và xóa cờ ECG |
+| `0x06` | ECG start | Bắt đầu đo (nếu chưa), chuyển MAX86150 sang ECG, bật cờ ECG và stream `ECG Data`. Nếu MAX86150 không phản hồi: error `0x01`, state vẫn là Measuring |
+| `0x07` | ECG stop | Dừng ECG và phép đo, xóa cờ ECG, chuyển về Idle |
 | `0x08` | Emergency test | Bật cờ emergency và chuyển sang Emergency |
 | `0x09` | Sync time | Đồng bộ thời gian thực (Unix time) cho thiết bị |
 
@@ -219,6 +220,22 @@ bit 7 6 5 4 | bit 3 2 1 0
 - Phiên bản protocol hiện tại: **1**
 - Do status chỉ giữ nibble cao, cờ `Fall candidate (0x08)` chỉ xuất hiện đầy đủ trong `Sensor Data`, không xuất hiện trong byte status hiện tại.
 
+## ECG Data
+
+Chỉ gửi trong phiên ECG (sau lệnh `0x06`, trước `0x07`, `0x01`, `0x02`, `0x05` hoặc khi mất kết nối). Mỗi notification dài **20 byte**, mẫu dạng `int16` **little-endian**:
+
+| Offset | Kích thước | Kiểu | Trường | Giá trị |
+|---:|---:|---|---|---|
+| 0 | 1 | `uint8` | Sequence | Tăng 1 mỗi gói, quay vòng sau 255, về 0 khi bắt đầu phiên mới |
+| 1 | 1 | `uint8` | Sample count | Luôn là `9` |
+| 2 | 18 | `int16 LE` × 9 | Samples | Mẫu ECG theo thứ tự thời gian |
+
+- Tần số lấy mẫu **200 Hz** (khoảng 22 gói/giây); gain analog IA 9.5 × PGA 8 = 76 V/V.
+- Mỗi mẫu là giá trị ADC 18-bit của MAX86150 dịch phải 2 bit (`raw18 >> 2`).
+- **Sequence nhảy cóc nghĩa là mất gói thật**: firmware vẫn tăng sequence khi chưa bật notify hoặc khi hàng đợi BLE (16 gói, khoảng 0.7 s) bị đầy.
+- Trong phiên ECG, LED PPG tắt nên nhịp tim và SpO2 trong `Sensor Data` giữ giá trị cuối cùng trước khi bắt đầu ECG.
+- Read trả về gói ECG gần nhất đã gửi.
+
 ## JavaScript decoder
 
 ```js
@@ -266,6 +283,18 @@ function decodeDeviceStatus(input) {
     emergency: Boolean(flagsAndVersion & 0x10),
     ecgActive: Boolean(flagsAndVersion & 0x20),
   };
+}
+
+function decodeEcgData(input) {
+  const b = input instanceof Uint8Array ? input : new Uint8Array(input);
+  if (b.length !== 20) throw new Error("ECG Data must be 20 bytes");
+
+  const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  const samples = [];
+  for (let i = 0; i < b[1]; i++) {
+    samples.push(view.getInt16(2 + i * 2, true));
+  }
+  return { sequence: b[0], samples }; // 200 Hz
 }
 ```
 

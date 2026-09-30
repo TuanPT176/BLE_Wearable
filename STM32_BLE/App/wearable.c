@@ -674,7 +674,24 @@ static BLEEVT_EvtAckStatus_t WEARABLE_EventHandler(aci_blecore_event *p_evt)
 	  {
 		return_value = BLEEVT_Ack;
 		/*USER CODE BEGIN Service1_Char_5_ACI_GATT_SRV_READ_VSEVT_CODE_1 */
-#warning user shall call aci_gatt_srv_read_resp() function if allowed
+		/* Last ECG_DATA packet notified (all zero before the first one). */
+		uint16_t value_length = ECG_DATA_SIZE;
+		const uint8_t *value = ecg_data_val_buffer;
+		uint8_t error_code = BLE_ATT_ERR_NONE;
+		if (p_read->Data_Offset > value_length)
+		{
+		  error_code = BLE_ATT_ERR_INVALID_OFFSET;
+		  value_length = 0U;
+		  value = NULL;
+		}
+		else
+		{
+		  value += p_read->Data_Offset;
+		  value_length -= p_read->Data_Offset;
+		}
+		aci_gatt_srv_resp(p_read->Connection_Handle, p_read->CID,
+		                  p_read->Attribute_Handle, error_code,
+		                  value_length, (uint8_t *)value);
 		/*USER CODE END Service1_Char_5_ACI_GATT_SRV_READ_VSEVT_CODE_1 */
 
 		/*USER CODE BEGIN Service1_Char_5_ACI_GATT_SRV_READ_VSEVT_CODE_2 */
@@ -735,7 +752,7 @@ static BLEEVT_EvtAckStatus_t WEARABLE_EventHandler(aci_blecore_event *p_evt)
       UNUSED(p_tx_pool_available_event);
 
       /* USER CODE BEGIN ACI_GATT_TX_POOL_AVAILABLE_VSEVT_CODE */
-
+      WEARABLE_APP_NotifyTxPoolAvailable();
       /* USER CODE END ACI_GATT_TX_POOL_AVAILABLE_VSEVT_CODE */
       break;/* ACI_GATT_TX_POOL_AVAILABLE_VSEVT_CODE*/
     }

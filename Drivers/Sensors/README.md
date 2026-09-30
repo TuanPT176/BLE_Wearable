@@ -7,8 +7,10 @@ All sensors share `I2C1` on PB6 (SCL) and PB7 (SDA).
 - MAX30208: body-temperature acquisition. The active STM32 HAL port is
   `Drivers/max30208.c`; asynchronous scheduling is handled by
   `Application/sensor_manager.c`.
-- MAX86150: target device for Red/IR PPG and ECG. The current STM32 driver is
-  still optical-only; ECG FIFO/configuration support remains to be added.
+- MAX86150: Red/IR PPG (HR/SpO2) and single-lead ECG, one mode at a time
+  (`max86150_optical.*`). ECG runs at 200 sps with IA 9.5 x PGA 8 gain and is
+  drained by the `CFG_TASK_WEARABLE_ECG_ID` task every 45 ms (FIFO lasts
+  160 ms). INTB is on PB4 but not used yet (polled FIFO).
 - LIS2DUXS12TR: accelerometer and Machine Learning Core (MLC). INT1 is connected
   to STM32WB09 PB2. Runtime I2C processing is deferred from the GPIO ISR to a
   sequencer task.

@@ -27,8 +27,9 @@ typedef struct
 } max86150_optical_t;
 
 /*
- * This STM32 port intentionally exposes only the Red/IR optical path.
- * ECG acquisition belongs to ST1VAFE3BX in this product.
+ * STM32 HAL port for the MAX86150. Two mutually exclusive modes, each
+ * starting with a soft reset: Red/IR PPG (MAX86150_OpticalConfigureRedIr)
+ * and single-lead ECG on ECG_P/ECG_N (MAX86150_EcgConfigure).
  */
 void MAX86150_OpticalBind(max86150_optical_t *device,
                           I2C_HandleTypeDef *i2c);
@@ -53,5 +54,20 @@ max86150_optical_result_t MAX86150_OpticalReadSample(
 max86150_optical_result_t MAX86150_OpticalShutdown(
     max86150_optical_t *device,
     bool enable);
+
+#define MAX86150_ECG_FIFO_DEPTH  32U
+
+/* ECG-only FIFO (LEDs off) at 200 sps, IA gain 9.5 x PGA gain 8 = 76 V/V.
+ * Samples are 18-bit two's complement. */
+max86150_optical_result_t MAX86150_EcgConfigure(max86150_optical_t *device);
+/* Burst-reads up to max_samples waiting ECG samples, sign-extended. Drain
+ * at least every 160 ms (32 samples at 200 sps); *overflowed reports that
+ * the FIFO filled and rolled over since the last call, losing samples. */
+max86150_optical_result_t MAX86150_EcgReadSamples(
+    max86150_optical_t *device,
+    int32_t *samples,
+    uint8_t max_samples,
+    uint8_t *count,
+    bool *overflowed);
 
 #endif /* MAX86150_OPTICAL_H */

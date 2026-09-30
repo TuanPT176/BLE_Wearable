@@ -140,6 +140,8 @@ static float optical_ir_ac_sumsq;
 static float optical_red_ac_sumsq;
 static uint32_t optical_spo2_window_samples;
 static uint32_t optical_drain_calls;
+/* ECG FIFO rollovers (samples lost because the drain task ran late). */
+static uint32_t ecg_overflow_events;
 
 static void SensorManager_StartTemperatureConversion(void)
 {
@@ -544,6 +546,8 @@ bool SensorManager_Start(void)
   running = true;
   SensorManager_StartTemperatureConversion();
 
+  /* PPG and ECG share the MAX86150: (re)starting PPG ends any ECG session. */
+  SensorManager_SetFlag(WEARABLE_FLAG_ECG_ACTIVE, false);
   if (optical_status != SENSOR_OPTICAL_NOT_PRESENT)
   {
     SensorManager_OpticalResetState();
@@ -572,11 +576,13 @@ bool SensorManager_Stop(void)
     temperature_status = SENSOR_TEMPERATURE_IDLE;
   }
 
-  if (optical_status == SENSOR_OPTICAL_ACTIVE)
+  if ((optical_status == SENSOR_OPTICAL_ACTIVE) ||
+      (optical_status == SENSOR_OPTICAL_ECG_ACTIVE))
   {
     (void)MAX86150_OpticalShutdown(&optical_device, true);
     optical_status = SENSOR_OPTICAL_IDLE;
   }
+  SensorManager_SetFlag(WEARABLE_FLAG_ECG_ACTIVE, false);
   return initialized;
 }
 
@@ -693,7 +699,8 @@ void SensorManager_Process(void)
     }
   }
 
-  if (optical_status != SENSOR_OPTICAL_ACTIVE)
+  if ((optical_status == SENSOR_OPTICAL_NOT_PRESENT) ||
+      (optical_status == SENSOR_OPTICAL_IDLE))
   {
     optical_reprobe_calls++;
     if (optical_reprobe_calls >= OPTICAL_REPROBE_INTERVAL_CALLS)
@@ -722,7 +729,8 @@ void SensorManager_Process(void)
     }
   }
 
-  if (optical_status != SENSOR_OPTICAL_ACTIVE)
+  if ((optical_status == SENSOR_OPTICAL_NOT_PRESENT) ||
+      (optical_status == SENSOR_OPTICAL_IDLE))
   {
     /* No PPG sensor available: keep a gently varying mock HR so the BLE
      * notification path stays exercisable without hardware attached.
@@ -838,6 +846,67 @@ sensor_motion_status_t SensorManager_GetMotionStatus(void)
 sensor_optical_status_t SensorManager_GetOpticalStatus(void)
 {
   return optical_status;
+}
+
+bool SensorManager_StartEcg(void)
+{
+  if ((!initialized) || (!running) ||
+      (optical_status == SENSOR_OPTICAL_NOT_PRESENT))
+  {
+    return false;
+  }
+
+  if (MAX86150_EcgConfigure(&optical_device) != MAX86150_OPTICAL_OK)
+  {
+    /* The chip was reset; Process() restores PPG on its reprobe cycle. */
+    optical_status = SENSOR_OPTICAL_IDLE;
+    return false;
+  }
+
+  optical_status = SENSOR_OPTICAL_ECG_ACTIVE;
+  SensorManager_SetFlag(WEARABLE_FLAG_ECG_ACTIVE, true);
+  APP_DBG_MSG("-- MAX86150: ECG active (200 sps)\n");
+  return true;
+}
+
+bool SensorManager_IsEcgActive(void)
+{
+  return optical_status == SENSOR_OPTICAL_ECG_ACTIVE;
+}
+
+uint8_t SensorManager_ReadEcgSamples(int16_t *samples, uint8_t max_samples)
+{
+  int32_t raw[MAX86150_ECG_FIFO_DEPTH];
+  uint8_t count = 0U;
+  uint8_t i;
+  bool overflowed = false;
+
+  if ((samples == NULL) || (optical_status != SENSOR_OPTICAL_ECG_ACTIVE))
+  {
+    return 0U;
+  }
+  if (max_samples > MAX86150_ECG_FIFO_DEPTH)
+  {
+    max_samples = (uint8_t)MAX86150_ECG_FIFO_DEPTH;
+  }
+
+  if (MAX86150_EcgReadSamples(&optical_device, raw, max_samples,
+                              &count, &overflowed) != MAX86150_OPTICAL_OK)
+  {
+    return 0U;
+  }
+  if (overflowed)
+  {
+    ecg_overflow_events++;
+  }
+
+  /* 18-bit two's complement -> int16 for the ECG_DATA wire format; the
+   * arithmetic shift keeps the sign (GCC on Arm). */
+  for (i = 0U; i < count; i++)
+  {
+    samples[i] = (int16_t)(raw[i] >> 2);
+  }
+  return count;
 }
 
 void SensorManager_ProcessMotionInterrupt(void)
