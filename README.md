@@ -338,10 +338,11 @@ MAX86150 chạy một trong hai chế độ, mỗi lần chuyển đều soft re
 | File | Nội dung |
 |---|---|
 | `Drivers/Sensors/MAX86150/max86150_optical.c/.h` | Driver I2C: giá trị thanh ghi của hai chế độ, đọc FIFO |
-| `Application/SensorManager/sensor_manager.c` | Tham số PPG (dòng LED, thuật toán nhịp tim/SpO2), chuyển PPG/ECG |
+| `Application/SensorManager/sensor_manager.c` | Thuật toán nhịp tim/SpO2, chuyển PPG/ECG |
+| `Application/wearable_config.h` | Tham số PPG (dòng LED, ngưỡng thuật toán) và các switch chẩn đoán ECG |
 | `STM32_BLE/App/wearable_app.c` | Task đọc FIFO ECG, đóng gói và notify `ECG Data` |
 | `Application/wearable_data.h` | Định dạng gói `ECG Data` (giao thức đã đóng băng) |
-| `Application/SensorManager/ecg_diag.h` | Các switch chẩn đoán nhiễu ECG và biến `g_ecgDiag` |
+| `Application/SensorManager/ecg_diag.h` | Biến quan sát `g_ecgDiag` và kiểm tra phạm vi các switch chẩn đoán |
 
 ### Giá trị thanh ghi (`max86150_optical.c`)
 
@@ -379,7 +380,7 @@ Quy đổi điện áp: `V_in = raw18 × 12.247 µV / 76`, tức **0.161 µV** m
 
 | Macro | Mặc định | Ý nghĩa |
 |---|---|---|
-| `WEARABLE_ECG_DRAIN_PERIOD_MS` | `ECG_DIAG_DRAIN_PERIOD_MS` (45) | Chu kỳ timer của task đọc FIFO. Timer được nạp lại **sau khi** task chạy xong nên chu kỳ thật dài hơn vài ms (thời gian đọc I2C). Đổi giá trị trong `ecg_diag.h` |
+| `WEARABLE_ECG_DRAIN_PERIOD_MS` | `ECG_DIAG_DRAIN_PERIOD_MS` (45) | Chu kỳ timer của task đọc FIFO. Timer được nạp lại **sau khi** task chạy xong nên chu kỳ thật dài hơn vài ms (thời gian đọc I2C). Đổi giá trị trong `wearable_config.h` (chỉ có tác dụng khi `ENABLE_TEST = 1`) |
 | `WEARABLE_ECG_READ_MAX_SAMPLES` | `32` | Số mẫu tối đa lấy trong một lần đọc, bằng độ sâu FIFO |
 | `WEARABLE_ECG_QUEUE_LEN` | `16` | Số gói `ECG Data` giữ lại khi bộ đệm TX của BLE đầy (khoảng 0.7 s). Đầy thì bỏ gói cũ nhất, app thấy sequence nhảy cóc |
 | `WEARABLE_ECG_SAMPLES_PER_PACKET` | `9` | Số mẫu mỗi gói. **Thuộc giao thức BLE, không đổi** |
@@ -387,7 +388,7 @@ Quy đổi điện áp: `V_in = raw18 × 12.247 µV / 76`, tức **0.161 µV** m
 
 Một lần đọc có thể trả về nhiều hơn 9 mẫu: firmware đóng một gói mỗi khi đủ 9 mẫu và giữ mẫu lẻ cho lần sau, không mất mẫu.
 
-### PPG: nhịp tim và SpO2 (`sensor_manager.c`)
+### PPG: nhịp tim và SpO2 (`wearable_config.h`, mục 5)
 
 | Macro | Mặc định | Ý nghĩa |
 |---|---|---|
@@ -407,9 +408,9 @@ Một lần đọc có thể trả về nhiều hơn 9 mẫu: firmware đóng m�
 
 Thuật toán nhịp tim và SpO2 là heuristic, chưa hiệu chuẩn với máy đo chuẩn.
 
-### Chẩn đoán nhiễu ECG (`ecg_diag.h`)
+### Chẩn đoán nhiễu ECG (`wearable_config.h`, mục 1)
 
-Dùng để tìm nguồn của nhiễu tuần hoàn khoảng 20 Hz trên tín hiệu ECG. Mỗi switch chỉ đổi **một** yếu tố; mỗi lần đo chỉ đổi một switch rồi so sánh log.
+Dùng để tìm nguồn của nhiễu tuần hoàn khoảng 20 Hz trên tín hiệu ECG. Các switch chỉ có tác dụng khi `ENABLE_TEST = 1`; với `ENABLE_TEST = 0` firmware luôn dùng giá trị production trong bảng. Mỗi switch chỉ đổi **một** yếu tố; mỗi lần đo chỉ đổi một switch rồi so sánh log.
 
 | Macro | Production | Ý nghĩa và cách dùng |
 |---|---|---|
@@ -464,18 +465,19 @@ Layout chi tiết, lệnh mailbox và các hạn chế còn lại (mailbox cần
 
 Thiết bị chạy LoRaWAN **OTAA, Class A** trên SX1262 bằng thư viện [LoRa Basics Modem](https://github.com/Lora-net/SWL2001) (LBM) v4.9.0 của Semtech, tương ứng LoRaWAN L2 1.0.4 và Regional Parameters RP002-1.0.3. Vùng tần số đang dùng: **AS923-2**.
 
-> **LoRaWAN không tự chạy.** SX1262 bị giữ ở reset cho tới khi webapp gửi lệnh BLE LoRa join (`0x0F`, màn hình *LoRa* của webapp). Sau khi join, mặc định **không** có uplink định kỳ (`LBM_UPLINK_PERIOD_S = 0`): uplink chỉ đi theo lệnh `0x10` hoặc khi nhấn nút SOS. Công suất phát bị giới hạn ở `0` dBm (`LBM_TX_POWER_MAX_DBM`, đổi lúc chạy bằng `0x12`). Build với `LBM_APP_ENABLE = 0` (trong `Application/LoRaWAN/lbm_app.h`) thì bỏ hẳn LoRa: các lệnh LoRa trả "not built".
+> **LoRaWAN không tự chạy.** SX1262 bị giữ ở reset cho tới khi webapp gửi lệnh BLE LoRa join (`0x0F`, màn hình *LoRa* của webapp). Sau khi join, mặc định **không** có uplink định kỳ (`LBM_UPLINK_PERIOD_S = 0`): uplink chỉ đi theo lệnh `0x10` hoặc khi nhấn nút SOS. Công suất phát bị giới hạn ở `0` dBm (`LBM_TX_POWER_MAX_DBM`, đổi lúc chạy bằng `0x12`). Build với `LBM_APP_ENABLE = 0` (trong `Application/wearable_config.h`) thì bỏ hẳn LoRa: các lệnh LoRa trả "not built".
 
 ### Vị trí code
 
 | Đường dẫn | Nội dung |
 |---|---|
-| `Application/LoRaWAN/lbm_config.h` | **Toàn bộ thông số cấu hình** (xem bảng bên dưới) |
+| `Application/wearable_config.h` (mục 6) | **Toàn bộ thông số cấu hình** (xem bảng bên dưới) |
+| `Application/LoRaWAN/lbm_config.h` | Gom cấu hình từ `wearable_config.h` và key từ `lbm_credentials.h` cho port LBM |
 | `Application/LoRaWAN/lbm_credentials.h` | DevEUI, JoinEUI, AppKey. Bản trong Git là mẫu toàn số 0, không commit key thật |
 | `Application/LoRaWAN/lbm_app.c` | Luồng ứng dụng: join, uplink định kỳ, nút SOS |
 | `Application/LoRaWAN/*_wb09.c` | Port cho WB09: timer, SPI3 với SX1262, cấu hình TCXO/PA |
 | `ThirdParty/LBM/lbm_lib/` | Thư viện LBM của Semtech, không sửa |
-| `Application/LoRaTest/` | Chương trình test radio độc lập, bật bằng `LORA_TEST_ENABLE` trong `lora_test.h` (mặc định tắt, không chạy cùng LBM) |
+| `Application/LoRaTest/` | Chương trình test radio độc lập, bật bằng `ENABLE_TEST = 1` và `LORA_TEST_ENABLE = 1` trong `wearable_config.h` (mặc định tắt, cần `LBM_APP_ENABLE = 0`) |
 
 Chân kết nối SX1262: SPI3 (SCK PB3, MISO PA8, MOSI PA11), NSS PA9, NRESET PB15, BUSY PB14, DIO1 PA1.
 
@@ -489,11 +491,11 @@ Chân kết nối SX1262: SPI3 (SCK PB3, MISO PA8, MOSI PA11), NSS PA9, NRESET P
 
 ### Cấu hình thông số
 
-Sửa trong `Application/LoRaWAN/lbm_config.h`, sau đó build lại và nạp.
+Sửa trong `Application/wearable_config.h` (mục 6), sau đó build lại và nạp.
 
 | Macro | Mặc định | Ý nghĩa |
 |---|---|---|
-| `LBM_APP_ENABLE` (trong `lbm_app.h`) | `1` | `0`: không có LoRa, SX1262 giữ ở reset. `1`: có LoRa, nhưng chỉ khởi động khi nhận lệnh BLE `0x0F` |
+| `LBM_APP_ENABLE` | `1` | `0`: không có LoRa, SX1262 giữ ở reset. `1`: có LoRa, nhưng chỉ khởi động khi nhận lệnh BLE `0x0F` |
 | `LBM_TX_POWER_MAX_DBM` | `0` | Giới hạn công suất phát của SX1262 (dBm, `-9`..`22`), áp sau yêu cầu của vùng (AS923 xin 14 dBm). Dòng phát xấp xỉ: 41 mA ở 0 dBm, 54 mA ở 5 dBm, 89 mA ở 14 dBm. Đổi lúc chạy bằng lệnh `0x12` |
 | `LBM_REGION` | `SMTC_MODEM_REGION_AS_923_GRP2` | Nhóm tần số. AS923-1 là `..._GRP1`, AS923-3 là `..._GRP3` (đồng thời gateway phải khớp) |
 | `LBM_UPLINK_PORT` | `101` | Cổng của uplink định kỳ |
@@ -637,7 +639,25 @@ Khi debug đừng đặt breakpoint trên đường chạy của LBM: CPU dừng
 
 > Lưu ý: các thư mục output build được loại khỏi Git bằng `.gitignore`.
 
+### Cấu hình build (`Application/wearable_config.h`)
+
+Mọi tham số build mà người dùng có thể chỉnh nằm trong **một file duy nhất**, mỗi macro có comment giải thích:
+
+| Mục | Nội dung |
+|---|---|
+| 1. Tests and diagnostics | `ENABLE_TEST` và mọi switch test/chẩn đoán (`LORA_TEST_ENABLE`, `ECG_DIAG_*`), thông số radio của LoRaTest |
+| 2. Features | `LBM_APP_ENABLE` |
+| 3. Power | Giá trị thanh ghi NEH7100, cầu phân áp supercap, ngưỡng power policy |
+| 4. BLE application | `WEARABLE_SENSOR_PERIOD_MS` |
+| 5. Sensors | Thời gian đo nhiệt độ, chu kỳ dò lại cảm biến, ngưỡng phát hiện đeo QVar, tham số PPG |
+| 6. LoRaWAN | Vùng tần số, uplink, data rate/ADR, SOS, front-end radio |
+
+`ENABLE_TEST` là công tắc tổng: `0` (mặc định, bản production) thì mọi test bị bỏ khỏi bản build và mọi switch chẩn đoán bị ép về giá trị production, bất kể khối test ghi gì. Chỉ khi `ENABLE_TEST = 1` thì các giá trị trong khối `#if ENABLE_TEST` mới có tác dụng.
+
+Không nằm trong file này (có chủ đích): địa chỉ/giá trị thanh ghi của chip, định dạng gói BLE/NFC (app đang decode), cấu hình STM32CubeMX (`Core/Inc/app_conf.h`) và key LoRaWAN (`lbm_credentials.h`).
+
 ## Cập nhật gần đây
+- Gom toàn bộ tham số build vào `Application/wearable_config.h`, thêm công tắc tổng `ENABLE_TEST` cho mọi test/chẩn đoán. Mã máy của bản production không đổi.
 - LoRaWAN: thêm lệnh BLE `0x0F`..`0x13` (join, test uplink, status, TX power, stop) và gói LoRa status `0x20` trên `FE46`; LoRa chỉ chạy khi có lệnh join; bỏ uplink định kỳ mặc định; giới hạn công suất phát ở 0 dBm; task LBM hạ xuống cùng mức ưu tiên với BLE, timeout BUSY từ 1 s xuống 100 ms. Webapp có màn hình *LoRa* để test.
 - Thứ tự khởi động mới: (1) cấu hình PMIC NEH7100 qua I2C trước mọi thứ khác, kể cả radio; (2) khởi tạo BLE và advertising; (3) cảm biến (MAX30208, MAX86150, LIS2DUXS12TR, ADC supercap) chỉ được dò và cấu hình **sau lần kết nối BLE đầu tiên kể từ khi reset**, rồi chờ lệnh `0x01`/`0x06` mới đo; kết nối lại không khởi tạo lại. LoRaWAN mặc định tắt (`LBM_APP_ENABLE`).
 - Tối ưu bộ nhớ: Tăng Stack size lên 6KB chuẩn bị cho các thuật toán xử lý dữ liệu phức tạp (PPG, ECG).

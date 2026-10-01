@@ -14,11 +14,9 @@
 extern "C" {
 #endif
 
-/* Set to 0 to compile the test out without removing the call site in main.c.
- * Off by default now: the LoRa Basics Modem (Application/LoRaWAN) owns the
- * SX1262, and the two must not run together. Set to 1 for radio bring-up
- * debugging (and then disable LBM_App_Init() in main.c). */
-#define LORA_TEST_ENABLE 0
+/* LORA_TEST_ENABLE and the radio settings of this test: wearable_config.h
+ * (only effective with ENABLE_TEST = 1, and needs LBM_APP_ENABLE = 0). */
+#include "../wearable_config.h"
 
 /*
  * This board has no working trace sink: PA1 is DIO1 (not USART1_TX), and

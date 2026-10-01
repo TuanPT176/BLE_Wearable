@@ -11,21 +11,9 @@ extern "C" {
 #define NEH7100_I2C_ADDRESS             0x3CU
 #define NEH7100_REGISTER_COUNT            11U
 
-#define NEH7100_REG00_EXPECTED          0x48U
-#define NEH7100_REG01_EXPECTED          0x67U
-#define NEH7100_REG04_EXPECTED          0x20U
-#define NEH7100_REG05_EXPECTED          0x06U
-
-// Định nghĩa các giá trị cấu hình thanh ghi tương ứng với từng môi trường
-#define CONFIG_FREQ_INDOOR   0x40 // f_max = 512kHz, f_min = 32kHz
-#define CONFIG_BF_INDOOR     0x32 // BF_max = 16x, BF_min = 8x
-
-#define CONFIG_FREQ_OUTDOOR  0x52 // f_max = 1.024MHz, f_min = 128kHz
-#define CONFIG_BF_OUTDOOR    0x20 // BF_max = 8x, BF_min = 2x
-
-// Định nghĩa ngưỡng chuyển đổi môi trường (đơn vị: Micro-Ampe - uA)
-#define THRESHOLD_TO_OUTDOOR  1000.0f // Chuyển sang chế độ ngoài trời nếu dòng > 1000 uA (1 mA)
-#define THRESHOLD_TO_INDOOR    500.0f // Chuyển về chế độ trong nhà nếu dòng < 500 uA (0.5 mA)
+/* NEH7100_REGxx_EXPECTED, the indoor/outdoor profiles and their switching
+ * thresholds: wearable_config.h. */
+#include "../wearable_config.h"
 
 typedef enum {
     ENV_INDOOR,

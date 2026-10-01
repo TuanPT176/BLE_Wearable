@@ -15,11 +15,8 @@
 extern "C" {
 #endif
 
-/* 0 = LoRaWAN not built in: the LoRa CONTROL commands answer "not built",
- * the SX1262 stays held in reset, the SOS button does nothing.
- * 1 = LoRaWAN available, but nothing starts on its own: the join only starts
- * on the BLE command LoRa join (CONTROL 0x0F). */
-#define LBM_APP_ENABLE 1
+/* LBM_APP_ENABLE (LoRaWAN built in or not): wearable_config.h. */
+#include "../wearable_config.h"
 
 /* LBM_App_SendTestUplink() result when the device has not joined yet. */
 #define LBM_APP_NOT_JOINED (-1)

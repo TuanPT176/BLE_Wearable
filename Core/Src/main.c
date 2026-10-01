@@ -25,6 +25,7 @@
 #include "../../Application/LoRaTest/lora_test.h"
 #include "../../Application/LoRaWAN/lbm_app.h"
 #include "../../Application/NEH7100/neh7100.h"
+#include "../../Application/wearable_config.h"
 #include "stm32_lpm.h"
 /* USER CODE END Includes */
 
@@ -40,9 +41,6 @@
 #endif
 #ifndef uADCxCalibrationPoint1_Offset
 #define uADCxCalibrationPoint1_Offset 0
-#endif
-#if LORA_TEST_ENABLE && LBM_APP_ENABLE
-#error "LoRaTest and LBM both drive the SX1262 - never enable both"
 #endif
 /* USER CODE END PD */
 

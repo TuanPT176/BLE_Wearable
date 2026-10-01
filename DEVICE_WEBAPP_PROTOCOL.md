@@ -1025,5 +1025,5 @@ Checklist cho mỗi thay đổi giao thức:
 | Recovery | `Application/DataRecovery/data_recovery_manager.c`, `Application/NFC/nfc_log.c` | `decodeRecoveryData()`, `lib/wearableRepository.ts` |
 | GAP, advertising, bảo mật | `Core/Inc/app_conf.h`, `STM32_BLE/App/app_ble.c` | `BleManager.scan()`, `BleManager.connect()` |
 | NFC mailbox | `Application/NFC/nfc_manager.c`, `nfc_config.h`, `nfc_log.h` | — |
-| LoRaWAN uplink | `Application/LoRaWAN/lbm_app.c`, `lbm_config.h` | — |
+| LoRaWAN uplink | `Application/LoRaWAN/lbm_app.c`, `Application/wearable_config.h` | — |
 | Lệnh test LoRa, gói `FE46` `0x20` | `wearable_app.c`: `WEARABLE_LoraTask()`, `WEARABLE_SendLoraStatus()`; `wearable_data.c`: `WearableData_EncodeLoraStatus()`; `lbm_app.c`: `LBM_App_Join()`… | `LORA_COMMANDS`, `loraCommandPacket()`, `decodeLoraStatus()`, `components/lora-test.tsx` |

@@ -3,11 +3,8 @@
 
 #include <stdint.h>
 
-/* Temporary Threshold Macros (in mV) */
-#define POWER_THRESHOLD_HIGH     2800U
-#define POWER_THRESHOLD_NORMAL   2500U
-#define POWER_THRESHOLD_LOW      2100U
-#define POWER_THRESHOLD_CRITICAL 1800U
+/* POWER_THRESHOLD_* (mV): wearable_config.h. */
+#include "../wearable_config.h"
 
 typedef enum {
   POWER_PROFILE_HIGH = 0,
