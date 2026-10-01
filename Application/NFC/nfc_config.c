@@ -3,6 +3,8 @@
 #include "../../Drivers/ST25DV/st25dv.h"
 #include <string.h>
 
+#define NFC_CONFIG_CRC_OFFSET (NFC_CONFIG_STORED_SIZE - 2)
+
 NFC_Config_t nfc_config;
 
 static uint16_t Calculate_CRC16(const uint8_t *data, uint16_t length)
@@ -26,6 +28,45 @@ static uint16_t Calculate_CRC16(const uint8_t *data, uint16_t length)
     return crc;
 }
 
+static void Config_PutU16(uint8_t *out, uint16_t value)
+{
+    out[0] = (uint8_t)(value & 0xFFU);
+    out[1] = (uint8_t)(value >> 8);
+}
+
+static uint16_t Config_GetU16(const uint8_t *in)
+{
+    return (uint16_t)(in[0] | ((uint16_t)in[1] << 8));
+}
+
+void NFC_Config_Encode(const NFC_Config_t *config, uint8_t out[NFC_CONFIG_STORED_SIZE])
+{
+    memset(out, 0, NFC_CONFIG_STORED_SIZE);
+    out[0] = config->version;
+    Config_PutU16(&out[2], config->hr_interval_s);
+    Config_PutU16(&out[4], config->spo2_interval_s);
+    Config_PutU16(&out[6], config->temp_interval_s);
+    Config_PutU16(&out[8], config->ble_interval_ms);
+    out[10] = config->spo2_threshold;
+    Config_PutU16(&out[12], (uint16_t)config->temp_threshold_centi_c);
+    out[14] = config->power_mode;
+    Config_PutU16(&out[NFC_CONFIG_CRC_OFFSET], Calculate_CRC16(out, NFC_CONFIG_CRC_OFFSET));
+}
+
+bool NFC_Config_Decode(const uint8_t in[NFC_CONFIG_STORED_SIZE], NFC_Config_t *config)
+{
+    config->version = in[0];
+    config->hr_interval_s = Config_GetU16(&in[2]);
+    config->spo2_interval_s = Config_GetU16(&in[4]);
+    config->temp_interval_s = Config_GetU16(&in[6]);
+    config->ble_interval_ms = Config_GetU16(&in[8]);
+    config->spo2_threshold = in[10];
+    config->temp_threshold_centi_c = (int16_t)Config_GetU16(&in[12]);
+    config->power_mode = in[14];
+
+    return Config_GetU16(&in[NFC_CONFIG_CRC_OFFSET]) == Calculate_CRC16(in, NFC_CONFIG_CRC_OFFSET);
+}
+
 void NFC_Config_LoadDefault(void)
 {
     memset(&nfc_config, 0, sizeof(NFC_Config_t));
@@ -37,31 +78,20 @@ void NFC_Config_LoadDefault(void)
     nfc_config.spo2_threshold = 90;
     nfc_config.temp_threshold_centi_c = 3800; // 38.00 C
     nfc_config.power_mode = 0; // Normal
-    
-    nfc_config.crc16 = Calculate_CRC16((uint8_t*)&nfc_config, sizeof(NFC_Config_t) - 2);
 }
 
 bool NFC_Config_Validate(void)
 {
-    if (nfc_config.version != NFC_CONFIG_VERSION)
-    {
-        return false;
-    }
-    
-    uint16_t calculated_crc = Calculate_CRC16((uint8_t*)&nfc_config, sizeof(NFC_Config_t) - 2);
-    if (calculated_crc != nfc_config.crc16)
-    {
-        return false;
-    }
-    
-    return true;
+    return nfc_config.version == NFC_CONFIG_VERSION;
 }
 
 void NFC_Config_Load(void)
 {
-    if (ST25DV_ReadRegister(&st25dv_obj, (uint8_t*)&nfc_config, NFC_CONFIG_EEPROM_ADDR, sizeof(NFC_Config_t)) == 0)
+    uint8_t stored[NFC_CONFIG_STORED_SIZE];
+
+    if (NFC_IO_ReadUserMemory(NFC_CONFIG_EEPROM_ADDR, stored, NFC_CONFIG_STORED_SIZE) == 0)
     {
-        if (!NFC_Config_Validate())
+        if (!NFC_Config_Decode(stored, &nfc_config) || !NFC_Config_Validate())
         {
             NFC_Config_LoadDefault();
             NFC_Config_Save();
@@ -75,9 +105,11 @@ void NFC_Config_Load(void)
 
 bool NFC_Config_Save(void)
 {
-    nfc_config.crc16 = Calculate_CRC16((uint8_t*)&nfc_config, sizeof(NFC_Config_t) - 2);
-    
-    if (ST25DV_WriteRegister(&st25dv_obj, (const uint8_t*)&nfc_config, NFC_CONFIG_EEPROM_ADDR, sizeof(NFC_Config_t)) == 0)
+    uint8_t stored[NFC_CONFIG_STORED_SIZE];
+
+    NFC_Config_Encode(&nfc_config, stored);
+
+    if (NFC_IO_WriteUserMemory(NFC_CONFIG_EEPROM_ADDR, stored, NFC_CONFIG_STORED_SIZE) == 0)
     {
         return true;
     }

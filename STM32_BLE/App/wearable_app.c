@@ -36,6 +36,7 @@
 #include "../../Application/DeviceTime/device_time.h"
 #include "../../Application/DataRecovery/data_recovery_manager.h"
 #include "../../Application/SensorManager/ecg_diag.h"
+#include "../../Application/LoRaWAN/lbm_app.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,7 +57,13 @@ typedef enum
   WEARABLE_CMD_START_BLE_RECOVERY= 0x0B,
   WEARABLE_CMD_STOP_BLE_RECOVERY = 0x0C,
   WEARABLE_CMD_RECOVERY_ACK      = 0x0D,
-  WEARABLE_CMD_RECOVERY_CLEAR    = 0x0E
+  WEARABLE_CMD_RECOVERY_CLEAR    = 0x0E,
+  /* LoRaWAN test; answered on DEBUG_DATA (FE46) with packet 0x20. */
+  WEARABLE_CMD_LORA_JOIN         = 0x0F,
+  WEARABLE_CMD_LORA_UPLINK       = 0x10,
+  WEARABLE_CMD_LORA_STATUS       = 0x11,
+  WEARABLE_CMD_LORA_TX_POWER     = 0x12,
+  WEARABLE_CMD_LORA_LEAVE        = 0x13
 } wearable_command_t;
 
 typedef enum
@@ -146,6 +153,14 @@ static VTIMER_HandleType wearable_sensor_async_timer;
 static VTIMER_HandleType wearable_motion_timer;
 static uint8_t wearable_sensor_snapshot[WEARABLE_SENSOR_PAYLOAD_LENGTH];
 static uint8_t wearable_status_snapshot[WEARABLE_STATUS_PAYLOAD_LENGTH];
+/* Last DEVICE_STATUS handed to the notify path, for WEARABLE_SendStatusIfChanged(). */
+static uint8_t wearable_status_reported[WEARABLE_STATUS_PAYLOAD_LENGTH];
+/* Set by the first BLE connection after a reset; reconnections leave it alone. */
+static bool wearable_first_connection_done;
+/* LoRa CONTROL command waiting for WEARABLE_LoraTask (0 = none). */
+static uint8_t wearable_lora_command;
+static int8_t wearable_lora_param;
+static uint8_t wearable_debug_snapshot[WEARABLE_DEBUG_PAYLOAD_LENGTH];
 static VTIMER_HandleType wearable_ecg_timer;
 static wearable_ecg_packet_t wearable_ecg_pending;
 static uint8_t wearable_ecg_sequence;
@@ -176,6 +191,12 @@ static void WEARABLE_Debug_data_SendNotification(void);
 static void WEARABLE_Recovery_data_SendNotification(void);
 
 /* USER CODE BEGIN PFP */
+static void WEARABLE_FirstConnectionTask(void);
+static void WEARABLE_LoraTask(void);
+#if LBM_APP_ENABLE
+static void WEARABLE_LoraEventCallback(void);
+#endif
+static void WEARABLE_SendLoraStatus(uint8_t command_result);
 static void WEARABLE_SensorTask(void);
 static void WEARABLE_SensorTimerCallback(void *arg);
 static void WEARABLE_SensorAsyncTask(void);
@@ -190,6 +211,7 @@ static void WEARABLE_FillSensorPayload(uint8_t *payload);
 static void WEARABLE_RefreshSensorSnapshot(void);
 static void WEARABLE_RefreshStatusSnapshot(void);
 static void WEARABLE_SendStatus(void);
+static void WEARABLE_SendStatusIfChanged(void);
 static void WEARABLE_EcgTask(void);
 static void WEARABLE_EcgTimerCallback(void *arg);
 static void WEARABLE_StartEcgStream(void);
@@ -394,10 +416,22 @@ void WEARABLE_Notification(WEARABLE_NotificationEvt_t *p_Notification)
           DataRecovery_Clear();
           break;
 
+        case WEARABLE_CMD_LORA_JOIN:
+        case WEARABLE_CMD_LORA_UPLINK:
+        case WEARABLE_CMD_LORA_STATUS:
+        case WEARABLE_CMD_LORA_TX_POWER:
+        case WEARABLE_CMD_LORA_LEAVE:
+          /* Starting the modem runs smtc_modem_init(): not inside a BLE event. */
+          wearable_lora_command = p_Notification->DataTransfered.p_Payload[0];
+          wearable_lora_param = (p_Notification->DataTransfered.Length >= 2U) ?
+                                (int8_t)p_Notification->DataTransfered.p_Payload[1] : 0;
+          UTIL_SEQ_SetTask(1U << CFG_TASK_WEARABLE_LORA_ID, CFG_SEQ_PRIO_1);
+          break;
+
         default:
           WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_INVALID_COMMAND;
           WearableState_Set(WEARABLE_STATE_ERROR);
-          WEARABLE_RefreshStatusSnapshot();
+          WEARABLE_SendStatus();
           APP_DBG_MSG("-- WEARABLE COMMAND: UNSUPPORTED 0x%02X\n",
                       p_Notification->DataTransfered.p_Payload[0]);
           break;
@@ -551,7 +585,12 @@ void WEARABLE_APP_EvtRx(WEARABLE_APP_ConnHandleNotEvt_t *p_Notification)
     case WEARABLE_CONN_HANDLE_EVT :
       WEARABLE_APP_Context.ConnectionHandle = p_Notification->ConnectionHandle;
       /* USER CODE BEGIN Service1_APP_CENTR_CONN_HANDLE_EVT */
-
+      if (!wearable_first_connection_done)
+      {
+        /* Nothing but BLE runs before this point. The bring-up is I2C work,
+         * so it goes to a task instead of running inside this BLE event. */
+        UTIL_SEQ_SetTask(1U << CFG_TASK_WEARABLE_FIRST_CONN_ID, CFG_SEQ_PRIO_0);
+      }
       /* USER CODE END Service1_APP_CENTR_CONN_HANDLE_EVT */
       break;
     case WEARABLE_DISCON_HANDLE_EVT :
@@ -597,17 +636,18 @@ void WEARABLE_APP_Init(void)
   WEARABLE_APP_Context.ResetCounter = 0U;
   WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_NONE;
   WearableState_Init();
-  if (!SensorManager_Init())
-  {
-    WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_INVALID_COMMAND;
-    WearableState_Set(WEARABLE_STATE_ERROR);
-  }
+  /* SensorManager_Init() is not called here: see WEARABLE_FirstConnectionTask(). */
   wearable_sensor_timer.callback = WEARABLE_SensorTimerCallback;
   wearable_sensor_async_timer.callback = WEARABLE_SensorAsyncTimerCallback;
   wearable_motion_timer.callback = WEARABLE_MotionTimerCallback;
   wearable_ecg_timer.callback = WEARABLE_EcgTimerCallback;
   g_ecgDiag.conn_req_status = 0xFFU;
   g_ecgDiag.magic = ECG_DIAG_MAGIC;
+  UTIL_SEQ_RegTask(1U << CFG_TASK_WEARABLE_FIRST_CONN_ID, UTIL_SEQ_RFU, WEARABLE_FirstConnectionTask);
+  UTIL_SEQ_RegTask(1U << CFG_TASK_WEARABLE_LORA_ID, UTIL_SEQ_RFU, WEARABLE_LoraTask);
+#if LBM_APP_ENABLE
+  LBM_App_SetStatusCallback(WEARABLE_LoraEventCallback);
+#endif
   UTIL_SEQ_RegTask(1U << CFG_TASK_WEARABLE_SENSOR_ID, UTIL_SEQ_RFU, WEARABLE_SensorTask);
   UTIL_SEQ_RegTask(1U << CFG_TASK_WEARABLE_SENSOR_ASYNC_ID, UTIL_SEQ_RFU, WEARABLE_SensorAsyncTask);
   UTIL_SEQ_RegTask(1U << CFG_TASK_WEARABLE_MOTION_INT_ID, UTIL_SEQ_RFU, WEARABLE_MotionInterruptTask);
@@ -708,6 +748,7 @@ __USED void WEARABLE_Device_status_SendNotification(void) /* Property Notificati
   /* USER CODE BEGIN Service1Char3_NS_1*/
   WEARABLE_RefreshStatusSnapshot();
   memcpy(a_WEARABLE_UpdateCharData, wearable_status_snapshot, WEARABLE_STATUS_PAYLOAD_LENGTH);
+  memcpy(wearable_status_reported, wearable_status_snapshot, WEARABLE_STATUS_PAYLOAD_LENGTH);
   wearable_notification_data.Length = WEARABLE_STATUS_PAYLOAD_LENGTH;
   if (WEARABLE_APP_Context.Device_status_Notification_Status == Device_status_NOTIFICATION_ON)
   {
@@ -790,6 +831,8 @@ __USED void WEARABLE_Debug_data_SendNotification(void) /* Property Notification 
   wearable_notification_data.Length = 0;
 
   /* USER CODE BEGIN Service1Char6_NS_1*/
+  memcpy(a_WEARABLE_UpdateCharData, wearable_debug_snapshot, WEARABLE_DEBUG_PAYLOAD_LENGTH);
+  wearable_notification_data.Length = WEARABLE_DEBUG_PAYLOAD_LENGTH;
   if (WEARABLE_APP_Context.Debug_data_Notification_Status == Debug_data_NOTIFICATION_ON)
   {
     notification_on_off = Debug_data_NOTIFICATION_ON;
@@ -862,7 +905,9 @@ static void WEARABLE_RefreshStatusSnapshot(void)
   status.measurement_state = (uint8_t)WearableState_Get();
   status.sensor_ready = SensorManager_GetLatestData(&sensor_data) ? 1U : 0U;
   status.error_code = WEARABLE_APP_Context.ErrorCode;
-  temperature_status = SensorManager_GetTemperatureStatus();
+  /* The outcome of the last finished conversion: the live status goes back
+   * to CONVERTING every second and would hide a timeout/bus error. */
+  temperature_status = SensorManager_GetTemperatureResult();
   if (status.error_code == WEARABLE_ERROR_NONE)
   {
     if (temperature_status == SENSOR_TEMPERATURE_NOT_PRESENT)
@@ -888,6 +933,123 @@ static void WEARABLE_RefreshStatusSnapshot(void)
   WearableData_EncodeStatus(&status, wearable_status_snapshot);
 }
 
+/* Runs once, right after the first BLE connection following a reset: only now
+ * are the sensors probed and configured (I2C, ADC). They still measure
+ * nothing until START_MEASUREMENT / ECG_START arrives. Queued at priority 0,
+ * it runs ahead of the BLE stack task (priority 1), i.e. before the central's
+ * first request is served. */
+static void WEARABLE_FirstConnectionTask(void)
+{
+  if (wearable_first_connection_done)
+  {
+    return;
+  }
+  wearable_first_connection_done = true;
+
+  if (!SensorManager_Init())
+  {
+    WEARABLE_APP_Context.ErrorCode = WEARABLE_ERROR_INVALID_COMMAND;
+    WearableState_Set(WEARABLE_STATE_ERROR);
+  }
+  WEARABLE_RefreshSensorSnapshot();
+  WEARABLE_RefreshStatusSnapshot();
+}
+
+/* LoRa CONTROL commands 0x0F-0x13. LoRa never starts on its own: the join
+ * only begins with 0x0F. Every command is answered with packet 0x20 on FE46. */
+static void WEARABLE_LoraTask(void)
+{
+  uint8_t command = wearable_lora_command;
+  uint8_t result = WEARABLE_LORA_RESULT_OK;
+
+  wearable_lora_command = 0U;
+  if (command == 0U)
+  {
+    return;
+  }
+#if LBM_APP_ENABLE
+  int32_t rc = 0;
+
+  switch ((wearable_command_t)command)
+  {
+    case WEARABLE_CMD_LORA_JOIN:
+      rc = LBM_App_Join();
+      break;
+    case WEARABLE_CMD_LORA_UPLINK:
+      rc = LBM_App_SendTestUplink();
+      if (rc == LBM_APP_NOT_JOINED)
+      {
+        result = WEARABLE_LORA_RESULT_NOT_JOINED;
+        rc = 0;
+      }
+      break;
+    case WEARABLE_CMD_LORA_TX_POWER:
+      /* SX1262 high-power PA range. */
+      if ((wearable_lora_param < -9) || (wearable_lora_param > 22))
+      {
+        result = WEARABLE_LORA_RESULT_BAD_PARAM;
+      }
+      else
+      {
+        LBM_App_SetTxPowerMax(wearable_lora_param);
+      }
+      break;
+    case WEARABLE_CMD_LORA_LEAVE:
+      rc = LBM_App_Leave();
+      break;
+    default: /* WEARABLE_CMD_LORA_STATUS */
+      break;
+  }
+  if (rc != 0)
+  {
+    result = WEARABLE_LORA_RESULT_MODEM_ERROR;
+  }
+#else
+  result = WEARABLE_LORA_RESULT_NOT_BUILT;
+#endif
+  WEARABLE_SendLoraStatus(result);
+}
+
+#if LBM_APP_ENABLE
+/* Modem events (join, TX done, ...), LBM task context. */
+static void WEARABLE_LoraEventCallback(void)
+{
+  WEARABLE_SendLoraStatus(WEARABLE_LORA_RESULT_EVENT);
+}
+#endif
+
+static void WEARABLE_SendLoraStatus(uint8_t command_result)
+{
+  wearable_lora_status_t status = {0};
+
+  status.command_result = command_result;
+#if LBM_APP_ENABLE
+  status.state = (uint8_t)g_lbmState;
+  status.tx_power_dbm = LBM_App_GetTxPowerMax();
+  status.last_event = g_lbmLastEvent;
+  status.tx_done_status = g_lbmTxDoneStatus;
+  status.last_rc = (int8_t)g_lbmLastRc;
+  status.uplink_count = (uint16_t)g_lbmUplinkCount;
+  status.event_count = (uint16_t)g_lbmEventCount;
+  status.downlink_count = (uint16_t)g_lbmDownlinkCount;
+  if (g_lbmDiag.magic == LBM_DIAG_MAGIC)
+  {
+    status.init_stage = (uint8_t)g_lbmDiag.init_stage;
+    status.panic_count = (uint16_t)g_lbmDiag.panic_count;
+    status.busy_timeouts = (uint16_t)g_lbmDiag.busy_timeouts;
+    status.spi_errors = (uint16_t)g_lbmDiag.spi_errors;
+  }
+  if (!LBM_App_IsStarted())
+  {
+    status.init_stage = 0U;
+  }
+#else
+  status.state = WEARABLE_LORA_STATE_NOT_BUILT;
+#endif
+  WearableData_EncodeLoraStatus(&status, wearable_debug_snapshot);
+  WEARABLE_Debug_data_SendNotification();
+}
+
 static void WEARABLE_SensorTask(void)
 {
   if (WearableState_AllowsPeriodicMeasurement())
@@ -902,6 +1064,7 @@ static void WEARABLE_SensorTask(void)
   {
     WEARABLE_Sensor_data_SendNotification();
   }
+  WEARABLE_SendStatusIfChanged();
 
   if (WearableState_AllowsPeriodicMeasurement())
   {
@@ -922,14 +1085,28 @@ static void WEARABLE_SensorAsyncTask(void)
     SensorManager_ProcessAsync();
     WEARABLE_RefreshSensorSnapshot();
     WEARABLE_ScheduleSensorAsyncTask();
+    /* A temperature conversion may just have finished or failed. */
+    WEARABLE_SendStatusIfChanged();
   }
 }
 
+/* PB2 = LIS2DUXS12 RES. Runs once per QVar sample (100 Hz) while measuring,
+ * so BLE is only touched when a flag actually changed (wear state, fall). */
 static void WEARABLE_MotionInterruptTask(void)
 {
-  SensorManager_ProcessMotionInterrupt();
+  if (!SensorManager_ProcessMotionInterrupt())
+  {
+    return;
+  }
+
   WEARABLE_ScheduleMotionTimeout();
-  WEARABLE_RefreshStatusSnapshot();
+  WEARABLE_RefreshSensorSnapshot();
+  if ((WEARABLE_APP_Context.ConnectionHandle != 0xFFFFU) &&
+      (WEARABLE_APP_Context.Sensor_data_Notification_Status == Sensor_data_NOTIFICATION_ON))
+  {
+    WEARABLE_Sensor_data_SendNotification();
+  }
+  WEARABLE_SendStatusIfChanged();
 }
 
 static void WEARABLE_MotionTimeoutTask(void)
@@ -982,6 +1159,20 @@ static void WEARABLE_StopSensorAsyncTask(void)
 static void WEARABLE_SendStatus(void)
 {
   WEARABLE_Device_status_SendNotification();
+}
+
+/* DEVICE_STATUS is otherwise only sent after a command. This pushes it when
+ * the state, sensor-ready, error code, power state or flags byte changed on
+ * its own (temperature fault appearing/clearing, wear state); the supercap
+ * voltage alone does not trigger it. */
+static void WEARABLE_SendStatusIfChanged(void)
+{
+  WEARABLE_RefreshStatusSnapshot();
+  if ((memcmp(wearable_status_snapshot, wearable_status_reported, 4U) != 0) ||
+      (wearable_status_snapshot[7] != wearable_status_reported[7]))
+  {
+    WEARABLE_SendStatus();
+  }
 }
 
 static void WEARABLE_EcgTask(void)

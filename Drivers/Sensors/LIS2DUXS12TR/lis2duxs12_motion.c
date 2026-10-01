@@ -12,8 +12,25 @@ static size_t class_rule_count;
 static bool motion_present;
 static bool mlc_loaded;
 static bool event_valid;
+static bool qvar_drdy_enabled;
+static bool mlc_interrupt_armed;
 
 #define LIS2DUXS12_RESET_POLL_MAX_TRIES 50U
+
+/* Board wiring: INT1 is the Qvar electrode, INT2 is unconnected and RES goes
+ * to PB2. Every interrupt source therefore leaves on RES (INT1_ON_RES), as in
+ * ST's lis2duxs12_qvar_read_data.c; routing one to INT1 itself would turn
+ * the electrode pin into an output. */
+static lis2duxs12_motion_result_t LIS2DUXS12_ApplyInterruptRoute(void)
+{
+  lis2duxs12_pin_int_route_t route = {0};
+
+  route.int_on_res = PROPERTY_ENABLE;
+  route.drdy = qvar_drdy_enabled ? PROPERTY_ENABLE : PROPERTY_DISABLE;
+  route.emb_function = mlc_interrupt_armed ? PROPERTY_ENABLE : PROPERTY_DISABLE;
+  return (lis2duxs12_pin_int1_route_set(&motion_context, &route) == 0) ?
+         LIS2DUXS12_MOTION_OK : LIS2DUXS12_MOTION_BUS_ERROR;
+}
 
 static int32_t LIS2DUXS12_MgRound(float_t value)
 {
@@ -58,6 +75,8 @@ lis2duxs12_motion_result_t LIS2DUXS12_MotionInit(I2C_HandleTypeDef *i2c)
   motion_present = false;
   mlc_loaded = false;
   event_valid = false;
+  qvar_drdy_enabled = false;
+  mlc_interrupt_armed = false;
   class_rule_count = 0U;
   if (i2c == NULL)
   {
@@ -84,7 +103,14 @@ lis2duxs12_motion_result_t LIS2DUXS12_MotionInit(I2C_HandleTypeDef *i2c)
   motion_mode.odr = LIS2DUXS12_100Hz_LP;
   motion_mode.fs = LIS2DUXS12_4g;
   motion_mode.bw = LIS2DUXS12_ODR_div_4;
+  /* These values keep PIN_CTRL at its reset state (CS pull-up and INT1/INT2
+   * pull-downs under the chip's control, push-pull), which is what ST's Qvar
+   * example runs with. The driver inverts the three pull fields, so a zeroed
+   * struct would instead cut the CS pull-up and both pull-downs. */
   pin_configuration.int1_int2_push_pull = PROPERTY_ENABLE;
+  pin_configuration.cs_pull_up = PROPERTY_ENABLE;
+  pin_configuration.int1_pull_down = PROPERTY_ENABLE;
+  pin_configuration.int2_pull_down = PROPERTY_ENABLE;
 
   if (lis2duxs12_sw_reset(&motion_context) != 0)
   {
@@ -112,7 +138,12 @@ lis2duxs12_motion_result_t LIS2DUXS12_MotionInit(I2C_HandleTypeDef *i2c)
       (lis2duxs12_mode_set(&motion_context, &motion_mode) != 0) ||
       (lis2duxs12_pin_conf_set(&motion_context, &pin_configuration) != 0) ||
       (lis2duxs12_int_pin_polarity_set(&motion_context,
-                                       LIS2DUXS12_ACTIVE_HIGH) != 0))
+                                       LIS2DUXS12_ACTIVE_HIGH) != 0) ||
+      /* Pulsed (typ. 90 us) so a sample that is not read cannot hold RES
+       * high and starve the rising-edge EXTI on PB2. */
+      (lis2duxs12_data_ready_mode_set(&motion_context,
+                                      LIS2DUXS12_DRDY_PULSED) != 0) ||
+      (LIS2DUXS12_ApplyInterruptRoute() != LIS2DUXS12_MOTION_OK))
   {
     motion_present = false;
     return LIS2DUXS12_MOTION_BUS_ERROR;
@@ -183,7 +214,7 @@ lis2duxs12_motion_result_t LIS2DUXS12_MotionLoadUcf(
 
 lis2duxs12_motion_result_t LIS2DUXS12_MotionArmMlcInterrupt(void)
 {
-  lis2duxs12_pin_int_route_t route = {0};
+  lis2duxs12_motion_result_t result;
   if (!motion_present)
   {
     return LIS2DUXS12_MOTION_NOT_PRESENT;
@@ -192,9 +223,18 @@ lis2duxs12_motion_result_t LIS2DUXS12_MotionArmMlcInterrupt(void)
   {
     return LIS2DUXS12_MOTION_INVALID_ARGUMENT;
   }
-  route.emb_function = PROPERTY_ENABLE;
-  return (lis2duxs12_pin_int1_route_set(&motion_context, &route) == 0) ?
-         LIS2DUXS12_MOTION_OK : LIS2DUXS12_MOTION_BUS_ERROR;
+  mlc_interrupt_armed = true;
+  result = LIS2DUXS12_ApplyInterruptRoute();
+  if (result != LIS2DUXS12_MOTION_OK)
+  {
+    mlc_interrupt_armed = false;
+  }
+  return result;
+}
+
+bool LIS2DUXS12_MotionIsMlcInterruptArmed(void)
+{
+  return mlc_interrupt_armed;
 }
 
 lis2duxs12_motion_result_t LIS2DUXS12_MotionSetClassRules(
@@ -222,14 +262,18 @@ lis2duxs12_motion_result_t LIS2DUXS12_MotionProcessInterrupt(void)
   {
     return LIS2DUXS12_MOTION_NOT_PRESENT;
   }
-  if ((lis2duxs12_mlc_status_get(&motion_context, &status) != 0) ||
-      (LIS2DUXS12_MotionReadAcceleration(&acceleration) != LIS2DUXS12_MOTION_OK))
+  if (lis2duxs12_mlc_status_get(&motion_context, &status) != 0)
   {
     return LIS2DUXS12_MOTION_BUS_ERROR;
   }
+  if (LIS2DUXS12_MlcStatusToMask(&status) == 0U)
+  {
+    /* RES is shared with the Qvar data-ready pulses: not an MLC event. */
+    return LIS2DUXS12_MOTION_OK;
+  }
   latest_event.mlc_status = LIS2DUXS12_MlcStatusToMask(&status);
-  if ((latest_event.mlc_status != 0U) &&
-      (lis2duxs12_mlc_out_get(&motion_context, latest_event.mlc_output) != 0))
+  if ((lis2duxs12_mlc_out_get(&motion_context, latest_event.mlc_output) != 0) ||
+      (LIS2DUXS12_MotionReadAcceleration(&acceleration) != LIS2DUXS12_MOTION_OK))
   {
     return LIS2DUXS12_MOTION_BUS_ERROR;
   }
@@ -280,10 +324,28 @@ lis2duxs12_motion_result_t LIS2DUXS12_MotionConfigureQvar(
          LIS2DUXS12_MOTION_OK : LIS2DUXS12_MOTION_BUS_ERROR;
 }
 
+lis2duxs12_motion_result_t LIS2DUXS12_MotionSetQvarDataReadyInterrupt(bool enable)
+{
+  lis2duxs12_motion_result_t result;
+  bool previous = qvar_drdy_enabled;
+
+  if (!motion_present)
+  {
+    return LIS2DUXS12_MOTION_NOT_PRESENT;
+  }
+  qvar_drdy_enabled = enable;
+  result = LIS2DUXS12_ApplyInterruptRoute();
+  if (result != LIS2DUXS12_MOTION_OK)
+  {
+    qvar_drdy_enabled = previous;
+  }
+  return result;
+}
+
 lis2duxs12_motion_result_t LIS2DUXS12_MotionInitQvar(void)
 {
-  /* Only one AH_QVAR electrode pin is wired on this board (the other,
-   * unrelated INT2, is intentionally left floating). ST's own example
+  /* Only one AH_QVAR electrode pin is wired on this board (INT1; the second
+   * Qvar input, INT2, is left floating). ST's own example
    * (lis2duxs12_qvar_read_data.c) defaults to 520MOhm/0.5x gain; kept here
    * to match that known-good reference starting point. */
   return LIS2DUXS12_MotionConfigureQvar(true, LIS2DUXS12_GAIN_0_5, LIS2DUXS12_520MOhm);

@@ -47,7 +47,10 @@
 #include "main.h"
 #include "lbm_app.h"
 
-#define RADIO_BUSY_TIMEOUT_MS 1000u
+/* BUSY normally drops within a few ms (calibration, TCXO start-up). Every ms
+ * spent here holds the main loop and with it the BLE host, so a radio that
+ * never answers must be given up on quickly. */
+#define RADIO_BUSY_TIMEOUT_MS 100u
 #define RADIO_SPI_TIMEOUT_MS  1000u
 #define RADIO_SPI_CHUNK       128u
 

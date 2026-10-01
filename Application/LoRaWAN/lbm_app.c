@@ -46,6 +46,9 @@ volatile int32_t     g_lbmSosLastRc;
 
 #define LBM_SOS_EVENT_SOS 0x01u /* first payload byte of an SOS uplink */
 
+static volatile bool s_taskRegistered;
+static int8_t        s_txPowerMaxDbm = LBM_TX_POWER_MAX_DBM;
+static void        (*s_statusCallback)(void);
 static volatile bool s_appInitDone;
 static bool          s_sosSeen;
 static uint32_t      s_sosLastTickMs;
@@ -75,17 +78,21 @@ static bool s_check(smtc_modem_return_code_t rc)
   return true;
 }
 
-static void s_sendUplink(void)
+/* One unconfirmed counter uplink on LBM_UPLINK_PORT. */
+static smtc_modem_return_code_t s_sendUplink(void)
 {
   uint32_t n = g_lbmUplinkCount;
   uint8_t payload[4] = {
     (uint8_t)(n >> 24), (uint8_t)(n >> 16), (uint8_t)(n >> 8), (uint8_t)n
   };
+  smtc_modem_return_code_t rc =
+      smtc_modem_request_uplink(LBM_STACK_ID, LBM_UPLINK_PORT, false, payload, sizeof(payload));
 
-  if (s_check(smtc_modem_request_uplink(LBM_STACK_ID, LBM_UPLINK_PORT, false, payload, sizeof(payload))))
+  if (rc == SMTC_MODEM_RC_OK)
   {
     g_lbmUplinkCount++;
   }
+  return rc;
 }
 
 /* Sends the pending SOS as an emergency uplink once the device is joined. A
@@ -208,8 +215,10 @@ static void s_onModemEvent(void)
           g_lbmState = LBM_STATE_JOINED; /* a rejected ADR setting must not stop the uplinks; see g_lbmLastRc */
         }
         s_trySendSos(); /* a button press made before the join */
-        s_sendUplink();
+#if (LBM_UPLINK_PERIOD_S != 0u)
+        (void)s_check(s_sendUplink());
         (void)s_check(smtc_modem_alarm_start_timer(LBM_FIRST_UPLINK_DELAY_S));
+#endif
         break;
 
       case SMTC_MODEM_EVENT_JOINFAIL:
@@ -217,8 +226,10 @@ static void s_onModemEvent(void)
         break;
 
       case SMTC_MODEM_EVENT_ALARM:
-        s_sendUplink();
+#if (LBM_UPLINK_PERIOD_S != 0u)
+        (void)s_check(s_sendUplink());
         (void)s_check(smtc_modem_alarm_start_timer(LBM_UPLINK_PERIOD_S));
+#endif
         break;
 
       case SMTC_MODEM_EVENT_TXDONE:
@@ -245,6 +256,11 @@ static void s_onModemEvent(void)
         break;
     }
   } while (pending > 0u);
+
+  if (s_statusCallback != NULL)
+  {
+    s_statusCallback();
+  }
 }
 
 static void LBM_Task(void)
@@ -255,7 +271,7 @@ static void LBM_Task(void)
 
   if (smtc_modem_is_irq_flag_pending())
   {
-    UTIL_SEQ_SetTask(1U << CFG_TASK_LBM_ID, CFG_SEQ_PRIO_0);
+    UTIL_SEQ_SetTask(1U << CFG_TASK_LBM_ID, CFG_SEQ_PRIO_1);
   }
   else
   {
@@ -279,11 +295,115 @@ void LBM_App_Init(void)
   UTIL_LPM_SetOffMode(1U << CFG_LPM_LBM, UTIL_LPM_DISABLE);
 
   UTIL_SEQ_RegTask(1U << CFG_TASK_LBM_ID, UTIL_SEQ_RFU, LBM_Task);
+  s_taskRegistered = true;
   g_lbmDiag.init_stage = 1;
   smtc_modem_init(&s_onModemEvent);
   g_lbmDiag.init_stage = 2;
   s_appInitDone = true;
-  UTIL_SEQ_SetTask(1U << CFG_TASK_LBM_ID, CFG_SEQ_PRIO_0);
+  UTIL_SEQ_SetTask(1U << CFG_TASK_LBM_ID, CFG_SEQ_PRIO_1);
+}
+
+bool LBM_App_IsStarted(void)
+{
+  return s_taskRegistered;
+}
+
+void LBM_App_SetStatusCallback(void (*callback)(void))
+{
+  s_statusCallback = callback;
+}
+
+void LBM_App_SetTxPowerMax(int8_t dbm)
+{
+  s_txPowerMaxDbm = dbm;
+}
+
+int8_t LBM_App_GetTxPowerMax(void)
+{
+  return s_txPowerMaxDbm;
+}
+
+int32_t LBM_App_Join(void)
+{
+  smtc_modem_return_code_t rc;
+
+  if (!s_taskRegistered)
+  {
+    LBM_App_Init(); /* the join starts from the modem RESET event */
+    return (int32_t)SMTC_MODEM_RC_OK;
+  }
+  /* After JOINFAIL LBM schedules the next attempt itself, so that state is
+   * still a join in progress. */
+  if ((g_lbmState == LBM_STATE_JOINING) || (g_lbmState == LBM_STATE_JOINED) ||
+      (g_lbmState == LBM_STATE_JOIN_FAILED))
+  {
+    return (int32_t)SMTC_MODEM_RC_OK;
+  }
+  if (g_lbmState == LBM_STATE_NO_CREDENTIALS)
+  {
+    g_lbmLastRc = (int32_t)SMTC_MODEM_RC_INVALID;
+    return (int32_t)SMTC_MODEM_RC_INVALID;
+  }
+
+  /* After LBM_App_Leave(): credentials and region are still set. */
+  rc = smtc_modem_join_network(LBM_STACK_ID);
+  if (rc == SMTC_MODEM_RC_OK)
+  {
+    g_lbmState = LBM_STATE_JOINING;
+    UTIL_SEQ_SetTask(1U << CFG_TASK_LBM_ID, CFG_SEQ_PRIO_1);
+  }
+  else
+  {
+    g_lbmLastRc = (int32_t)rc;
+  }
+  return (int32_t)rc;
+}
+
+int32_t LBM_App_SendTestUplink(void)
+{
+  smtc_modem_status_mask_t status = 0;
+  smtc_modem_return_code_t rc;
+
+  if (!s_appInitDone ||
+      (smtc_modem_get_status(LBM_STACK_ID, &status) != SMTC_MODEM_RC_OK) ||
+      ((status & SMTC_MODEM_STATUS_JOINED) == 0u))
+  {
+    return LBM_APP_NOT_JOINED;
+  }
+
+  /* Same payload and port as the periodic uplink, so the TTS formatter decodes
+   * it. A refusal (duty cycle, modem busy) does not move g_lbmState to ERROR. */
+  rc = s_sendUplink();
+  if (rc == SMTC_MODEM_RC_OK)
+  {
+    UTIL_SEQ_SetTask(1U << CFG_TASK_LBM_ID, CFG_SEQ_PRIO_1);
+  }
+  else
+  {
+    g_lbmLastRc = (int32_t)rc;
+  }
+  return (int32_t)rc;
+}
+
+int32_t LBM_App_Leave(void)
+{
+  smtc_modem_return_code_t rc;
+
+  if (!s_appInitDone)
+  {
+    return (int32_t)SMTC_MODEM_RC_OK;
+  }
+  (void)smtc_modem_alarm_clear_timer();
+  rc = smtc_modem_leave_network(LBM_STACK_ID);
+  if (rc == SMTC_MODEM_RC_OK)
+  {
+    g_lbmState = LBM_STATE_IDLE; /* the radio planner leaves the SX1262 asleep */
+  }
+  else
+  {
+    g_lbmLastRc = (int32_t)rc;
+  }
+  return (int32_t)rc;
 }
 
 void LBM_App_SosButtonIrq(void)
@@ -303,5 +423,5 @@ void LBM_App_SosButtonIrq(void)
 
   g_lbmSosPressCount++;
   g_lbmSosPending = 1;
-  UTIL_SEQ_SetTask(1U << CFG_TASK_LBM_ID, CFG_SEQ_PRIO_0);
+  UTIL_SEQ_SetTask(1U << CFG_TASK_LBM_ID, CFG_SEQ_PRIO_1);
 }
