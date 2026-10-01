@@ -592,7 +592,7 @@ Gói duy nhất firmware hiện gửi trên `FE46` (notify). Trả lời các l�
 | 2 | `int8` | TX power cap | dBm, giới hạn công suất phát của SX1262 |
 | 3 | `uint8` | Sự kiện modem gần nhất | `0` reset, `1` alarm, `2` joined, `3` TX done, `4` downlink, `5` join fail. Chỉ có nghĩa khi byte `10–11` > 0 |
 | 4 | `uint8` | Kết quả TX gần nhất | `0` chưa gửi, `1` đã gửi, `2` có ACK |
-| 5 | `int8` | Mã lỗi LBM gần nhất | `smtc_modem_return_code_t`: `0` OK, `1` not init, `2` invalid, `3` busy, `4` fail, `5` no time |
+| 5 | `int8` | Mã lỗi LBM gần nhất | `smtc_modem_return_code_t`: `0` OK, `1` not init, `2` invalid, `3` busy, `4` fail, `5` no time, `6` invalid stack ID, `7` no event |
 | 6 | `uint8` | Kết quả lệnh | `0x00` OK, `0x01` firmware không có LoRa, `0x02` chưa join (cho `0x10`), `0x03` LBM từ chối (xem byte 5), `0x04` TX power ngoài `-9`…`22`, `0xFF` không phải trả lời lệnh mà là một sự kiện modem |
 | 7 | `uint8` | Modem | `0` chưa khởi động, `1` đang trong `smtc_modem_init()`, `2` đã khởi động |
 | 8–9 | `uint16` LE | Số uplink đã yêu cầu | |
