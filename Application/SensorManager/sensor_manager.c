@@ -4,7 +4,6 @@
 #include <math.h>
 
 #include "main.h"
-#include "../NEH7100/neh7100.h"
 #include "../../Drivers/max30208.h"
 #include "../../Drivers/supercap_monitor.h"
 #include "../../Drivers/Sensors/LIS2DUXS12TR/lis2duxs12_motion.h"
@@ -93,27 +92,39 @@
 #define OPTICAL_BEAT_HISTORY_LEN           4U
 #define OPTICAL_SPO2_WINDOW_DRAINS         5U   /* ~1s of samples before recomputing SpO2 */
 
-/* QVar (LIS2DUXS12TR AH_QVAR channel) wear detection.
- * On real hardware the raw channel previously sat on a large, erratic offset
- * (tens of thousands of LSB) regardless of touch - later traced to
- * lis2duxs12_motion.c using an older register-driver snapshot whose
- * ah_qvar_data_get() read OUT_T_AH_QVAR_L/H directly, instead of priming the
- * read by first reading the preceding OUT_Z_H register in the same I2C
- * burst (what the chip needs to latch a coherent QVar sample - see ST's own
- * lis2duxs12_reg.c). That has since been fixed by switching to ST's current
- * official lis2duxs12-pid driver. This baseline-relative deviation check is
- * kept anyway as a robustness measure (the channel may still carry a
- * nonzero DC offset even when read correctly), but ALPHA/THRESHOLD are a
- * first guess, not calibrated against a real touch/release capture - expect
- * to retune once you have one with clearly marked touch vs release
- * segments. */
-#define QVAR_BASELINE_ALPHA              0.05f
-#define QVAR_WEAR_DEVIATION_THRESHOLD  500.0f
+/*
+ * QVar (LIS2DUXS12TR AH_QVAR channel) wear detection.
+ * ---------------------------------------------------
+ * The chip has no threshold interrupt on the QVar channel: only its MLC/FSM
+ * can classify QVar on-chip, and no MLC program is loaded yet. Until then
+ * the classification runs here. While measuring, the chip pulses RES (PB2)
+ * once per output sample (100 Hz ODR, see lis2duxs12_motion.c) and every
+ * sample feeds a window; WEARABLE_FLAG_WEAR_DETECTED follows the window's
+ * peak-to-peak activity with hysteresis and debounce, so it holds the state
+ * instead of only marking touch/release edges. A flag change is returned by
+ * SensorManager_ProcessMotionInterrupt() and notified immediately.
+ *
+ * Skin contact couples body-borne interference and motion artefacts into
+ * the electrode, an open electrode stays quiet - that is the assumption
+ * behind using activity rather than the DC level, whose sign and offset are
+ * board-specific. The thresholds are a first guess (roughly 16 mV / 8 mV at
+ * the 0.5x gain, ~37 LSB/mV), not calibrated: capture g_qvarDiag worn and
+ * not worn and retune.
+ *
+ * The stream is off during an ECG session (no extra I2C traffic next to the
+ * ECG drain task); the wear flag is frozen and only the 1 Hz raw value keeps
+ * updating.
+ */
+#define QVAR_WINDOW_SAMPLES       100U  /* ~1 s at the 100 Hz ODR */
+#define QVAR_WORN_ENTER_P2P       600U  /* raw LSB, window peak-to-peak */
+#define QVAR_WORN_EXIT_P2P        300U
+#define QVAR_DEBOUNCE_WINDOWS       2U  /* consecutive windows to switch */
 
 static wearable_sensor_data_t latest_data;
 static bool initialized;
 static bool running;
 static sensor_temperature_status_t temperature_status;
+static sensor_temperature_status_t temperature_result;
 static sensor_motion_status_t motion_status;
 static sensor_optical_status_t optical_status;
 static uint32_t temperature_conversion_elapsed_ms;
@@ -122,8 +133,16 @@ static uint32_t temperature_reprobe_calls;
 static uint32_t motion_reprobe_calls;
 static uint32_t optical_reprobe_calls;
 static uint32_t motion_delay_ms;
-static float qvar_baseline;
-static bool qvar_baseline_ready;
+static uint32_t motion_last_event_sequence;
+static bool qvar_stream_active;
+static uint32_t qvar_stream_samples;
+static uint32_t qvar_samples_at_last_poll;
+static int16_t qvar_window_min;
+static int16_t qvar_window_max;
+static int32_t qvar_window_sum;
+static uint16_t qvar_window_count;
+static uint8_t qvar_debounce_windows;
+volatile sensor_qvar_diag_t g_qvarDiag;
 
 static max86150_optical_t optical_device;
 static bool optical_baseline_ready;
@@ -198,6 +217,7 @@ static void SensorManager_StartTemperatureConversion(void)
   {
     temperature_async_delay_ms = 0U;
     temperature_status = SENSOR_TEMPERATURE_BUS_ERROR;
+    temperature_result = SENSOR_TEMPERATURE_BUS_ERROR;
   }
 }
 
@@ -225,75 +245,125 @@ static void SensorManager_DebugScanI2CBus(void)
   }
 }
 
-static void SensorManager_QvarResetBaseline(void)
+static void SensorManager_QvarResetWindow(void)
 {
-  qvar_baseline_ready = false;
+  qvar_window_count = 0U;
+  qvar_window_sum = 0;
+  qvar_debounce_windows = 0U;
 }
 
-/*
- * Software-only QVar diagnostic - no multimeter/scope needed, just read the
- * UART debug log. Two checks:
- *
- * 1) AH_QVAR disabled: OUT_T_AH_QVAR_L/H then reports plain ambient
- *    temperature (raw/355.5 + 25 = deg C), a small number - nowhere near the
- *    ~32000 seen with AH_QVAR enabled. If this ALSO reads ~32000, the fault
- *    is upstream of the analog front-end (register write not taking effect,
- *    stuck I2C value, wrong register), not the QVar circuit itself.
- * 2) Gain sweep 0.5x/1x/2x/4x at the lowest (most stable) input impedance:
- *    a genuine analog signal should scale roughly with gain. If the reading
- *    stays flat/unrelated across gains, that points at a stuck value or
- *    hardware fault rather than a real (if noisy) analog signal.
- *
- * Restores the normal operating config (ST's own reference default: gain
- * 0.5x, 520MOhm, enabled - see lis2duxs12_qvar_read_data.c) and resets the
- * wear baseline before returning.
- */
-static void SensorManager_QvarSelfTest(void)
+/* Any LIS2DUXS12 I2C failure ends up here: Process() re-probes the chip on
+ * its MOTION_REPROBE_INTERVAL_CALLS cycle. The wear flag keeps its last
+ * state meanwhile, so a bus glitch is not reported as a wear change. */
+static void SensorManager_MotionBusError(void)
 {
-  int16_t qvar_raw;
-  uint8_t i;
-  static const lis2duxs12_ah_qvar_gain_t gains[4] = {
-    LIS2DUXS12_GAIN_0_5, LIS2DUXS12_GAIN_1, LIS2DUXS12_GAIN_2, LIS2DUXS12_GAIN_4
-  };
-  static const uint16_t gain_x10[4] = { 5U, 10U, 20U, 40U };
-  uint8_t g;
+  motion_status = SENSOR_MOTION_BUS_ERROR;
+  motion_reprobe_calls = 0U;
+  qvar_stream_active = false;
+  g_qvarDiag.stream_active = 0U;
+  g_qvarDiag.bus_errors++;
+}
 
-  APP_DBG_MSG("== QVar self-test start ==\n");
-
-  if (LIS2DUXS12_MotionConfigureQvar(false, LIS2DUXS12_GAIN_1, LIS2DUXS12_75MOhm) ==
-      LIS2DUXS12_MOTION_OK)
+static void SensorManager_QvarStreamStart(void)
+{
+  SensorManager_QvarResetWindow();
+  if (LIS2DUXS12_MotionSetQvarDataReadyInterrupt(true) == LIS2DUXS12_MOTION_OK)
   {
-    HAL_Delay(50U);
-    for (i = 0U; i < 3U; i++)
-    {
-      if (LIS2DUXS12_MotionReadQvar(&qvar_raw) == LIS2DUXS12_MOTION_OK)
-      {
-        APP_DBG_MSG("   AH_QVAR disabled (expect small, temperature-like): raw #%u = %d\n",
-                    (unsigned int)i, (int)qvar_raw);
-      }
-      HAL_Delay(20U);
-    }
+    qvar_stream_active = true;
+    g_qvarDiag.stream_active = 1U;
+  }
+  else
+  {
+    SensorManager_MotionBusError();
+  }
+}
+
+static void SensorManager_QvarStreamStop(void)
+{
+  if (qvar_stream_active)
+  {
+    (void)LIS2DUXS12_MotionSetQvarDataReadyInterrupt(false);
+  }
+  qvar_stream_active = false;
+  g_qvarDiag.stream_active = 0U;
+}
+
+/* Feeds one stream sample to the wear detector. Returns true when
+ * WEARABLE_FLAG_WEAR_DETECTED changed. */
+static bool SensorManager_QvarProcessSample(int16_t qvar_raw)
+{
+  bool worn = (latest_data.flags & WEARABLE_FLAG_WEAR_DETECTED) != 0U;
+  uint32_t peak_to_peak;
+
+  latest_data.qvar_raw = qvar_raw;
+  if ((qvar_window_count == 0U) || (qvar_raw < qvar_window_min))
+  {
+    qvar_window_min = qvar_raw;
+  }
+  if ((qvar_window_count == 0U) || (qvar_raw > qvar_window_max))
+  {
+    qvar_window_max = qvar_raw;
+  }
+  qvar_window_sum += qvar_raw;
+  qvar_window_count++;
+  if (qvar_window_count < QVAR_WINDOW_SAMPLES)
+  {
+    return false;
   }
 
-  for (g = 0U; g < 4U; g++)
+  peak_to_peak = (uint32_t)((int32_t)qvar_window_max - (int32_t)qvar_window_min);
+  g_qvarDiag.windows++;
+  g_qvarDiag.last_peak_to_peak = (uint16_t)peak_to_peak;
+  g_qvarDiag.last_mean = (int16_t)(qvar_window_sum / (int32_t)qvar_window_count);
+  g_qvarDiag.last_min = qvar_window_min;
+  g_qvarDiag.last_max = qvar_window_max;
+  qvar_window_count = 0U;
+  qvar_window_sum = 0;
+
+  if (worn ? (peak_to_peak <= QVAR_WORN_EXIT_P2P) :
+             (peak_to_peak >= QVAR_WORN_ENTER_P2P))
   {
-    if (LIS2DUXS12_MotionConfigureQvar(true, gains[g], LIS2DUXS12_75MOhm) ==
-        LIS2DUXS12_MOTION_OK)
-    {
-      HAL_Delay(100U);
-      if (LIS2DUXS12_MotionReadQvar(&qvar_raw) == LIS2DUXS12_MOTION_OK)
-      {
-        APP_DBG_MSG("   AH_QVAR gain=%u.%ux: raw = %d\n",
-                    (unsigned int)(gain_x10[g] / 10U),
-                    (unsigned int)(gain_x10[g] % 10U), (int)qvar_raw);
-      }
-    }
+    qvar_debounce_windows++;
+  }
+  else
+  {
+    qvar_debounce_windows = 0U;
+  }
+  if (qvar_debounce_windows < QVAR_DEBOUNCE_WINDOWS)
+  {
+    return false;
   }
 
-  APP_DBG_MSG("== QVar self-test end ==\n");
+  qvar_debounce_windows = 0U;
+  SensorManager_SetFlag(WEARABLE_FLAG_WEAR_DETECTED, !worn);
+  g_qvarDiag.worn = worn ? 0U : 1U;
+  g_qvarDiag.state_changes++;
+  return true;
+}
 
-  (void)LIS2DUXS12_MotionInitQvar();
-  SensorManager_QvarResetBaseline();
+/* Probe + configure the LIS2DUXS12 (boot and re-probe). MotionInit() resets
+ * the chip, so QVar and the RES data-ready stream are set up again. */
+static void SensorManager_MotionBringUp(void)
+{
+  qvar_stream_active = false;
+  g_qvarDiag.stream_active = 0U;
+  motion_last_event_sequence = 0U;
+  if (LIS2DUXS12_MotionInit(&hi2c1) != LIS2DUXS12_MOTION_OK)
+  {
+    motion_status = SENSOR_MOTION_NOT_PRESENT;
+    return;
+  }
+  motion_status = SENSOR_MOTION_ACCELEROMETER_READY;
+  if (LIS2DUXS12_MotionInitQvar() != LIS2DUXS12_MOTION_OK)
+  {
+    APP_DBG_MSG("-- LIS2DUXS12TR QVar init FAILED\n");
+    SensorManager_MotionBusError();
+    return;
+  }
+  if (running && (optical_status != SENSOR_OPTICAL_ECG_ACTIVE))
+  {
+    SensorManager_QvarStreamStart();
+  }
 }
 
 static void SensorManager_OpticalResetState(void)
@@ -491,7 +561,9 @@ bool SensorManager_Init(void)
   latest_data.accel_y = 0;
   latest_data.accel_z = 0;
   latest_data.qvar_raw = 0;
-  qvar_baseline_ready = false;
+  SensorManager_QvarResetWindow();
+  qvar_stream_samples = 0U;
+  qvar_samples_at_last_poll = 0U;
   running = false;
   initialized = SupercapMonitor_Init();
   if (initialized)
@@ -499,14 +571,9 @@ bool SensorManager_Init(void)
     latest_data.supercap_mv = SupercapMonitor_ReadMillivolts();
   }
 
-  /* The PMIC is optional for BLE/ADC operation; record presence independently. */
-  if (NEH7100_Init())
-  {
-    (void)NEH7100_EnsureConfig();
-  }
-
   temperature_status = (TempSensor_Init() == TEMP_SENSOR_RESULT_OK) ?
                        SENSOR_TEMPERATURE_IDLE : SENSOR_TEMPERATURE_NOT_PRESENT;
+  temperature_result = temperature_status;
   if (temperature_status == SENSOR_TEMPERATURE_IDLE)
   {
     APP_DBG_MSG("-- MAX30208: found at I2C 7-bit addr 0x%02x\n",
@@ -532,12 +599,11 @@ bool SensorManager_Init(void)
     APP_DBG_MSG("-- MAX86150: not present\n");
   }
 
-  motion_status = (LIS2DUXS12_MotionInit(&hi2c1) == LIS2DUXS12_MOTION_OK) ?
-                  SENSOR_MOTION_ACCELEROMETER_READY : SENSOR_MOTION_NOT_PRESENT;
+  SensorManager_MotionBringUp();
   motion_delay_ms = 0U;
   if (motion_status == SENSOR_MOTION_ACCELEROMETER_READY)
   {
-    APP_DBG_MSG("-- LIS2DUXS12TR: WHO_AM_I OK, I2C=0x%02x\n",
+    APP_DBG_MSG("-- LIS2DUXS12TR: WHO_AM_I OK, I2C=0x%02x, QVar on INT1, IRQ on RES\n",
                 (unsigned int)(LIS2DUXS12_MotionGetHalAddress() >> 1U));
     if (LIS2DUXS12_MotionReadAcceleration(&acceleration) ==
         LIS2DUXS12_MOTION_OK)
@@ -546,17 +612,6 @@ bool SensorManager_Init(void)
                   (long)acceleration.mg[0],
                   (long)acceleration.mg[1],
                   (long)acceleration.mg[2]);
-    }
-    
-    if (LIS2DUXS12_MotionInitQvar() == LIS2DUXS12_MOTION_OK)
-    {
-      SensorManager_QvarResetBaseline();
-      APP_DBG_MSG("-- LIS2DUXS12TR QVar initialized on INT1\n");
-      SensorManager_QvarSelfTest();
-    }
-    else
-    {
-      APP_DBG_MSG("-- LIS2DUXS12TR QVar init FAILED\n");
     }
   }
   else
@@ -579,6 +634,12 @@ bool SensorManager_Start(void)
   }
   running = true;
   SensorManager_StartTemperatureConversion();
+
+  if ((motion_status == SENSOR_MOTION_ACCELEROMETER_READY) ||
+      (motion_status == SENSOR_MOTION_CLASSIFIER_READY))
+  {
+    SensorManager_QvarStreamStart();
+  }
 
   /* PPG and ECG share the MAX86150: (re)starting PPG ends any ECG session. */
   SensorManager_SetFlag(WEARABLE_FLAG_ECG_ACTIVE, false);
@@ -608,7 +669,9 @@ bool SensorManager_Stop(void)
   {
     (void)TempSensor_Sleep();
     temperature_status = SENSOR_TEMPERATURE_IDLE;
+    temperature_result = SENSOR_TEMPERATURE_IDLE;
   }
+  SensorManager_QvarStreamStop();
 
   if ((optical_status == SENSOR_OPTICAL_ACTIVE) ||
       (optical_status == SENSOR_OPTICAL_ECG_ACTIVE))
@@ -647,6 +710,7 @@ void SensorManager_Process(void)
       temperature_reprobe_calls = 0U;
       temperature_status = (TempSensor_Init() == TEMP_SENSOR_RESULT_OK) ?
                            SENSOR_TEMPERATURE_IDLE : SENSOR_TEMPERATURE_NOT_PRESENT;
+      temperature_result = temperature_status;
       if (temperature_status == SENSOR_TEMPERATURE_IDLE)
       {
         APP_DBG_MSG("-- MAX30208: recovered at I2C 7-bit addr 0x%02x\n",
@@ -664,20 +728,11 @@ void SensorManager_Process(void)
     if (motion_reprobe_calls >= MOTION_REPROBE_INTERVAL_CALLS)
     {
       motion_reprobe_calls = 0U;
-      motion_status = (LIS2DUXS12_MotionInit(&hi2c1) == LIS2DUXS12_MOTION_OK) ?
-                      SENSOR_MOTION_ACCELEROMETER_READY : SENSOR_MOTION_NOT_PRESENT;
+      SensorManager_MotionBringUp();
       if (motion_status == SENSOR_MOTION_ACCELEROMETER_READY)
       {
         APP_DBG_MSG("-- LIS2DUXS12TR: recovered, I2C=0x%02x\n",
                     (unsigned int)(LIS2DUXS12_MotionGetHalAddress() >> 1U));
-        if (LIS2DUXS12_MotionInitQvar() == LIS2DUXS12_MOTION_OK)
-        {
-          SensorManager_QvarResetBaseline();
-        }
-        else
-        {
-          APP_DBG_MSG("-- LIS2DUXS12TR: QVar init FAILED after recovery\n");
-        }
       }
     }
   }
@@ -686,51 +741,38 @@ void SensorManager_Process(void)
   {
     lis2duxs12_acceleration_t acceleration;
     int16_t qvar_raw = 0;
-    
+
     if (LIS2DUXS12_MotionReadAcceleration(&acceleration) == LIS2DUXS12_MOTION_OK)
     {
       latest_data.accel_x = (int16_t)acceleration.mg[0];
       latest_data.accel_y = (int16_t)acceleration.mg[1];
       latest_data.accel_z = (int16_t)acceleration.mg[2];
     }
-    
-    if (LIS2DUXS12_MotionReadQvar(&qvar_raw) == LIS2DUXS12_MOTION_OK)
-    {
-       float qvar_deviation;
-
-       APP_DBG_MSG("-- QVar raw = %d\n", (int)qvar_raw);
-       latest_data.qvar_raw = qvar_raw;
-
-       /* Wear/no-wear from deviation off a slow-moving baseline, not an
-        * absolute value - see QVAR_BASELINE_ALPHA/QVAR_WEAR_DEVIATION_THRESHOLD
-        * comment above for why (raw sits on a large hardware-specific DC
-        * offset, not centered near 0). */
-       if (!qvar_baseline_ready)
-       {
-          qvar_baseline = (float)qvar_raw;
-          qvar_baseline_ready = true;
-       }
-       else
-       {
-          qvar_baseline += QVAR_BASELINE_ALPHA * ((float)qvar_raw - qvar_baseline);
-       }
-
-       qvar_deviation = (float)qvar_raw - qvar_baseline;
-       APP_DBG_MSG("-- QVar baseline = %d, deviation = %d\n",
-                   (int)qvar_baseline, (int)qvar_deviation);
-       if (fabsf(qvar_deviation) > QVAR_WEAR_DEVIATION_THRESHOLD)
-       {
-          latest_data.flags |= 0x40; /* Wear detected */
-       }
-       else
-       {
-          latest_data.flags &= ~0x40; /* No wear detected */
-       }
-    }
     else
     {
-       APP_DBG_MSG("-- QVar read FAILED\n");
+      APP_DBG_MSG("-- LIS2DUXS12TR: acceleration read FAILED\n");
+      SensorManager_MotionBusError();
     }
+
+    /* The RES stream normally keeps qvar_raw current. Poll here when it is
+     * off (ECG session) or delivered nothing since the last call, so the
+     * raw value still updates if the PB2 interrupt never arrives; the wear
+     * flag is only driven by the stream. */
+    if ((motion_status != SENSOR_MOTION_BUS_ERROR) &&
+        ((!qvar_stream_active) ||
+         (qvar_stream_samples == qvar_samples_at_last_poll)))
+    {
+      if (LIS2DUXS12_MotionReadQvar(&qvar_raw) == LIS2DUXS12_MOTION_OK)
+      {
+        latest_data.qvar_raw = qvar_raw;
+      }
+      else
+      {
+        APP_DBG_MSG("-- QVar read FAILED\n");
+        SensorManager_MotionBusError();
+      }
+    }
+    qvar_samples_at_last_poll = qvar_stream_samples;
   }
 
   if ((optical_status == SENSOR_OPTICAL_NOT_PRESENT) ||
@@ -823,6 +865,7 @@ void SensorManager_ProcessAsync(void)
       latest_data.temperature_centi_c = temperature_centi_c;
       temperature_async_delay_ms = 0U;
       temperature_status = SENSOR_TEMPERATURE_VALID;
+      temperature_result = SENSOR_TEMPERATURE_VALID;
     }
     else if ((result == TEMP_SENSOR_RESULT_NOT_READY) &&
              (temperature_conversion_elapsed_ms < TEMPERATURE_CONVERSION_TIMEOUT_MS))
@@ -834,6 +877,7 @@ void SensorManager_ProcessAsync(void)
       temperature_async_delay_ms = 0U;
       temperature_status = (result == TEMP_SENSOR_RESULT_NOT_READY) ?
                            SENSOR_TEMPERATURE_TIMEOUT : SENSOR_TEMPERATURE_BUS_ERROR;
+      temperature_result = temperature_status;
     }
   }
   else
@@ -872,6 +916,11 @@ sensor_temperature_status_t SensorManager_GetTemperatureStatus(void)
   return temperature_status;
 }
 
+sensor_temperature_status_t SensorManager_GetTemperatureResult(void)
+{
+  return temperature_result;
+}
+
 sensor_motion_status_t SensorManager_GetMotionStatus(void)
 {
   return motion_status;
@@ -896,6 +945,9 @@ bool SensorManager_StartEcg(void)
     optical_status = SENSOR_OPTICAL_IDLE;
     return false;
   }
+
+  /* No 100 Hz QVar reads on the shared I2C bus during an ECG session. */
+  SensorManager_QvarStreamStop();
 
 #if ECG_DIAG_PPG_OFF
   if (MAX86150_LedsOff(&optical_device) != MAX86150_OPTICAL_OK)
@@ -959,38 +1011,62 @@ uint8_t SensorManager_ReadEcgSamples(int16_t *samples, uint8_t max_samples)
   return count;
 }
 
-void SensorManager_ProcessMotionInterrupt(void)
+bool SensorManager_ProcessMotionInterrupt(void)
 {
   lis2duxs12_motion_result_t result;
   lis2duxs12_motion_event_t event;
+  int16_t qvar_raw;
+  bool changed = false;
 
   if ((motion_status == SENSOR_MOTION_NOT_PRESENT) ||
       (motion_status == SENSOR_MOTION_BUS_ERROR))
   {
-    return;
+    return false;
+  }
+
+  /* RES carries both sources: the QVar data-ready pulses (one per sample
+   * while the stream is on) and, once an MLC program is armed, its events. */
+  if (qvar_stream_active)
+  {
+    g_qvarDiag.interrupts++;
+    if (LIS2DUXS12_MotionReadQvar(&qvar_raw) != LIS2DUXS12_MOTION_OK)
+    {
+      SensorManager_MotionBusError();
+      return false;
+    }
+    qvar_stream_samples++;
+    g_qvarDiag.samples++;
+    changed = SensorManager_QvarProcessSample(qvar_raw);
+  }
+
+  if (!LIS2DUXS12_MotionIsMlcInterruptArmed())
+  {
+    return changed;
   }
 
   result = LIS2DUXS12_MotionProcessInterrupt();
   if (result == LIS2DUXS12_MOTION_OK)
   {
-    if (!LIS2DUXS12_MotionGetLatestEvent(&event))
+    if ((!LIS2DUXS12_MotionGetLatestEvent(&event)) ||
+        (event.sequence == motion_last_event_sequence))
     {
-      return;
+      return changed;
     }
-    if (event.mlc_status != 0U)
-    {
-      motion_status = SENSOR_MOTION_CLASSIFIER_READY;
-    }
-    if (event.activity == LIS2DUXS12_ACTIVITY_FALL)
+    motion_last_event_sequence = event.sequence;
+    motion_status = SENSOR_MOTION_CLASSIFIER_READY;
+    if ((event.activity == LIS2DUXS12_ACTIVITY_FALL) &&
+        ((latest_data.flags & WEARABLE_FLAG_FALL_CANDIDATE) == 0U))
     {
       SensorManager_SetFlag(WEARABLE_FLAG_FALL_CANDIDATE, true);
+      changed = true;
       APP_DBG_MSG("-- LIS2DUXS12TR: MLC fall candidate\n");
     }
   }
   else if (result == LIS2DUXS12_MOTION_BUS_ERROR)
   {
-    motion_status = SENSOR_MOTION_BUS_ERROR;
+    SensorManager_MotionBusError();
   }
+  return changed;
 }
 
 void SensorManager_ProcessMotionTimeout(void)

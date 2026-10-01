@@ -24,6 +24,8 @@
 #include "../../Application/NFC/nfc_manager.h"
 #include "../../Application/LoRaTest/lora_test.h"
 #include "../../Application/LoRaWAN/lbm_app.h"
+#include "../../Application/NEH7100/neh7100.h"
+#include "stm32_lpm.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -38,6 +40,9 @@
 #endif
 #ifndef uADCxCalibrationPoint1_Offset
 #define uADCxCalibrationPoint1_Offset 0
+#endif
+#if LORA_TEST_ENABLE && LBM_APP_ENABLE
+#error "LoRaTest and LBM both drive the SX1262 - never enable both"
 #endif
 /* USER CODE END PD */
 
@@ -105,7 +110,15 @@ int main(void)
   PeriphCommonClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  /* The NEH7100 PMIC is configured first, before the radio or any other
+   * peripheral is touched: its registers set the rail the rest of the board
+   * runs from (values: NEH7100_REGxx_EXPECTED in neh7100.h). It needs I2C1,
+   * which the generated code below initialises a second time - harmless. */
+  MX_I2C1_Init();
+  if (NEH7100_Init())
+  {
+    (void)NEH7100_EnsureConfig();
+  }
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -128,11 +141,12 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  /* LoRa Basics Modem: needs the sequencer, so it starts after MX_APPE_Init().
-   * LoRaTest (LORA_TEST_ENABLE) and LBM both drive the SX1262 - never enable both. */
-#if !LORA_TEST_ENABLE
-  LBM_App_Init();
-#endif
+  /* LoRa Basics Modem no longer starts here: with LBM_APP_ENABLE it starts on
+   * the BLE command LoRa join (CONTROL 0x0F, WEARABLE_LoraTask).
+   * Stop/Off mode stays forbidden as it was while LBM_App_Init() ran at boot:
+   * DeviceTime counts on SysTick, which stops in those modes. */
+  UTIL_LPM_SetStopMode(1U << CFG_LPM_LBM, UTIL_LPM_DISABLE);
+  UTIL_LPM_SetOffMode(1U << CFG_LPM_LBM, UTIL_LPM_DISABLE);
   while (1)
   {
     /* USER CODE END WHILE */
@@ -536,7 +550,8 @@ static void MX_GPIO_Init(void)
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
-  /* LIS2DUXS12TR INT1: active-high, task-level I2C/MLC handling. */
+  /* LIS2DUXS12TR RES pin (interrupts routed there by INT1_ON_RES; INT1 itself
+   * is the Qvar electrode): active-high, task-level I2C/QVar/MLC handling. */
   GPIO_InitStruct.Pin = LIS2DUXS12_INT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;

@@ -20,10 +20,21 @@
  * Build defines needed by the library: REGION_AS_923, RP2_103 (RP002-1.0.3). */
 #define LBM_REGION                   SMTC_MODEM_REGION_AS_923_GRP2
 
-/* Periodic application uplink: 4-byte big-endian counter on this port, unconfirmed. */
+/* Application uplink: 4-byte big-endian counter on this port, unconfirmed.
+ * LBM_UPLINK_PERIOD_S = 0: no uplink after the join and no periodic uplink;
+ * the radio only transmits for the join, the BLE test command (CONTROL 0x10)
+ * and the SOS button. Otherwise one uplink right after the join, the next
+ * LBM_FIRST_UPLINK_DELAY_S later, then one every LBM_UPLINK_PERIOD_S. */
 #define LBM_UPLINK_PORT              101
-#define LBM_UPLINK_PERIOD_S          60u
+#define LBM_UPLINK_PERIOD_S          0u
 #define LBM_FIRST_UPLINK_DELAY_S     10u
+
+/* Cap on the SX1262 output power, dBm (-9 to 22). AS923 asks for 14 dBm
+ * (16 dBm EIRP minus 2 dB); the cap wins when lower. Lower power = lower
+ * peak current: per the RAL table in ral_sx126x_bsp_wb09.c about 89 mA at
+ * 14 dBm, 54 mA at 5 dBm, 41 mA at 0 dBm (DC-DC mode). Changed at run time by
+ * CONTROL 0x12 until the next reset. */
+#define LBM_TX_POWER_MAX_DBM         0
 
 /* ---- Data rate / spreading factor -------------------------------------- *
  * AS923 data rates (RP002-1.0.3), 125 kHz unless noted:

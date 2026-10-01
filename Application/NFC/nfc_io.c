@@ -1,4 +1,6 @@
 #include "nfc_io.h"
+#include <stdbool.h>
+#include <stddef.h>
 
 extern I2C_HandleTypeDef hi2c1;
 
@@ -66,6 +68,53 @@ int32_t NFC_IO_Init(void)
     if (St25Dv_Drv.Init(&st25dv_obj) != 0) {
         return -1;
     }
-    
+
     return 0;
+}
+
+static bool NFC_IO_UserRangeValid(uint16_t addr, uint16_t length)
+{
+    return ((uint32_t)addr + length) <= NFC_USER_MEMORY_SIZE;
+}
+
+int32_t NFC_IO_ReadUserMemory(uint16_t addr, uint8_t *data, uint16_t length)
+{
+    if ((data == NULL) || !NFC_IO_UserRangeValid(addr, length))
+    {
+        return -1;
+    }
+
+    return St25Dv_Drv.ReadData(&st25dv_obj, data, addr, length);
+}
+
+int32_t NFC_IO_WriteUserMemory(uint16_t addr, const uint8_t *data, uint16_t length)
+{
+    ST25DV_EN_STATUS mailbox_enabled = ST25DV_DISABLE;
+    int32_t ret;
+
+    if ((data == NULL) || !NFC_IO_UserRangeValid(addr, length))
+    {
+        return -1;
+    }
+
+    /* EEPROM writes transit through the fast transfer mode buffer, so the tag
+     * NACKs them while the mailbox is enabled (DS10925 section 6.4). Disabling
+     * it empties the mailbox: a message not yet read by either side is lost. */
+    if (ST25DV_GetMBEN_Dyn(&st25dv_obj, &mailbox_enabled) != 0)
+    {
+        return -1;
+    }
+    if ((mailbox_enabled == ST25DV_ENABLE) && (ST25DV_ResetMBEN_Dyn(&st25dv_obj) != 0))
+    {
+        return -1;
+    }
+
+    ret = St25Dv_Drv.WriteData(&st25dv_obj, data, addr, length);
+
+    if (mailbox_enabled == ST25DV_ENABLE)
+    {
+        ST25DV_SetMBEN_Dyn(&st25dv_obj);
+    }
+
+    return ret;
 }
