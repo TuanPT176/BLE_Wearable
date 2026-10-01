@@ -645,7 +645,7 @@ Mọi tham số build mà người dùng có thể chỉnh nằm trong **một f
 
 | Mục | Nội dung |
 |---|---|
-| 1. Tests and diagnostics | `ENABLE_TEST` và mọi switch test/chẩn đoán (`LORA_TEST_ENABLE`, `ECG_DIAG_*`), thông số radio của LoRaTest |
+| 1. Tests and diagnostics | `ENABLE_TEST` và mọi switch test/chẩn đoán (`SENSOR_TEST_*`, `MAX86150_TEST_*`, `LORA_TEST_ENABLE`, `ECG_DIAG_*`), thời lượng test, thông số radio của LoRaTest |
 | 2. Features | `LBM_APP_ENABLE` |
 | 3. Power | Giá trị thanh ghi NEH7100, cầu phân áp supercap, ngưỡng power policy |
 | 4. BLE application | `WEARABLE_SENSOR_PERIOD_MS` |

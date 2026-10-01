@@ -25,6 +25,8 @@
  */
 #include "sensor_test.h"
 
+#if SENSOR_TEST_ENABLE
+
 #include <stdbool.h>
 #include <string.h>
 
@@ -314,3 +316,5 @@ void SensorTest_Run(void)
   /* Breakpoint here to read g_sensorTest once per boot. */
   __NOP();
 }
+
+#endif /* SENSOR_TEST_ENABLE */

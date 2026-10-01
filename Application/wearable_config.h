@@ -32,6 +32,26 @@
 #if ENABLE_TEST
 /* ---- Edit these (only used when ENABLE_TEST = 1) ------------------------- */
 
+/* SensorTest (Application/SensorTest): at boot, before NFC/BLE, checks every
+ * I2C1 device (ACK, ID register, one data read) and reports in the Live
+ * Expression g_sensorTest. Blocks boot for about 1.5 s. */
+#define SENSOR_TEST_ENABLE              1
+/* 1 = never boot: repeat SensorTest every SENSOR_TEST_LOOP_PERIOD_MS so the
+ * Live Expressions keep updating (touch the QVar electrode, move the board,
+ * finger on the MAX86150). No BLE in this mode. Needs SENSOR_TEST_ENABLE. */
+#define SENSOR_TEST_LOOP                0
+
+/* MAX86150Test (Application/MAX86150Test): step-by-step MAX86150 bring-up,
+ * from bus lines to PPG and ECG, result in g_max86150Test. Blocks boot for
+ * MAX86150_TEST_STREAM_MS + MAX86150_TEST_ECG_MS. */
+#define MAX86150_TEST_ENABLE            0
+/* 1 = replace MAX86150Test with a multimeter wiring check that never
+ * returns: PB6/SCL held at 3.3 V, PB7/SDA toggling 0 V <-> 3.3 V every
+ * second. At the chip pins: steady SCL + blinking SDA = wired right; swapped
+ * = SCL/SDA crossed; ~0 V = that wire never reaches the MCU. Needs
+ * MAX86150_TEST_ENABLE. */
+#define MAX86150_TEST_WIRE_CHECK        0
+
 /* LoRaTest (Application/LoRaTest): raw SX1262 bring-up + LORA_TX_REPEAT_COUNT
  * test packets at boot, before BLE. Drives the SX1262 directly, so it needs
  * LBM_APP_ENABLE = 0. Blocks boot for about count x period. */
@@ -59,6 +79,10 @@
 
 #else
 /* ---- Production values: do not edit, use the block above ----------------- */
+#define SENSOR_TEST_ENABLE              0
+#define SENSOR_TEST_LOOP                0
+#define MAX86150_TEST_ENABLE            0
+#define MAX86150_TEST_WIRE_CHECK        0
 #define LORA_TEST_ENABLE                0
 #define ECG_DIAG_PPG_OFF                0
 #define ECG_DIAG_DRAIN_PERIOD_MS        45U
@@ -66,6 +90,22 @@
 #define ECG_DIAG_CONN_INTERVAL_MS       0U
 #define ECG_DIAG_DUMP_REGS              0
 #endif /* ENABLE_TEST */
+
+#if SENSOR_TEST_LOOP && !SENSOR_TEST_ENABLE
+#error "SENSOR_TEST_LOOP needs SENSOR_TEST_ENABLE = 1"
+#endif
+#if MAX86150_TEST_WIRE_CHECK && !MAX86150_TEST_ENABLE
+#error "MAX86150_TEST_WIRE_CHECK needs MAX86150_TEST_ENABLE = 1"
+#endif
+
+/* ---- Test durations (only read by the test they belong to) ---------------- */
+
+/* SensorTest repeat period with SENSOR_TEST_LOOP = 1, ms. */
+#define SENSOR_TEST_LOOP_PERIOD_MS      1000U
+/* MAX86150Test live PPG stream (finger on the sensor), ms. 0 = skip. */
+#define MAX86150_TEST_STREAM_MS         30000U
+/* MAX86150Test ECG step (both hands on ECG_P/ECG_N), ms. 0 = skip. */
+#define MAX86150_TEST_ECG_MS            20000U
 
 /* ---- LoRaTest radio settings (only read when LORA_TEST_ENABLE = 1) -------- */
 

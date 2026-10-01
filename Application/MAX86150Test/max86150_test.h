@@ -14,20 +14,9 @@
 extern "C" {
 #endif
 
-/* Set to 0 to compile the test out without removing the call site in main.c. */
-#define MAX86150_TEST_ENABLE 0
-
-/* While enabled, MAX86150Test_Run() blocks boot for roughly
- * MAX86150_TEST_STREAM_MS (PPG, finger on the sensor) followed by
- * MAX86150_TEST_ECG_MS (ECG, both hands on ECG_P/ECG_N) - see
- * max86150_test.c. */
-
-/* 1 = replace the whole test with a multimeter wiring check that never
- * returns: PB6/SCL is driven steadily HIGH (3.3V) and PB7/SDA toggles
- * 0V <-> 3.3V every second. Measured at the MAX86150 module pins: steady
- * 3.3V on SCL + blinking SDA = wired right; swapped readings = SCL/SDA
- * crossed; ~0V steady = that wire never reaches the MCU pin. */
-#define MAX86150_TEST_WIRE_CHECK 0
+/* MAX86150_TEST_ENABLE, MAX86150_TEST_WIRE_CHECK and the stream/ECG
+ * durations: wearable_config.h (only effective with ENABLE_TEST = 1). */
+#include "../wearable_config.h"
 
 /*
  * Same reporting approach as LoRaTest: this board has no trace sink (PA1 is

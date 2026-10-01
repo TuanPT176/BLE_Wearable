@@ -14,16 +14,9 @@
 extern "C" {
 #endif
 
-/* 1 = main() runs SensorTest_Run() right after the peripheral init, before
- * NFC/BLE start. It blocks boot for about 1.5 s, then the firmware boots as
- * usual. 0 = compiled out. */
-#define SENSOR_TEST_ENABLE 1
-
-/* 1 = never boot: repeat the test every SENSOR_TEST_LOOP_PERIOD_MS so the
- * Live Expressions keep updating (touch the QVar electrode, move the board,
- * put a finger on the MAX86150). No BLE in this mode. */
-#define SENSOR_TEST_LOOP 0
-#define SENSOR_TEST_LOOP_PERIOD_MS 1000U
+/* SENSOR_TEST_ENABLE, SENSOR_TEST_LOOP and SENSOR_TEST_LOOP_PERIOD_MS:
+ * wearable_config.h (only effective with ENABLE_TEST = 1). */
+#include "../wearable_config.h"
 
 /*
  * The board has no UART, so the result lives in `g_sensorTest`: add it as a

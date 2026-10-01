@@ -64,7 +64,6 @@
 #define MAX86150_TEST_MIN_WINDOW_SAMPLES  10U
 #define MAX86150_TEST_LED_MIN_DELTA       2000  /* raw counts; matches OPTICAL_MIN_DC_FOR_VALID */
 #define MAX86150_TEST_SATURATION_COUNTS   0x7F000UL /* 19-bit full scale is 0x7FFFF */
-#define MAX86150_TEST_STREAM_MS           30000U /* 0 = skip the live stream */
 #define MAX86150_TEST_STREAM_POLL_MS      20U
 #define MAX86150_TEST_P2P_WINDOW_SAMPLES  200U  /* ~2 s at 100 Hz */
 /* Both LEDs at full scale (LED_RANGE 0: 0.2 mA/LSB -> ~51 mA pulses) to
@@ -78,7 +77,6 @@
  * the first one after arming). Let it settle and discard that latch. */
 #define MAX86150_TEST_VDD_OOR_SETTLE_MS   50U
 #define MAX86150_TEST_VDD_POLL_MS         500U  /* VDD_OOR sampling period during STREAM */
-#define MAX86150_TEST_ECG_MS              20000U /* 0 = skip the ECG step */
 #define MAX86150_TEST_ECG_POLL_MS         20U    /* ~4 samples per drain, FIFO lasts 160 ms */
 #define MAX86150_TEST_ECG_EXPECTED_HZ     200U
 #define MAX86150_TEST_ECG_WINDOW_SAMPLES  200U   /* ~1 s peak-to-peak window */
