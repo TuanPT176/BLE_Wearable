@@ -12,6 +12,7 @@
 #include "../../STM32_BLE/App/app_ble.h"
 #include "../DeviceTime/device_time.h"
 #include "ecg_diag.h"
+#include "../wearable_config.h"
 #include <string.h>
 
 /*
@@ -41,24 +42,7 @@
 #include "../../Drivers/ST25DV/st25dv.c"
 #include "../../Drivers/ST25DV/st25dv_reg.c"
 
-#define TEMPERATURE_FIRST_POLL_DELAY_MS   20U
-#define TEMPERATURE_RETRY_DELAY_MS         5U
-#define TEMPERATURE_CONVERSION_TIMEOUT_MS 60U
-/* SensorManager_Process() runs once per WEARABLE_SENSOR_PERIOD_MS (~1s);
- * re-probe the bus for a missing MAX30208 every this many calls instead of
- * every call, so a genuinely absent sensor doesn't waste bus time. */
-#define TEMPERATURE_REPROBE_INTERVAL_CALLS 5U
-/* Same idea for LIS2DUXS12TR (accel/QVar) and MAX86150 (PPG): unlike the
- * temperature path, neither previously had any recovery once a boot-time
- * probe/config attempt failed, so a transient I2C glitch at startup would
- * leave accel/QVar/HR/SpO2 stuck forever (mock HR, flat SpO2, zeroed accel,
- * QVar wear flag never set). */
-#define MOTION_REPROBE_INTERVAL_CALLS 5U
-/* Shorter than the motion/temperature reprobe interval: an I2C probe + FIFO
- * config write is cheap, and while diagnosing a MAX86150 that never comes up
- * a faster retry gives quicker feedback on whether it is a transient bus
- * glitch or a persistent (wiring/hardware) failure. */
-#define OPTICAL_REPROBE_INTERVAL_CALLS 2U
+/* Timings, re-probe intervals, PPG and QVar thresholds: wearable_config.h. */
 
 /*
  * MAX86150 Red/IR optical (PPG) pipeline.
@@ -77,20 +61,7 @@
  * and the SpO2 curve coefficients should be re-tuned/calibrated against a
  * reference pulse oximeter on the real enclosure/skin contact.
  */
-#define OPTICAL_DRAIN_INTERVAL_MS        200U
-#define OPTICAL_SAMPLE_PERIOD_MS          10U   /* fixed by the 100 Hz PPG ODR below */
-#define OPTICAL_DEFAULT_LED_CURRENT_CODE 0x24U  /* ~7 mA (0.2 mA/LSB); tune per enclosure */
-#define OPTICAL_DC_ALPHA                0.05f   /* baseline EMA smoothing factor */
-#define OPTICAL_ENVELOPE_ALPHA          0.03f   /* pulse-amplitude envelope EMA factor */
-#define OPTICAL_PULSE_SIGN            (-1.0f)   /* flip if beats aren't detected on your optical path */
-#define OPTICAL_THRESHOLD_HIGH_FRAC      0.5f
-#define OPTICAL_THRESHOLD_LOW_FRAC      0.25f
-#define OPTICAL_MIN_ENVELOPE            50.0f   /* raw ADC counts; below this = noise/no perfusion */
-#define OPTICAL_MIN_DC_FOR_VALID      2000.0f   /* raw ADC counts; below this = sensor not worn */
-#define OPTICAL_MIN_BPM                   30U
-#define OPTICAL_MAX_BPM                  220U
-#define OPTICAL_BEAT_HISTORY_LEN           4U
-#define OPTICAL_SPO2_WINDOW_DRAINS         5U   /* ~1s of samples before recomputing SpO2 */
+#define OPTICAL_SAMPLE_PERIOD_MS          10U   /* fixed by the 100 Hz PPG ODR */
 
 /*
  * QVar (LIS2DUXS12TR AH_QVAR channel) wear detection.
@@ -115,11 +86,6 @@
  * ECG drain task); the wear flag is frozen and only the 1 Hz raw value keeps
  * updating.
  */
-#define QVAR_WINDOW_SAMPLES       100U  /* ~1 s at the 100 Hz ODR */
-#define QVAR_WORN_ENTER_P2P       600U  /* raw LSB, window peak-to-peak */
-#define QVAR_WORN_EXIT_P2P        300U
-#define QVAR_DEBOUNCE_WINDOWS       2U  /* consecutive windows to switch */
-
 static wearable_sensor_data_t latest_data;
 static bool initialized;
 static bool running;

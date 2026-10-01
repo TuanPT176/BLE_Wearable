@@ -37,6 +37,7 @@
 #include "../../Application/DataRecovery/data_recovery_manager.h"
 #include "../../Application/SensorManager/ecg_diag.h"
 #include "../../Application/LoRaWAN/lbm_app.h"
+#include "../../Application/wearable_config.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -116,7 +117,6 @@ typedef struct
 
 /* Private defines -----------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define WEARABLE_SENSOR_PERIOD_MS       1000U
 #define WEARABLE_ERROR_NONE              0x00U
 #define WEARABLE_ERROR_INVALID_COMMAND   0x01U
 #define WEARABLE_ERROR_TEMP_NOT_PRESENT  0x10U
@@ -125,7 +125,7 @@ typedef struct
 /* ECG streaming: the MAX86150 FIFO holds 32 samples = 160 ms at 200 sps.
  * Draining every 45 ms yields one 9-sample ECG_DATA packet per drain on
  * average and leaves >100 ms of slack for a late sequencer turn.
- * Production value 45 ms lives in ecg_diag.h (DIAG_READ_PERIOD). */
+ * Production value 45 ms: ECG_DIAG_DRAIN_PERIOD_MS in wearable_config.h. */
 #define WEARABLE_ECG_DRAIN_PERIOD_MS     ECG_DIAG_DRAIN_PERIOD_MS
 #define WEARABLE_ECG_READ_MAX_SAMPLES    32U
 /* Packets held back while the BLE TX pool is full (~0.7 s of ECG). */

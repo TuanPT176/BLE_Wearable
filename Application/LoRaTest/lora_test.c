@@ -50,34 +50,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-/* ---- Configuration ---------------------------------------------------- */
-
-/* 0 = bare XTAL crystal on XTA/XTB (custom wearable PCB as originally
- *     designed; DIO3 not wired to the MCU)
- * 1 = TCXO (Nucleo-WB09KE + Ebyte E22-900M22S rig; also the custom PCB after
- *     the user retrofitted a TCXO onto it to test whether the XTAL path was
- *     the reason the SX1262 never left its post-reset BUSY state) */
-#define LORA_USE_TCXO            1
-#define LORA_TCXO_VOLTAGE        0x02u   /* 0x02 = 1.8V per SX1262 datasheet (0x00=1.6V, 0x01=1.7V); worked on E22 rig + retrofitted custom PCB */
-#define LORA_TCXO_TIMEOUT_MS     5u
-
-#define LORA_USE_DCDC             1      /* SetRegulatorMode: 1=DC-DC+LDO, 0=LDO only (VERIFY) */
-#define LORA_USE_DIO2_RF_SWITCH   1      /* module's onboard TX/RX switch is driven by DIO2 internally */
-
-#define LORA_XTAL_HZ              32000000UL
-#define LORA_FREQ_HZ              923000000UL   /* VERIFY this is legal in your region before TX */
-
-#define LORA_OUTPUT_POWER_DBM     22            /* matches E22-900M22S's rated +22dBm */
-#define LORA_SPREADING_FACTOR     7
-#define LORA_BANDWIDTH_REG        0x04u          /* 125 kHz */
-#define LORA_CODING_RATE_REG      0x01u          /* 4/5 */
-
-#define LORA_TX_TIMEOUT_MS        3000u
-
-/* Packets sent back to back before the test hands over to the BLE app
- * (1 = single shot). LoRaTest_Run() blocks for roughly count * period. */
-#define LORA_TX_REPEAT_COUNT      30u
-#define LORA_TX_REPEAT_PERIOD_MS  1000u
+/* Radio settings (LORA_USE_TCXO, LORA_FREQ_HZ, ...): wearable_config.h. */
 
 /* Trailing "000" is overwritten with the packet counter each transmission. */
 static uint8_t s_testPayload[] = "LoRaTest #000";

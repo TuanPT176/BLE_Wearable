@@ -203,6 +203,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/Core/Src/stm32wb0x_it.c</locationURI>
 		</link>
 		<link>
+			<name>Application/User/Wearable/wearable_config.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Application/wearable_config.h</locationURI>
+		</link>
+		<link>
 			<name>Application/User/Wearable/max86150_optical.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Drivers/Sensors/MAX86150/max86150_optical.c</locationURI>
