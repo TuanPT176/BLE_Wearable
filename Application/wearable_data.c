@@ -24,6 +24,26 @@ void WearableData_EncodeSensor(const wearable_sensor_data_t *data,
   payload[15] = (uint8_t)((uint16_t)data->qvar_raw >> 8);
 }
 
+static int16_t WearableData_GetI16(const uint8_t *payload)
+{
+  return (int16_t)(uint16_t)(payload[0] | ((uint16_t)payload[1] << 8));
+}
+
+void WearableData_DecodeSensor(const uint8_t payload[WEARABLE_SENSOR_PAYLOAD_LENGTH],
+                               wearable_sensor_data_t *data)
+{
+  data->heart_rate_bpm = payload[0];
+  data->spo2_percent = payload[1];
+  data->temperature_centi_c = WearableData_GetI16(&payload[2]);
+  data->supercap_mv = (uint16_t)WearableData_GetI16(&payload[4]);
+  data->power_state = payload[6];
+  data->flags = payload[7];
+  data->accel_x = WearableData_GetI16(&payload[8]);
+  data->accel_y = WearableData_GetI16(&payload[10]);
+  data->accel_z = WearableData_GetI16(&payload[12]);
+  data->qvar_raw = WearableData_GetI16(&payload[14]);
+}
+
 void WearableData_EncodeStatus(const wearable_device_status_t *status,
                                uint8_t payload[WEARABLE_STATUS_PAYLOAD_LENGTH])
 {
@@ -77,4 +97,28 @@ void WearableData_EncodeDebug(const wearable_debug_packet_t *data, uint8_t paylo
   memset(payload, 0, WEARABLE_DEBUG_PAYLOAD_LENGTH);
   payload[0] = data->command;
   memcpy(&payload[1], data->params, WEARABLE_DEBUG_PAYLOAD_LENGTH - 1);
+}
+
+static void WearableData_PutU16(uint8_t *out, uint16_t value)
+{
+  out[0] = (uint8_t)(value & 0xFFU);
+  out[1] = (uint8_t)(value >> 8);
+}
+
+void WearableData_EncodeLoraStatus(const wearable_lora_status_t *data, uint8_t payload[WEARABLE_DEBUG_PAYLOAD_LENGTH])
+{
+  payload[0] = WEARABLE_DEBUG_LORA_STATUS;
+  payload[1] = data->state;
+  payload[2] = (uint8_t)data->tx_power_dbm;
+  payload[3] = data->last_event;
+  payload[4] = data->tx_done_status;
+  payload[5] = (uint8_t)data->last_rc;
+  payload[6] = data->command_result;
+  payload[7] = data->init_stage;
+  WearableData_PutU16(&payload[8], data->uplink_count);
+  WearableData_PutU16(&payload[10], data->event_count);
+  WearableData_PutU16(&payload[12], data->downlink_count);
+  WearableData_PutU16(&payload[14], data->panic_count);
+  WearableData_PutU16(&payload[16], data->busy_timeouts);
+  WearableData_PutU16(&payload[18], data->spi_errors);
 }

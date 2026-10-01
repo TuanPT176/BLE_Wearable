@@ -8,15 +8,25 @@
 #ifndef LBM_APP_H
 #define LBM_APP_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/* 0 = LoRaWAN not built in: the LoRa CONTROL commands answer "not built",
+ * the SX1262 stays held in reset, the SOS button does nothing.
+ * 1 = LoRaWAN available, but nothing starts on its own: the join only starts
+ * on the BLE command LoRa join (CONTROL 0x0F). */
+#define LBM_APP_ENABLE 1
+
+/* LBM_App_SendTestUplink() result when the device has not joined yet. */
+#define LBM_APP_NOT_JOINED (-1)
+
 typedef enum
 {
-  LBM_STATE_IDLE = 0,       /* LBM_App_Init() not called yet, or modem not reset yet */
+  LBM_STATE_IDLE = 0,      /* LBM_App_Init() not called yet, or modem not reset yet */
   LBM_STATE_NO_CREDENTIALS, /* lbm_credentials.h is still all zero: not joining */
   LBM_STATE_JOINING,
   LBM_STATE_JOINED,
@@ -66,7 +76,7 @@ typedef struct
   uint32_t panic_count;
   uint32_t panic_line;
   uint32_t radio_resets;  /* sx126x_hal_reset() calls since power-up */
-  uint32_t busy_timeouts; /* radio BUSY stuck high past the 1 s timeout */
+  uint32_t busy_timeouts; /* radio BUSY stuck high past the 100 ms timeout */
   uint32_t spi_errors;    /* HAL_SPI_TransmitReceive() failures */
   uint8_t  first_read_valid;   /* set once the first radio read of THIS boot is captured */
   uint8_t  first_read_cmd[4];  /* its command bytes: 1D 02 9F 00 = ReadRegister(0x029F) */
@@ -81,6 +91,43 @@ extern volatile LBM_Diag_t g_lbmDiag; /* defined in smtc_modem_hal_wb09.c */
  *        The join starts from the modem RESET event, run by the LBM task.
  */
 void LBM_App_Init(void);
+
+/**
+ * @brief true once LBM_App_Init() has registered the LBM task. The SysTick and
+ *        DIO1 handlers must not wake the task before that: the sequencer would
+ *        call a task with no function registered.
+ */
+bool LBM_App_IsStarted(void);
+
+/**
+ * @brief Called after every batch of modem events (LBM task context), e.g. to
+ *        report the new state over BLE. NULL removes it.
+ */
+void LBM_App_SetStatusCallback(void (*callback)(void));
+
+/** @brief Cap on the SX1262 output power in dBm, read before every TX. */
+void LBM_App_SetTxPowerMax(int8_t dbm);
+int8_t LBM_App_GetTxPowerMax(void);
+
+/**
+ * @brief Starts LBM on the first call (the join follows the modem RESET event),
+ *        joins again after LBM_App_Leave(). Task context only: the first call
+ *        runs smtc_modem_init(). Returns a smtc_modem_return_code_t.
+ */
+int32_t LBM_App_Join(void);
+
+/**
+ * @brief One unconfirmed uplink on LBM_UPLINK_PORT (4-byte counter).
+ *        Returns LBM_APP_NOT_JOINED, or a smtc_modem_return_code_t.
+ */
+int32_t LBM_App_SendTestUplink(void);
+
+/**
+ * @brief Stops the join attempts and the uplinks (smtc_modem_leave_network);
+ *        the radio stays asleep until LBM_App_Join(). Returns a
+ *        smtc_modem_return_code_t.
+ */
+int32_t LBM_App_Leave(void);
 
 /**
  * @brief SOS button handler. Call from the PB5 EXTI callback (ISR context): it

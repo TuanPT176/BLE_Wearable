@@ -14,7 +14,7 @@ Thiết bị quảng bá với GAP Device Name: **`BLEWearable`**.
 - Đọc trực tiếp hoặc nhận notification từ các characteristic.
 - Chu kỳ gửi dữ liệu cảm biến mặc định: **1 giây** khi đang đo và notification đã được bật.
 - Đã tích hợp ST25DV04K để lưu trữ cấu hình, backup dữ liệu cảm biến qua circular buffer và hỗ trợ giao tiếp qua NFC Mailbox.
-- Đã tích hợp SX1262 với LoRa Basics Modem: OTAA trên The Things Stack (AS923-2), uplink định kỳ và uplink khẩn cấp khi nhấn nút SOS (PB5). Xem mục [LoRaWAN](#lorawan-lora-basics-modem).
+- Đã tích hợp SX1262 với LoRa Basics Modem: OTAA trên The Things Stack (AS923-2), uplink theo lệnh BLE và uplink khẩn cấp khi nhấn nút SOS (PB5). LoRa **chỉ chạy khi webapp gửi lệnh join** (`0x0F`). Xem mục [LoRaWAN](#lorawan-lora-basics-modem).
 
 ## Phần cứng và cảm biến
 
@@ -23,7 +23,7 @@ Thiết bị quảng bá với GAP Device Name: **`BLEWearable`**.
 | STM32WB09KE | MCU và BLE peripheral |
 | MAX86150 | Đo PPG (nhịp tim/SpO2) và ECG |
 | MAX30208 | Cảm biến nhiệt độ |
-| LIS2DUXS12TR | Đo gia tốc và xử lý Machine Learning Core (MLC); thay thế ST1VAFE3BX |
+| LIS2DUXS12TR | Đo gia tốc, QVar (phát hiện đeo) và Machine Learning Core (MLC); thay thế ST1VAFE3BX. INT1 là điện cực QVar, INT2 để hở, chân RES nối PB2 làm đường ngắt |
 | NEH7100 | Energy-harvesting PMIC; quản lý nguồn và theo dõi dòng điện qua I2C |
 | Supercapacitor monitor | Theo dõi điện áp nguồn |
 | ST25DV04K | Dynamic NFC/RFID Tag; lưu trữ cấu hình thiết bị, log cảm biến, và hỗ trợ Energy Harvesting |
@@ -89,13 +89,20 @@ Các UUID dưới đây được ghi theo định dạng chuẩn mà nRF Connect
 | Control | `0000FE41-8E22-4541-9D4C-21EDAE82ED19` | Write | 8 byte | Gửi lệnh điều khiển; firmware hiện đọc byte đầu tiên |
 | Sensor Data | `0000FE42-8E22-4541-9D4C-21EDAE82ED19` | Read, Notify | 16 byte | Dữ liệu sức khỏe và nguồn |
 | Device Status | `0000FE43-8E22-4541-9D4C-21EDAE82ED19` | Read, Notify | 8 byte | Trạng thái, lỗi và phiên bản protocol |
+| NFC Data | `0000FE44-8E22-4541-9D4C-21EDAE82ED19` | Read, Notify | 20 byte | Có trong GATT nhưng firmware **chưa gửi** gói nào |
 | ECG Data | `0000FE45-8E22-4541-9D4C-21EDAE82ED19` | Read, Notify | 20 byte | Dạng sóng ECG, 9 mẫu mỗi gói (xem mục ECG Data) |
+| Debug Data | `0000FE46-8E22-4541-9D4C-21EDAE82ED19` | Read, Write, Notify | 20 byte | Notify gói LoRa status `0x20` (trả lời lệnh `0x0F`..`0x13`, xem dưới). Ghi vào bị bỏ qua |
+| Recovery Data | `0000FE47-8E22-4541-9D4C-21EDAE82ED19` | Read, Notify | 24 byte | Record lịch sử từ ST25DV (xem ghi chú ở mục Control commands); **chưa hoạt động end-to-end** |
 
 Để nhận notification, BLE central phải ghi `0x0001` vào CCCD của `Sensor Data`, `Device Status` hoặc `ECG Data`.
 
+Read một characteristic trả về **gói gần nhất đã notify** (stack tự trả lời từ buffer), toàn `0` nếu chưa notify lần nào; nên subscribe thay vì read.
+
+Bản quy ước đầy đủ giữa thiết bị và webapp (từng byte, máy trạng thái, luồng sử dụng, test vector) là [DEVICE_WEBAPP_PROTOCOL.md](DEVICE_WEBAPP_PROTOCOL.md). Tài liệu giao thức phía app nằm ở `BLE_PROTOCOL.md` trong repo `WearableWebApp`; cả ba nơi phải được sửa cùng lúc.
+
 ## Control commands
 
-Ghi payload 8 byte vào characteristic `Control`. Byte `0` là command; byte `1..7` hiện chưa sử dụng và nên đặt bằng `0`.
+Ghi payload 8 byte vào characteristic `Control`. Byte `0` là command; byte `1..7` đặt bằng `0` trừ các lệnh có tham số (`0x09`, `0x0B`, `0x0D`, `0x12`).
 
 | Byte 0 | Command | Tác dụng |
 |---:|---|---|
@@ -108,6 +115,22 @@ Ghi payload 8 byte vào characteristic `Control`. Byte `0` là command; byte `1.
 | `0x07` | ECG stop | Dừng ECG và phép đo, xóa cờ ECG, chuyển về Idle |
 | `0x08` | Emergency test | Bật cờ emergency và chuyển sang Emergency |
 | `0x09` | Sync time | Đồng bộ thời gian thực (Unix time) cho thiết bị |
+| `0x0A` | Get recovery info | Chưa có tác dụng (chỉ xóa error code) |
+| `0x0B` | Start BLE recovery | Byte `1..2` = sequence bắt đầu (`uint16 LE`) |
+| `0x0C` | Stop BLE recovery | Dừng phiên recovery |
+| `0x0D` | Recovery ACK | Byte `1..2` = sequence đã nhận (`uint16 LE`); hiện chỉ được lưu lại |
+| `0x0E` | Recovery clear | Xóa toàn bộ log lịch sử trên ST25DV |
+| `0x0F` | LoRa join | Lần đầu: khởi động LoRa Basics Modem và join OTAA; sau `0x13`: join lại |
+| `0x10` | LoRa test uplink | Một uplink không xác nhận trên FPort 101 (cần đã join) |
+| `0x11` | LoRa status | Chỉ trả về trạng thái LoRa |
+| `0x12` | LoRa TX power | Byte `1` = công suất tối đa của SX1262, `int8` dBm, `-9`..`22`. Mất khi reset (mặc định `0` dBm) |
+| `0x13` | LoRa stop | Rời mạng, dừng join/uplink, SX1262 ngủ |
+
+Các lệnh LoRa `0x0F`..`0x13` không đổi state và không có `Device Status`; chúng được trả lời bằng gói LoRa status 20 byte trên `Debug Data` (`FE46`), byte `0` = `0x20`. Firmware cũng gửi gói này sau mỗi sự kiện của modem (joined, TX done…). Layout từng byte nằm ở mục 10.1 của `DEVICE_WEBAPP_PROTOCOL.md`.
+
+`Device Status` được notify ngay sau các lệnh `0x01`, `0x02`, `0x04`..`0x09` và sau một lệnh không hợp lệ. Command lạ đưa thiết bị về state `Error` với error `0x01` (dừng gửi `Sensor Data`) cho đến khi nhận một lệnh đổi state như `0x01` hoặc `0x02`.
+
+> **Recovery chưa hoạt động end-to-end:** `DataRecovery_Process()` chưa được gọi ở đâu nên `0x0B` không phát gói nào; log chỉ được ghi khi đang đo mà không có kết nối BLE (trạng thái hiện không xảy ra vì mất kết nối là dừng đo); và phần lưu trữ trên ST25DV vừa được sửa trong code nhưng **chưa chạy trên phần cứng** (xem mục [Lưu trữ trên ST25DV04K](#lưu-trữ-trên-st25dv04k)).
 
 Ví dụ bắt đầu đo:
 
@@ -126,19 +149,19 @@ Ghi 8 byte vào characteristic `Control` với cấu trúc như sau (dữ liệu
 | 5 | 2 | `uint16 LE` | Milliseconds (0..999) |
 | 7 | 1 | `uint8` | Reserved (bắt buộc = `0x00`) |
 
-Ví dụ (Đồng bộ thời gian Unix `1724833200` = `0x66CE9DB0`, `500` ms = `0x01F4`):
+Ví dụ (Đồng bộ thời gian Unix `1724833200` = `0x66CEDDB0`, `500` ms = `0x01F4`):
 ```text
-09 B0 9D CE 66 F4 01 00
+09 B0 DD CE 66 F4 01 00
 ```
 
 ## Decode Sensor Data
 
-Payload dài **16 byte**. Các số nhiều byte dùng **little-endian**.
+Payload dài **16 byte**. Các số nhiều byte dùng **little-endian**. Gửi mỗi 1 giây khi state là `Measuring` hoặc `ECG active`, và gửi thêm ngay khi cờ `0x40` hoặc `0x08` đổi.
 
 | Offset | Kích thước | Kiểu | Trường | Cách decode/đơn vị |
 |---:|---:|---|---|---|
-| 0 | 1 | `uint8` | Heart rate | bpm |
-| 1 | 1 | `uint8` | SpO2 | % |
+| 0 | 1 | `uint8` | Heart rate | bpm. Khi MAX86150 không chạy, firmware gửi giá trị **giả** chạy 68→82; trước nhịp đầu tiên là 72 |
+| 1 | 1 | `uint8` | SpO2 | %. Mặc định 98 cho đến khi tính được giá trị đầu tiên |
 | 2 | 2 | `int16 LE` | Temperature | `raw / 100.0` °C; `-32768` nghĩa là không hợp lệ |
 | 4 | 2 | `uint16 LE` | Supercapacitor voltage | mV |
 | 6 | 1 | `uint8` | Power state | `1` = Normal, `2` = Low power |
@@ -146,7 +169,7 @@ Payload dài **16 byte**. Các số nhiều byte dùng **little-endian**.
 | 8 | 2 | `int16 LE` | Gia tốc X | mg |
 | 10 | 2 | `int16 LE` | Gia tốc Y | mg |
 | 12 | 2 | `int16 LE` | Gia tốc Z | mg |
-| 14 | 2 | `int16 LE` | QVar raw | Giá trị thô kênh electrometer (AH_QVAR) của LIS2DUXS12TR; cùng đơn vị/thang đo dùng để so ngưỡng cờ `Wear detected` (`0x40`) bên dưới. Không phải điện áp, là LSB thô từ cảm biến |
+| 14 | 2 | `int16 LE` | QVar raw | Mẫu thô mới nhất của kênh AH_QVAR trên LIS2DUXS12TR (12-bit canh trái, 4 bit thấp luôn bằng 0; khoảng 37 LSB/mV ở gain 0.5). Cờ `Wear detected` (`0x40`) **không** suy ra từ riêng giá trị này mà từ biên độ dao động trong cửa sổ 1 giây, xem bên dưới |
 
 ### Sensor/status flags
 
@@ -156,6 +179,8 @@ Payload dài **16 byte**. Các số nhiều byte dùng **little-endian**.
 | `0x10` | Emergency đang bật |
 | `0x20` | ECG đang hoạt động |
 | `0x40` | Wear detected (QVar) – Trạng thái đang đeo |
+
+Cờ `0x40`: khi đang đo, LIS2DUXS12TR phát xung data-ready trên chân RES (PB2) cho mỗi mẫu QVar (100 Hz). Firmware tính biên độ đỉnh-đỉnh của từng cửa sổ 100 mẫu: từ `600` LSB trở lên trong 2 cửa sổ liên tiếp thì bật cờ, từ `300` LSB trở xuống trong 2 cửa sổ liên tiếp thì tắt cờ. Khi cờ đổi, `Sensor Data` và `Device Status` được notify ngay. Trong phiên ECG luồng này tắt, cờ giữ nguyên và QVar raw chỉ cập nhật 1 lần mỗi giây. Ngưỡng (`QVAR_*` trong `sensor_manager.c`) là ước lượng ban đầu, **chưa hiệu chuẩn**; biến RAM `g_qvarDiag` (đọc qua SWD như `g_ecgDiag`) chứa min/max/đỉnh-đỉnh của cửa sổ gần nhất để chỉnh ngưỡng. Chip không tự ngắt theo ngưỡng QVar; việc đó cần chương trình MLC/FSM, khi có sẽ dùng chung đường ngắt RES.
 
 Ví dụ payload:
 
@@ -177,10 +202,12 @@ Decode:
 
 Payload dài **8 byte**; các số nhiều byte dùng **little-endian**.
 
+Không gửi định kỳ. Được notify khi: central bật notification, sau các lệnh Control nêu ở trên, và khi state, sensor ready, error code, power state hoặc byte flags tự thay đổi (ví dụ lỗi cảm biến nhiệt xuất hiện hoặc hết, cờ đeo đổi). Riêng điện áp supercap thay đổi thì không kích hoạt notify, nên byte `4..5` có thể cũ; lấy giá trị mới từ `Sensor Data`.
+
 | Offset | Kích thước | Kiểu | Trường | Giá trị |
 |---:|---:|---|---|---|
 | 0 | 1 | `uint8` | Measurement state | Xem bảng state |
-| 1 | 1 | `uint8` | Sensor ready | `0` = chưa sẵn sàng, `1` = sẵn sàng |
+| 1 | 1 | `uint8` | Sensor ready | `1` khi SensorManager đã khởi tạo (ADC supercap). **Không** phản ánh từng cảm biến I2C |
 | 2 | 1 | `uint8` | Error code | Xem bảng error code |
 | 3 | 1 | `uint8` | Power state | `1` = Normal, `2` = Low power |
 | 4 | 2 | `uint16 LE` | Supercapacitor voltage | mV |
@@ -208,6 +235,8 @@ Payload dài **8 byte**; các số nhiều byte dùng **little-endian**.
 | `0x11` | Timeout khi đọc nhiệt độ |
 | `0x12` | Lỗi bus cảm biến nhiệt độ |
 
+Mã `0x10`..`0x12` phản ánh kết quả của lần đo nhiệt độ gần nhất và chỉ hiện khi không có lỗi command (`0x01`). Giao thức không có mã "OK" riêng cho cảm biến nhiệt: `0x00` cùng với nhiệt độ khác `-32768` nghĩa là cảm biến hoạt động. Các cảm biến còn lại (MAX86150, LIS2DUXS12TR) chưa có error code.
+
 ### Byte flags/version
 
 ```text
@@ -218,6 +247,7 @@ bit 7 6 5 4 | bit 3 2 1 0
 - `flags = payload[7] & 0xF0`
 - `protocolVersion = payload[7] & 0x0F`
 - Phiên bản protocol hiện tại: **1**
+- Nibble cao mang các cờ `0x10` (Emergency), `0x20` (ECG active), `0x40` (Wear detected) giống `Sensor Data`.
 - Do status chỉ giữ nibble cao, cờ `Fall candidate (0x08)` chỉ xuất hiện đầy đủ trong `Sensor Data`, không xuất hiện trong byte status hiện tại.
 
 ## ECG Data
@@ -282,6 +312,7 @@ function decodeDeviceStatus(input) {
     protocolVersion: flagsAndVersion & 0x0f,
     emergency: Boolean(flagsAndVersion & 0x10),
     ecgActive: Boolean(flagsAndVersion & 0x20),
+    wearDetected: Boolean(flagsAndVersion & 0x40),
   };
 }
 
@@ -413,9 +444,27 @@ Script `STM32CubeIDE/diag_builds/read_ecg_diag.py` làm việc này tự động
 
 Phải đọc **trước khi** nạp lại hoặc tắt nguồn, vì reset xóa RAM.
 
+## Lưu trữ trên ST25DV04K
+
+Cấu hình và log nằm trong bộ nhớ người dùng của tag (512 byte, địa chỉ I2C `0x0000`–`0x01FF`), truy cập qua `NFC_IO_ReadUserMemory/WriteUserMemory` (`Application/NFC/nfc_io.c`). Mọi cấu trúc được encode từng byte, little-endian; CRC là CRC-16/MODBUS của các byte đứng trước nó. Phần này đã biên dịch và chạy thử trên PC với tag giả lập, **chưa chạy trên phần cứng**.
+
+| Địa chỉ | Kích thước | Nội dung |
+|---|---:|---|
+| `0x0000`–`0x001F` | 32 | Cấu hình: các trường ở byte `0–14`, CRC ở byte `30–31` |
+| `0x0020`–`0x002F` | 16 | Header log: CRC ở byte `14–15` |
+| `0x0030`–`0x003F` | 16 | Không dùng |
+| `0x0040`–`0x01EF` | 432 | 18 record × 24 byte, bộ đệm vòng |
+| `0x01F0`–`0x01FF` | 16 | Không dùng |
+
+Mỗi record 24 byte trùng từng byte với gói `Recovery Data`: sequence (`uint16`, byte `0–1`, do `NFC_Log_Add` gán từ `1`), timestamp (`uint32`, `2–5`), sensor payload 16 byte (`6–21`), CRC của byte `0–21` (`22–23`).
+
+Layout chi tiết, lệnh mailbox và các hạn chế còn lại (mailbox cần `MB_MODE = 1` trên tag, `Get log` chỉ trả 10 record, cấu hình chiếm chỗ của CC file NDEF) nằm ở mục 16.1 của [DEVICE_WEBAPP_PROTOCOL.md](DEVICE_WEBAPP_PROTOCOL.md).
+
 ## LoRaWAN (LoRa Basics Modem)
 
 Thiết bị chạy LoRaWAN **OTAA, Class A** trên SX1262 bằng thư viện [LoRa Basics Modem](https://github.com/Lora-net/SWL2001) (LBM) v4.9.0 của Semtech, tương ứng LoRaWAN L2 1.0.4 và Regional Parameters RP002-1.0.3. Vùng tần số đang dùng: **AS923-2**.
+
+> **LoRaWAN không tự chạy.** SX1262 bị giữ ở reset cho tới khi webapp gửi lệnh BLE LoRa join (`0x0F`, màn hình *LoRa* của webapp). Sau khi join, mặc định **không** có uplink định kỳ (`LBM_UPLINK_PERIOD_S = 0`): uplink chỉ đi theo lệnh `0x10` hoặc khi nhấn nút SOS. Công suất phát bị giới hạn ở `0` dBm (`LBM_TX_POWER_MAX_DBM`, đổi lúc chạy bằng `0x12`). Build với `LBM_APP_ENABLE = 0` (trong `Application/LoRaWAN/lbm_app.h`) thì bỏ hẳn LoRa: các lệnh LoRa trả "not built".
 
 ### Vị trí code
 
@@ -444,10 +493,12 @@ Sửa trong `Application/LoRaWAN/lbm_config.h`, sau đó build lại và nạp.
 
 | Macro | Mặc định | Ý nghĩa |
 |---|---|---|
+| `LBM_APP_ENABLE` (trong `lbm_app.h`) | `1` | `0`: không có LoRa, SX1262 giữ ở reset. `1`: có LoRa, nhưng chỉ khởi động khi nhận lệnh BLE `0x0F` |
+| `LBM_TX_POWER_MAX_DBM` | `0` | Giới hạn công suất phát của SX1262 (dBm, `-9`..`22`), áp sau yêu cầu của vùng (AS923 xin 14 dBm). Dòng phát xấp xỉ: 41 mA ở 0 dBm, 54 mA ở 5 dBm, 89 mA ở 14 dBm. Đổi lúc chạy bằng lệnh `0x12` |
 | `LBM_REGION` | `SMTC_MODEM_REGION_AS_923_GRP2` | Nhóm tần số. AS923-1 là `..._GRP1`, AS923-3 là `..._GRP3` (đồng thời gateway phải khớp) |
 | `LBM_UPLINK_PORT` | `101` | Cổng của uplink định kỳ |
-| `LBM_UPLINK_PERIOD_S` | `60` | Chu kỳ gửi uplink định kỳ (giây) |
-| `LBM_FIRST_UPLINK_DELAY_S` | `10` | Trễ của gói định kỳ đầu tiên sau khi join (gói ngay khi join xong gửi riêng) |
+| `LBM_UPLINK_PERIOD_S` | `0` | Chu kỳ uplink định kỳ (giây). `0` = không có uplink định kỳ, kể cả gói ngay sau khi join |
+| `LBM_FIRST_UPLINK_DELAY_S` | `10` | Trễ của gói định kỳ đầu tiên sau khi join (gói ngay khi join xong gửi riêng). Chỉ dùng khi `LBM_UPLINK_PERIOD_S` > 0 |
 | `LBM_ADR_MODE` | `LBM_ADR_NETWORK_CONTROLLED` | Cách chọn data rate, xem bên dưới |
 | `LBM_FIXED_DR` | `2` | DR cố định, chỉ dùng khi `LBM_ADR_MODE = LBM_ADR_FIXED_DR` |
 | `LBM_NB_TRANS` | `1` | Số lần phát mỗi uplink (1 đến 15). Bị bỏ qua khi ADR do server điều khiển |
@@ -513,7 +564,7 @@ Nối một nút nhấn giữa PB5 và GND (chân đã cấu hình pull-up nội
 
 | Cổng | Khi nào | Nội dung |
 |---|---|---|
-| 101 | Định kỳ, không xác nhận | 4 byte: bộ đếm uplink, big-endian, gói đầu tiên là 0 |
+| 101 | Lệnh BLE `0x10`, hoặc định kỳ nếu `LBM_UPLINK_PERIOD_S` > 0; không xác nhận | 4 byte: bộ đếm uplink, big-endian, gói đầu tiên là 0 |
 | 102 | Nhấn nút SOS, confirmed | 5 byte: `0x01` (SOS) rồi 4 byte số lần nhấn từ khi khởi động, big-endian |
 
 Payload formatter cho The Things Stack (*Payload formatters* → *Uplink* → *Custom Javascript formatter*):
@@ -563,8 +614,9 @@ Khi debug đừng đặt breakpoint trên đường chạy của LBM: CPU dừng
 ### Giới hạn đã biết
 
 - Context LBM (trong đó có DevNonce) chưa lưu vào flash, chỉ nằm trong RAM `.noinit`. Cần bật *Resets join nonces* trên server khi test, xem mục chuẩn bị ở trên.
-- Timer của LBM chạy trên SysTick 1 ms nên CPU không vào Stop/Off mode khi LBM chạy (`CFG_LPM_LBM`, và `PWR_EnterSleepMode` không còn dừng SysTick). Đây là cấu hình bring-up, tốn điện hơn thiết kế cuối.
-- BLE và LoRaWAN chưa được kiểm chứng chạy đồng thời lâu dài; ngắt radio BLE có thể làm lệch cửa sổ RX của LoRaWAN.
+- Timer của LBM chạy trên SysTick 1 ms nên CPU không vào Stop/Off mode (`CFG_LPM_LBM`, và `PWR_EnterSleepMode` không còn dừng SysTick). `main()` giữ nguyên giới hạn này cả khi LoRaWAN tắt, vì `DeviceTime` cũng đếm bằng SysTick. Đây là cấu hình bring-up, tốn điện hơn thiết kế cuối.
+- BLE và LoRaWAN chưa được kiểm chứng chạy đồng thời lâu dài; ngắt radio BLE có thể làm lệch cửa sổ RX của LoRaWAN. Task LBM chạy cùng mức ưu tiên với BLE stack (sequencer luân phiên) và chờ BUSY của SX1262 tối đa 100 ms, để LoRa không chặn BLE host.
+- Ở LDO 2.4 V của NEH7100, khi LoRa join ở 14 dBm thì BLE mất kết nối; ở điện áp cao hơn thì không. Nguyên nhân phần cứng chưa xác định, vì vậy công suất mặc định được hạ xuống 0 dBm.
 - Board custom: clock SX1262 dùng TCXO gắn thêm. Với thạch anh thiết kế ban đầu, chip không hoàn tất khởi động trên board này (nguyên nhân trong mạch XTAL chưa xác định).
 
 ## Kết nối nhanh bằng nRF Connect
@@ -586,8 +638,11 @@ Khi debug đừng đặt breakpoint trên đường chạy của LBM: CPU dừng
 > Lưu ý: các thư mục output build được loại khỏi Git bằng `.gitignore`.
 
 ## Cập nhật gần đây
+- LoRaWAN: thêm lệnh BLE `0x0F`..`0x13` (join, test uplink, status, TX power, stop) và gói LoRa status `0x20` trên `FE46`; LoRa chỉ chạy khi có lệnh join; bỏ uplink định kỳ mặc định; giới hạn công suất phát ở 0 dBm; task LBM hạ xuống cùng mức ưu tiên với BLE, timeout BUSY từ 1 s xuống 100 ms. Webapp có màn hình *LoRa* để test.
+- Thứ tự khởi động mới: (1) cấu hình PMIC NEH7100 qua I2C trước mọi thứ khác, kể cả radio; (2) khởi tạo BLE và advertising; (3) cảm biến (MAX30208, MAX86150, LIS2DUXS12TR, ADC supercap) chỉ được dò và cấu hình **sau lần kết nối BLE đầu tiên kể từ khi reset**, rồi chờ lệnh `0x01`/`0x06` mới đo; kết nối lại không khởi tạo lại. LoRaWAN mặc định tắt (`LBM_APP_ENABLE`).
 - Tối ưu bộ nhớ: Tăng Stack size lên 6KB chuẩn bị cho các thuật toán xử lý dữ liệu phức tạp (PPG, ECG).
 - Khắc phục lỗi sinh code của STM32CubeMX: Xử lý triệt để các lỗi ghi đè cấu hình GATT, lỗi thiếu biến ADC, và lỗi khai báo của thư viện BLE stack (BLEPLAT_CNTR_IsEnabledTimer1).
 - Tích hợp LoRa Basics Modem v4.9.0 trên SX1262: OTAA AS923-2 với The Things Stack, uplink định kỳ, cấu hình data rate/SF/ADR trong `lbm_config.h`.
 - Thêm nút SOS ở PB5: nhấn nút gửi uplink LoRaWAN khẩn cấp (cổng 102, confirmed).
 - MAX86150: đối chiếu giá trị thanh ghi ECG với datasheet, thêm các switch chẩn đoán nhiễu ECG trong `ecg_diag.h` và biến `g_ecgDiag` đọc qua SWD (board không có UART).
+- ST25DV04K: sửa phần lưu cấu hình và log (ghi nhầm vào vùng cấu hình hệ thống thay vì bộ nhớ người dùng, layout chồng lấn, CRC sai phạm vi, tràn bộ đệm `Get log`, vượt 512 byte); chưa kiểm chứng trên phần cứng.

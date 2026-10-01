@@ -487,7 +487,9 @@ void smtc_modem_hal_print_trace( const char* fmt, ... )
 
 void smtc_modem_hal_user_lbm_irq( void )
 {
-    UTIL_SEQ_SetTask( 1U << CFG_TASK_LBM_ID, CFG_SEQ_PRIO_0 );
+    /* Same priority as the BLE stack task: the sequencer then alternates the two
+     * instead of letting a busy modem starve the BLE host. */
+    UTIL_SEQ_SetTask( 1U << CFG_TASK_LBM_ID, CFG_SEQ_PRIO_1 );
 }
 
 /* --- EOF ------------------------------------------------------------------ */

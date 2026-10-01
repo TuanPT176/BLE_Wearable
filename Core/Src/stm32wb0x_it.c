@@ -135,7 +135,10 @@ void SysTick_Handler(void)
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
-  LBM_HAL_TimerTick();
+  if (LBM_App_IsStarted())
+  {
+    LBM_HAL_TimerTick();
+  }
   /* USER CODE END SysTick_IRQn 1 */
 }
 
@@ -274,7 +277,7 @@ void HAL_GPIO_EXTI_Callback(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin)
     /* PB5 SOS button (falling edge) -> LoRaWAN emergency uplink */
     LBM_App_SosButtonIrq();
   }
-  if ((GPIOx == DIO1_GPIO_Port) && (GPIO_Pin == DIO1_Pin))
+  if ((GPIOx == DIO1_GPIO_Port) && (GPIO_Pin == DIO1_Pin) && LBM_App_IsStarted())
   {
     /* SX1262 DIO1 -> LoRa Basics Modem radio IRQ (flags only, SPI work is done
      * later by the LBM sequencer task). lora_test.c never used this path. */

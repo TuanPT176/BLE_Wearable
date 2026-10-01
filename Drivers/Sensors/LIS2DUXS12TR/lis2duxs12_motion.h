@@ -56,14 +56,22 @@ lis2duxs12_motion_result_t LIS2DUXS12_MotionReadAcceleration(
     lis2duxs12_acceleration_t *sample);
 lis2duxs12_motion_result_t LIS2DUXS12_MotionLoadUcf(
     const ucf_line_t *configuration, size_t line_count);
+/* Interrupts leave the chip on the RES pin (INT1_ON_RES), which is wired to
+ * PB2: INT1 is the Qvar electrode on this board and INT2 is unconnected. */
 lis2duxs12_motion_result_t LIS2DUXS12_MotionArmMlcInterrupt(void);
+bool LIS2DUXS12_MotionIsMlcInterruptArmed(void);
 lis2duxs12_motion_result_t LIS2DUXS12_MotionSetClassRules(
     const lis2duxs12_class_rule_t *rules, size_t rule_count);
+/* Reads the MLC status; a new event (sequence incremented) is stored only
+ * when an MLC output changed. */
 lis2duxs12_motion_result_t LIS2DUXS12_MotionProcessInterrupt(void);
 bool LIS2DUXS12_MotionGetLatestEvent(lis2duxs12_motion_event_t *event);
 lis2duxs12_motion_result_t LIS2DUXS12_MotionInitQvar(void);
 lis2duxs12_motion_result_t LIS2DUXS12_MotionConfigureQvar(
     bool enable, lis2duxs12_ah_qvar_gain_t gain, lis2duxs12_ah_qvar_zin_t zin);
 lis2duxs12_motion_result_t LIS2DUXS12_MotionReadQvar(int16_t *qvar_value);
+/* One pulse on RES per output sample (accelerometer ODR); each pulse is
+ * answered with LIS2DUXS12_MotionReadQvar(). */
+lis2duxs12_motion_result_t LIS2DUXS12_MotionSetQvarDataReadyInterrupt(bool enable);
 
 #endif /* LIS2DUXS12_MOTION_H */

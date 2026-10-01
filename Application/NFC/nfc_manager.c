@@ -5,6 +5,10 @@
 #include "../../Drivers/ST25DV/st25dv.h"
 #include <string.h>
 
+/* GET_LOG response: [cmd][status][record count, uint16 LE] then whole stored records */
+#define NFC_GET_LOG_PREFIX_SIZE 4
+#define NFC_GET_LOG_MAX_RECORDS ((ST25DV_MAX_MAILBOX_LENGTH - NFC_GET_LOG_PREFIX_SIZE) / NFC_LOG_RECORD_SIZE)
+
 static uint8_t mb_rx_buf[ST25DV_MAX_MAILBOX_LENGTH];
 static uint8_t mb_tx_buf[ST25DV_MAX_MAILBOX_LENGTH];
 
@@ -21,14 +25,15 @@ static void NFC_Manager_HandleCommand(uint8_t *data, uint16_t length)
     {
         case NFC_CMD_GET_CONFIG:
             mb_tx_buf[1] = NFC_RESP_ACK;
-            memcpy(&mb_tx_buf[2], &nfc_config, sizeof(NFC_Config_t));
-            tx_len = 2 + sizeof(NFC_Config_t);
+            NFC_Config_Encode(&nfc_config, &mb_tx_buf[2]);
+            tx_len = 2 + NFC_CONFIG_STORED_SIZE;
             break;
 
         case NFC_CMD_SET_CONFIG:
-            if (length >= 1 + sizeof(NFC_Config_t))
+            if (length >= 1 + NFC_CONFIG_STORED_SIZE)
             {
-                memcpy(&nfc_config, &data[1], sizeof(NFC_Config_t));
+                // The CRC sent by the reader is not checked: NFC_Config_Save() recomputes it
+                NFC_Config_Decode(&data[1], &nfc_config);
                 if (NFC_Config_Save())
                 {
                     mb_tx_buf[1] = NFC_RESP_ACK;
@@ -47,28 +52,31 @@ static void NFC_Manager_HandleCommand(uint8_t *data, uint16_t length)
 
         case NFC_CMD_GET_LOG_INFO:
             mb_tx_buf[1] = NFC_RESP_ACK;
-            memcpy(&mb_tx_buf[2], &nfc_log_header, sizeof(NFC_LogHeader_t));
-            tx_len = 2 + sizeof(NFC_LogHeader_t);
+            NFC_Log_EncodeHeader(&mb_tx_buf[2]);
+            tx_len = 2 + NFC_LOG_HEADER_SIZE;
             break;
 
         case NFC_CMD_GET_LOG:
+        {
             mb_tx_buf[1] = NFC_RESP_ACK;
             uint16_t count = NFC_Log_Count();
             mb_tx_buf[2] = count & 0xFF;
             mb_tx_buf[3] = (count >> 8) & 0xFF;
-            tx_len = 4;
-            
-            // Note: FTM buffer is 256 bytes.
-            // 256 - 4 = 252 bytes. 252 / 8 = 31 records max per packet.
-            // For a full read, we might need a more complex protocol with chunking.
-            // For now, we'll pack as many as possible (up to 31).
-            uint16_t records_to_send = (count > 31) ? 31 : count;
+            tx_len = NFC_GET_LOG_PREFIX_SIZE;
+
+            // One mailbox message holds NFC_GET_LOG_MAX_RECORDS (10) records, oldest first.
+            // Reading the rest of the log needs a chunked protocol, which does not exist yet.
+            // A record that fails its check is left out; each record carries its own sequence.
+            uint16_t records_to_send = (count > NFC_GET_LOG_MAX_RECORDS) ? NFC_GET_LOG_MAX_RECORDS : count;
             for (uint16_t i = 0; i < records_to_send; i++)
             {
-                NFC_Log_Read(i, (NFC_SensorRecord_t*)&mb_tx_buf[tx_len]);
-                tx_len += sizeof(NFC_SensorRecord_t);
+                if (NFC_Log_ReadStored(i, &mb_tx_buf[tx_len]))
+                {
+                    tx_len += NFC_LOG_RECORD_SIZE;
+                }
             }
             break;
+        }
 
         case NFC_CMD_CLEAR_LOG:
             NFC_Log_Clear();
@@ -106,7 +114,7 @@ void NFC_Manager_Init(void)
 void NFC_Manager_Process(void)
 {
     ST25DV_MB_CTRL_DYN_STATUS mb_status;
-    
+
     if (ST25DV_ReadMBCtrl_Dyn(&st25dv_obj, &mb_status) == 0)
     {
         if (mb_status.CurrentMsg == ST25DV_RF_MSG)

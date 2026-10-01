@@ -42,6 +42,7 @@
 
 #include "ral_sx126x_bsp.h"
 #include "lbm_config.h"
+#include "lbm_app.h"
 /*
  * -----------------------------------------------------------------------------
  * --- PRIVATE MACROS-----------------------------------------------------------
@@ -258,6 +259,12 @@ void ral_sx126x_bsp_get_tx_cfg( const void* context, const ral_sx126x_bsp_tx_cfg
     int8_t board_tx_pwr_offset_db = LBM_TX_POWER_OFFSET_DB;
 
     int16_t power = input_params->system_output_pwr_in_dbm + board_tx_pwr_offset_db;
+
+    // Run-time cap (LBM_TX_POWER_MAX_DBM, CONTROL 0x12): lower peak current
+    if( power > LBM_App_GetTxPowerMax( ) )
+    {
+        power = LBM_App_GetTxPowerMax( );
+    }
 
     output_params->pa_ramp_time  = SX126X_RAMP_40_US;
     output_params->pa_cfg.pa_lut = 0x01;  // reserved value, same for sx1261 sx1262 and sx1268
