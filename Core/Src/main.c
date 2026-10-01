@@ -25,6 +25,7 @@
 #include "../../Application/LoRaTest/lora_test.h"
 #include "../../Application/LoRaWAN/lbm_app.h"
 #include "../../Application/MAX86150Test/max86150_test.h"
+#include "../../Application/SensorTest/sensor_test.h"
 #include "../../Application/NEH7100/neh7100.h"
 #include "stm32_lpm.h"
 /* USER CODE END Includes */
@@ -131,7 +132,11 @@ int main(void)
   MX_I2C1_Init();
   MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
-  /* First user of I2C1, so a bus fault is diagnosed before NFC/sensors touch it. */
+  /* First users of I2C1, so a bus fault is diagnosed before NFC/sensors touch it.
+   * Results: Live Expression g_sensorTest (and g_max86150Test). */
+#if SENSOR_TEST_ENABLE
+  SensorTest_Run();
+#endif
 #if MAX86150_TEST_ENABLE
   MAX86150Test_Run();
 #endif

@@ -24,3 +24,6 @@ Release/
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# Local archives (project backups)
+*.rar

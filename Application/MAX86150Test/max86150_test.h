@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 /* Set to 0 to compile the test out without removing the call site in main.c. */
-#define MAX86150_TEST_ENABLE 1
+#define MAX86150_TEST_ENABLE 0
 
 /* While enabled, MAX86150Test_Run() blocks boot for roughly
  * MAX86150_TEST_STREAM_MS (PPG, finger on the sensor) followed by
